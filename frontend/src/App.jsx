@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { useState } from "react";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 import LoginPage from "./pages/LoginPage";
@@ -9,16 +10,19 @@ import NotFound from "./pages/NotFound";
 import "./styles/global.css";
 import "./App.css";
 
+
 const Layout = ({ children }) => {
   const location = useLocation();
   const showSidebar = location.pathname.startsWith("/admin") || location.pathname.startsWith("/manager") || location.pathname.startsWith("/employee");
 
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <div className="app-container">
       <Navbar />
-      <div className="main-content">
-        {showSidebar && <Sidebar />}
-        <div className="page-content">{children}</div>
+      <div className="flex main-coontent">
+        {showSidebar && <Sidebar isOpen={isOpen} setIsOpen={setIsOpen}/>}
+        <div className={`flex-1 transition-all duration-500 ${isOpen ? "ml-64" : "ml-16"}`}>{children}</div>
       </div>
     </div>
   );
