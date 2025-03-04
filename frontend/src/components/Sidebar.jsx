@@ -137,7 +137,7 @@ const Sidebar = ({isOpen, setIsOpen}) => {
         <nav className="flex-1 pt-4 pb-2">
           <ul className="p-0 m-0 list-none">
             {menuItems[role]?.map((item, index) => (
-              <li key={index} className="p-3 rounded-md hover:bg-[var(--primary-medium)] cursor-pointer mb-2">
+              <li key={index} className="p-3 rounded-md hover:bg-[var(--primary-medium)] cursor-pointer ml-1 mb-2">
                 <div className="flex justify-between items-center" onClick={() => toggleSubMenu(item.label)}>
                   <Link to={item.path || "#"} className="flex gap-3">
                     {item.icon && <item.icon size={24} />} {isOpen && item.label}
