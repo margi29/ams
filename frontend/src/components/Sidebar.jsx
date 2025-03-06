@@ -47,7 +47,7 @@ const Sidebar = ({isOpen, setIsOpen}) => {
         subItems: [
           { name: "All Assets", path: "/admin/assets" },
           { name: "Add New Asset", path: "/admin/add-asset" },
-          { name: "Asset Categories", path: "/admin/categories" },
+          // { name: "Asset Categories", path: "/admin/categories" },
           { name: "Asset History", path: "/admin/history" }
         ]
       },
@@ -63,41 +63,30 @@ const Sidebar = ({isOpen, setIsOpen}) => {
         icon: QrCode, label: "QR Code Management",
         subItems: [
           { name: "Generate QR Code", path: "/admin/generate-qr" },
-          { name: "Scan QR Code", path: "/admin/scan-qr" },
+          // { name: "Scan QR Code", path: "/admin/scan-qr" },
           { name: "QR Code Logs", path: "/admin/qr-logs" }
         ]
       },
       {
-        icon: Wrench, label: "Maintenance & Repairs",
-        subItems: [
-          { name: "Scheduled Maintenance", path: "/admin/scheduled-maintenance" },
-          { name: "Request Repair", path: "/admin/request-repair" },
-          { name: "Repair Status", path: "/admin/repair-status" }
-        ]
+        icon: Wrench, label: "Maintenance & Repair",path: "/admin/scheduled-maintenance"
+        // subItems: [
+        //   { name: "Scheduled Maintenance", path: "/admin/scheduled-maintenance" },
+        //   { name: "Request Repair", path: "/admin/request-repair" },
+        //   { name: "Repair Status", path: "/admin/repair-status" }
+        // ]
       },
       {
-        icon: BarChart2, label: "Reports & Analytics",
-        subItems: [
-          { name: "Asset Reports", path: "/admin/asset-reports" },
-          { name: "Maintenance Reports", path: "/admin/maintenance-reports" },
-          { name: "Usage Reports", path: "/admin/usage-reports" }
-        ]
+        icon: BarChart2, label: "Report", path: "/admin/asset-reports"
       },
       {
-        icon: User, label: "Users & Roles",
+        icon: User, label: "User Management",
         subItems: [
           { name: "All Users", path: "/admin/all-users" },
           { name: "Add User", path: "/admin/add-user" },
-          { name: "Role Management", path: "/admin/role-management" }
         ]
       },
       {
-        icon: Settings, label: "Settings",
-        subItems: [
-          { name: "General Settings", path: "/admin/settings" },
-          { name: "Notification Settings", path: "/admin/notifications" },
-          { name: "Backup & Restore", path: "/admin/backup" }
-        ]
+        icon: Settings, label: "Settings",path: "/admin/settings"
       }
     ],
     manager: [
@@ -114,29 +103,25 @@ const Sidebar = ({isOpen, setIsOpen}) => {
         subItems: [
           { name: "View Assigned Assets", path: "/manager/assigned-assets" },
           { name: "Return Asset", path: "/manager/return-asset" },
-          { name: "Asset Condition Reports", path: "/manager/asset-condition-reports" }
+          // { name: "Asset Condition Reports", path: "/manager/asset-condition-reports" }
         ]
       },
       {
-        icon: QrCode, label: "QR Code Management",
-        subItems: [
-          { name: "Scan QR Code", path: "/manager/scan-qr" },
-          { name: "QR Code Logs", path: "/manager/qr-logs" }
-        ]
+        icon: QrCode, label: "QR Code Logs", path: "/manager/qr-logs" 
       },
       {
-        icon: Wrench, label: "Maintenance Requests",
-        subItems: [
-          { name: "Report an Issue", path: "/manager/report-issue" },
-          { name: "Track Requests", path: "/manager/track-requests" }
-        ]
+        icon: Wrench, label: "Maintenance Requests",path: "/manager/maintenance request"
+        // subItems: [
+        //   { name: "Report an Issue", path: "/manager/report-issue" },
+        //   { name: "Track Requests", path: "/manager/track-requests" }
+        // ]
       },
-      {
-        icon: User, label: "Employees & Requests",
-        subItems: [
-          { name: "Manage Employee Requests", path: "/manager/employee-requests" }
-        ]
-      }
+      // {
+      //   icon: User, label: "Employees & Requests",
+      //   subItems: [
+      //     { name: "Manage Employee Requests", path: "/manager/employee-requests" }
+      //   ]
+      // }
     ],
     employee: [
       { icon: Home, label: "Dashboard", path: "/employee/dashboard" },
@@ -148,10 +133,10 @@ const Sidebar = ({isOpen, setIsOpen}) => {
           { name: "Report an Issue", path: "/employee/report-issue" }
         ]
       },
-      {
-        icon: QrCode, label: "QR Code Scanner",
-        subItems: [{ name: "Scan QR Code", path: "/employee/scan-qr" }]
-      },
+      // {
+      //   icon: QrCode, label: "QR Code Scanner",
+      //   subItems: [{ name: "Scan QR Code", path: "/employee/scan-qr" }]
+      // },
       {
         icon: Package, label: "Request Asset",
         subItems: [
@@ -163,7 +148,7 @@ const Sidebar = ({isOpen, setIsOpen}) => {
         icon: Settings, label: "Help & Support",
         subItems: [
           { name: "Guidelines", path: "/employee/guidelines" },
-          { name: "Contact IT/Admin", path: "/employee/contact-support" }
+          { name: "Contact Admin", path: "/employee/contact-support" }
         ]
       }
     ]
