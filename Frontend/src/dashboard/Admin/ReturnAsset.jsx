@@ -1,12 +1,40 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { FaSearch, FaDownload } from "react-icons/fa";
+import Table from "../../components/Table";
+import { exportData } from "../../utils/exportData";
 
-const ReturnAssetLog = () => {
+const ReturnAsset= () => {
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("All");
+  const [exportFormat, setExportFormat] = useState("csv");
   const [logs] = useState([
     { id: 1, asset: "Dell Laptop", date: "2024-02-20", condition: "Good", employee: "John Doe", note: "No issues" },
     { id: 2, asset: "Office Chair", date: "2024-02-18", condition: "Minor Damage", employee: "Jane Smith", note: "Slight tear on cushion" },
     { id: 3, asset: "Projector", date: "2024-02-22", condition: "Needs Repair", employee: "Emily Davis", note: "Bulb malfunctioning" }
   ]);
+
+  const filteredLogs = logs.filter(
+    (log) => (filter === "All" || log.condition === filter) && log.asset.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleExport = () => {
+    exportData(filteredLogs, exportFormat, "return_asset_log");
+  };
+
+  const columns = [
+    { header: "Asset", accessor: "asset" },
+    { header: "Return Date", accessor: "date" },
+    { 
+      header: "Condition", 
+      accessor: "condition", 
+      className: (value) =>
+        value === "Good" ? "text-green-600 font-semibold" :
+        value === "Minor Damage" ? "text-yellow-600 font-semibold" : "text-red-600 font-semibold"
+    },
+    { header: "Employee", accessor: "employee" },
+    { header: "Notes", accessor: "note" },
+  ];
 
   return (
     <motion.div 
@@ -15,47 +43,40 @@ const ReturnAssetLog = () => {
       animate={{ opacity: 1, y: 0 }}
     >
       <h2 className="text-3xl font-bold mb-4 text-gray-800 text-center">Returned Asset Log</h2>
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-gray-300">
-          <thead>
-            <tr className="bg-[#3A6D8C] text-white">
-              <th className="p-3 border">Asset</th>
-              <th className="p-3 border">Return Date</th>
-              <th className="p-3 border">Condition</th>
-              <th className="p-3 border">Employee</th>
-              <th className="p-3 border">Notes</th>
-            </tr>
-          </thead>
-          <tbody>
-            {logs.length > 0 ? (
-              logs.map((log) => (
-                <motion.tr 
-                  key={log.id} 
-                  className="text-center bg-gray-100 hover:bg-gray-200 transition"
-                  initial={{ x: -10, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                >
-                  <td className="p-3 border">{log.asset}</td>
-                  <td className="p-3 border">{log.date}</td>
-                  <td className={`p-3 border font-semibold ${
-                    log.condition === "Good" ? "text-green-600" :
-                    log.condition === "Minor Damage" ? "text-yellow-600" :
-                    "text-red-600"
-                  }`}>{log.condition}</td>
-                  <td className="p-3 border">{log.employee}</td>
-                  <td className="p-3 border">{log.note || "-"}</td>
-                </motion.tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="5" className="p-3 text-center text-gray-500">No returned assets recorded</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      <div className="flex gap-2 mb-4">
+        <input
+          type="text"
+          placeholder="Search assets..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="p-3 flex-grow border rounded-lg focus:outline-none"
+        />
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="p-3 border rounded-lg"
+        >
+          <option value="All">All Conditions</option>
+          <option value="Good">Good</option>
+          <option value="Minor Damage">Minor Damage</option>
+          <option value="Needs Repair">Needs Repair</option>
+        </select>
+        <select
+          value={exportFormat}
+          onChange={(e) => setExportFormat(e.target.value)}
+          className="p-3 border rounded-lg"
+        >
+          <option value="csv">CSV</option>
+          <option value="pdf">PDF</option>
+          <option value="excel">Excel</option>
+        </select>
+        <button className="bg-blue-500 text-white px-4 flex items-center gap-2 rounded-lg" onClick={handleExport}>
+          <FaDownload /> Export
+        </button>
       </div>
+      <Table columns={columns} data={filteredLogs} />
     </motion.div>
   );
 };
 
-export default ReturnAssetLog;
+export default ReturnAsset;

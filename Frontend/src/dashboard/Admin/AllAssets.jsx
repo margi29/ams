@@ -1,20 +1,37 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { FaDownload } from "react-icons/fa";
+import Table from "../../components/Table";
+import { exportData } from "../../utils/exportData";
 
 const statusColors = {
-  Available: "text-green-600",
-  Assigned: "text-blue-600",
-  "Under Maintenance": "text-red-600",
-  Retired: "text-gray-600",
+  Available: "text-green-600 font-semibold",
+  Assigned: "text-blue-600 font-semibold",
+  "Under Maintenance": "text-red-600 font-semibold",
+  Retired: "text-gray-600 ont-semibold",
 };
 
 const AllAssets = () => {
   const [assets, setAssets] = useState([
     { id: 1, name: "Dell Laptop", category: "Electronics", status: "Assigned" },
-    { id: 2, name: "HP Printer", category: "Office Equipment", status: "Available" },
-    { id: 3, name: "Office Desk", category: "Furniture", status: "Under Maintenance" },
+    {
+      id: 2,
+      name: "HP Printer",
+      category: "Office Equipment",
+      status: "Available",
+    },
+    {
+      id: 3,
+      name: "Office Desk",
+      category: "Furniture",
+      status: "Under Maintenance",
+    },
     { id: 4, name: "Projector", category: "Electronics", status: "Available" },
   ]);
 
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("All");
+  const [exportFormat, setExportFormat] = useState("csv");
   const [editingAsset, setEditingAsset] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -24,84 +41,99 @@ const AllAssets = () => {
   };
 
   const handleSave = () => {
-    setAssets(assets.map(a => a.id === editingAsset.id ? editingAsset : a));
+    setAssets(assets.map((a) => (a.id === editingAsset.id ? editingAsset : a)));
     setModalOpen(false);
   };
 
-  return (
-    <div className="p-6 mt-16 bg-white shadow-lg rounded-xl">
-      <h2 className="text-3xl font-bold mb-4 text-gray-800 text-center">All Assets</h2>
-      <table className="w-full border-collapse border border-gray-300">
-        <thead>
-          <tr className="bg-[#3A6D8C] text-white">
-            <th className="p-3 border">Asset Name</th>
-            <th className="p-3 border">Category</th>
-            <th className="p-3 border">Status</th>
-            <th className="p-3 border">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {assets.map((asset) => (
-            <tr key={asset.id} className="text-center">
-              <td className="p-3 border">{asset.name}</td>
-              <td className="p-3 border">{asset.category}</td>
-              <td className={`p-3 border font-semibold ${statusColors[asset.status]}`}>{asset.status}</td>
-              <td className="p-3 border">
-                <button 
-                  className="bg-blue-500 text-white px-3 py-1 rounded"
-                  onClick={() => handleEdit(asset)}
-                >
-                  Edit
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {modalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            <h2 className="text-xl font-semibold mb-4">Edit Asset</h2>
-            <input 
-              type="text" 
-              className="border p-2 w-full mb-2" 
-              value={editingAsset.name} 
-              onChange={(e) => setEditingAsset({ ...editingAsset, name: e.target.value })} 
-            />
-            <input 
-              type="text" 
-              className="border p-2 w-full mb-2" 
-              value={editingAsset.category} 
-              onChange={(e) => setEditingAsset({ ...editingAsset, category: e.target.value })} 
-            />
-            <select 
-              className="border p-2 w-full mb-4" 
-              value={editingAsset.status} 
-              onChange={(e) => setEditingAsset({ ...editingAsset, status: e.target.value })} 
-            >
-              <option value="Available">Available</option>
-              <option value="Assigned">Assigned</option>
-              <option value="Under Maintenance">Under Maintenance</option>
-              <option value="Retired">Retired</option>
-            </select>
-            <div className="flex justify-end">
-              <button 
-                className="bg-green-500 text-white px-4 py-2 rounded mr-2" 
-                onClick={handleSave}
-              >
-                Save
-              </button>
-              <button 
-                className="bg-red-500 text-white px-4 py-2 rounded" 
-                onClick={() => setModalOpen(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
+  const handleDelete = (id) => {
+    setAssets(assets.filter((asset) => asset.id !== id));
+  };
+
+  const filteredAssets = assets.filter(
+    (asset) =>
+      (filter === "All" || asset.status === filter) &&
+      asset.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleExport = () => {
+    exportData(filteredAssets, exportFormat, "all_assets");
+  };
+
+  const columns = [
+    { header: "Asset Name", accessor: "name" },
+    { header: "Category", accessor: "category" },
+    {
+      header: "Status",
+      accessor: "status",
+      className: (value) => statusColors[value] || "",
+    },
+    {
+      header: "Actions",
+      render: (row) => (
+        <div className="flex gap-2 justify-center">
+          <button
+            className="bg-blue-500 text-white px-3 py-1 rounded"
+            onClick={() => handleEdit(row)}
+          >
+            Edit
+          </button>
+          <button
+            className="bg-red-500 text-white px-3 py-1 rounded"
+            onClick={() => handleDelete(row.id)}
+          >
+            Delete
+          </button>
         </div>
-      )}
-    </div>
+      ),
+    },
+  ];
+
+  return (
+    <motion.div
+      className="p-6 mt-16 bg-white shadow-lg rounded-xl"
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <h2 className="text-3xl font-bold mb-4 text-gray-800 text-center">
+        All Assets
+      </h2>
+      <div className="flex gap-2 mb-4">
+        <input
+          type="text"
+          placeholder="Search assets..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="p-3 flex-grow border rounded-lg focus:outline-none"
+        />
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="p-3 border rounded-lg "
+        >
+          <option value="All">All Status</option>
+          <option value="Available">Available</option>
+          <option value="Assigned">Assigned</option>
+          <option value="Under Maintenance">Under Maintenance</option>
+          <option value="Retired">Retired</option>
+        </select>
+        <select
+          value={exportFormat}
+          onChange={(e) => setExportFormat(e.target.value)}
+          className="p-3 border rounded-lg"
+        >
+          <option value="csv">CSV</option>
+          <option value="pdf">PDF</option>
+          <option value="excel">Excel</option>
+        </select>
+        <button
+          className="bg-blue-500 text-white px-4 flex items-center gap-2 rounded-lg"
+          onClick={handleExport}
+        >
+          <FaDownload /> Export
+        </button>
+      </div>
+      <Table columns={columns} data={filteredAssets} />
+    </motion.div>
   );
 };
 

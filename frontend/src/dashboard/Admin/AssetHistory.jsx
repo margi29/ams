@@ -1,63 +1,41 @@
 import { useState } from "react";
-import { FaSearch, FaDownload, FaFilter } from "react-icons/fa";
+import { FaDownload } from "react-icons/fa";
 import { motion } from "framer-motion";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
-import Docxtemplater from "docxtemplater";
-import PizZip from "pizzip";
+import Table from "../../components/Table.jsx";
+import { exportData } from "../../utils/exportData";
 
 const AssetHistory = () => {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
   const [exportFormat, setExportFormat] = useState("csv");
-  const [history] = useState([
+  
+  const columns = [
+    { header: "Asset", accessor: "asset" },
+    { 
+      header: "Action", 
+      accessor: "action", 
+      className: (value) => 
+        value === "Assigned" ? "text-blue-600 font-semibold " : 
+        value === "Returned" ? "text-green-600 font-semibold" : 
+        "text-red-600 font-semibold"
+    },
+    { header: "Date", accessor: "date" },
+    { header: "User", accessor: "user" }
+  ];
+
+  const history = [
     { id: 1, asset: "Dell Laptop", action: "Assigned", date: "2024-02-15", user: "John Doe" },
     { id: 2, asset: "HP Printer", action: "Returned", date: "2024-02-18", user: "Jane Smith" },
     { id: 3, asset: "Office Desk", action: "Under Maintenance", date: "2024-02-20", user: "Mark Lee" },
     { id: 4, asset: "Projector", action: "Assigned", date: "2024-02-21", user: "Emily Davis" },
-  ]);
+  ];
 
   const filteredHistory = history.filter((entry) =>
     (filter === "All" || entry.action === filter) && entry.asset.toLowerCase().includes(search.toLowerCase())
   );
 
   const handleExport = () => {
-    if (exportFormat === "csv") {
-      const data = [
-        ["Asset", "Action", "Date", "User"],
-        ...filteredHistory.map(({ asset, action, date, user }) => [asset, action, date, user])
-      ].map((e) => e.join(",")).join("\n");
-      const blob = new Blob([data], { type: "text/csv" });
-      downloadFile(blob, "asset_history.csv");
-    } else if (exportFormat === "pdf") {
-      const doc = new jsPDF();
-      doc.text("Asset History", 14, 10);
-      autoTable(doc, {
-        head: [["Asset", "Action", "Date", "User"]],
-        body: filteredHistory.map(({ asset, action, date, user }) => [asset, action, date, user]),
-      });
-      doc.save("asset_history.pdf");
-    } else if (exportFormat === "excel") {
-      const ws = XLSX.utils.json_to_sheet(filteredHistory);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Asset History");
-      XLSX.writeFile(wb, "asset_history.xlsx");
-    } else if (exportFormat === "docx") {
-      const content = `Asset History\n\n` + filteredHistory.map(({ asset, action, date, user }) => `${asset}\t${action}\t${date}\t${user}`).join("\n");
-      const blob = new Blob([content], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
-      downloadFile(blob, "asset_history.docx");
-    }
-  };
-
-  const downloadFile = (blob, filename) => {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
+    exportData(filteredHistory, exportFormat, "asset_history");
   };
 
   return (
@@ -93,52 +71,12 @@ const AssetHistory = () => {
           <option value="csv">CSV</option>
           <option value="pdf">PDF</option>
           <option value="excel">Excel</option>
-          <option value="docx">Word</option>
         </select>
         <button className="bg-blue-500 text-white px-4 flex items-center gap-2 rounded-lg" onClick={handleExport}>
           <FaDownload /> Export
         </button>
       </div>
-      <motion.table 
-        className="w-full border-collapse border border-gray-300"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-      >
-        <thead>
-          <tr className="bg-[#3A6D8C] text-white">
-            <th className="p-3 border">Asset</th>
-            <th className="p-3 border">Action</th>
-            <th className="p-3 border">Date</th>
-            <th className="p-3 border">User</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredHistory.length > 0 ? (
-            filteredHistory.map((entry) => (
-              <motion.tr 
-                key={entry.id} 
-                className="text-center bg-gray-100 hover:bg-gray-200 transition"
-                initial={{ x: -10, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-              >
-                <td className="p-3 border">{entry.asset}</td>
-                <td className={`p-3 border font-semibold ${
-                  entry.action === "Assigned" ? "text-blue-600" :
-                  entry.action === "Returned" ? "text-green-600" :
-                  "text-red-600"
-                }`}>{entry.action}</td>
-                <td className="p-3 border">{entry.date}</td>
-                <td className="p-3 border">{entry.user}</td>
-              </motion.tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="4" className="p-3 text-center text-gray-500">No history found</td>
-            </tr>
-          )}
-        </tbody>
-      </motion.table>
+      <Table columns={columns} data={filteredHistory} />
     </motion.div>
   );
 };
