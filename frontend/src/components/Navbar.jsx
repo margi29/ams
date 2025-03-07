@@ -6,7 +6,7 @@ const Navbar = () => {
       <div className="flex items-center px-4">
         {/* Logo and Title */}
         <img src="/assets/logo.png" alt="Logo" className="h-10 w-10 mr-2" />
-        <span className="text-lg font-bold text-[var(--accent)]">
+        <span className="text-lg font-bold text-[var(--white)]">
           Asset Management
         </span>
       </div>

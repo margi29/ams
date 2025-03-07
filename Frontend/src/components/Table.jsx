@@ -18,7 +18,7 @@ const Table = ({
       <thead>
         <tr className="bg-[#3A6D8C] text-white">
           {columns.map((col, index) => (
-            <th key={index} className="p-3 border text-left">
+            <th key={index} className="p-3 border text-center">
               {col.header}
             </th>
           ))}

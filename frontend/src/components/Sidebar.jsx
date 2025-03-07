@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, ChevronDown, Home, Settings, User, Package, QrCode, Wrench, BarChart2, LogOut } from "lucide-react";
 
-const Sidebar = ({isOpen, setIsOpen}) => {
+const Sidebar = ({ isOpen, setIsOpen }) => {
   const [openMenu, setOpenMenu] = useState(null);
   const sidebarRef = useRef(null);
   const location = useLocation();
@@ -47,7 +47,6 @@ const Sidebar = ({isOpen, setIsOpen}) => {
         subItems: [
           { name: "All Assets", path: "/admin/assets" },
           { name: "Add New Asset", path: "/admin/add-asset" },
-          // { name: "Asset Categories", path: "/admin/categories" },
           { name: "Asset History", path: "/admin/history" }
         ]
       },
@@ -63,17 +62,11 @@ const Sidebar = ({isOpen, setIsOpen}) => {
         icon: QrCode, label: "QR Code Management",
         subItems: [
           { name: "Generate QR Code", path: "/admin/generate-qr" },
-          // { name: "Scan QR Code", path: "/admin/scan-qr" },
           { name: "QR Code Logs", path: "/admin/qr-logs" }
         ]
       },
       {
-        icon: Wrench, label: "Maintenance & Repair",path: "/admin/scheduled-maintenance"
-        // subItems: [
-        //   { name: "Scheduled Maintenance", path: "/admin/scheduled-maintenance" },
-        //   { name: "Request Repair", path: "/admin/request-repair" },
-        //   { name: "Repair Status", path: "/admin/repair-status" }
-        // ]
+        icon: Wrench, label: "Maintenance & Repair", path: "/admin/scheduled-maintenance"
       },
       {
         icon: BarChart2, label: "Report", path: "/admin/asset-reports"
@@ -82,11 +75,11 @@ const Sidebar = ({isOpen, setIsOpen}) => {
         icon: User, label: "User Management",
         subItems: [
           { name: "All Users", path: "/admin/all-users" },
-          { name: "Add User", path: "/admin/add-user" },
+          { name: "Add User", path: "/admin/add-user" }
         ]
       },
       {
-        icon: Settings, label: "Settings",path: "/admin/settings"
+        icon: Settings, label: "Settings", path: "/admin/settings"
       }
     ],
     manager: [
@@ -102,26 +95,15 @@ const Sidebar = ({isOpen, setIsOpen}) => {
         icon: User, label: "Assigned Assets",
         subItems: [
           { name: "View Assigned Assets", path: "/manager/assigned-assets" },
-          { name: "Return Asset", path: "/manager/return-asset" },
-          // { name: "Asset Condition Reports", path: "/manager/asset-condition-reports" }
+          { name: "Return Asset", path: "/manager/return-asset" }
         ]
       },
       {
-        icon: QrCode, label: "QR Code Logs", path: "/manager/qr-logs" 
+        icon: QrCode, label: "QR Code Logs", path: "/manager/qr-logs"
       },
       {
-        icon: Wrench, label: "Maintenance Requests",path: "/manager/maintenance request"
-        // subItems: [
-        //   { name: "Report an Issue", path: "/manager/report-issue" },
-        //   { name: "Track Requests", path: "/manager/track-requests" }
-        // ]
-      },
-      // {
-      //   icon: User, label: "Employees & Requests",
-      //   subItems: [
-      //     { name: "Manage Employee Requests", path: "/manager/employee-requests" }
-      //   ]
-      // }
+        icon: Wrench, label: "Maintenance Requests", path: "/manager/maintenance-request"
+      }
     ],
     employee: [
       { icon: Home, label: "Dashboard", path: "/employee/dashboard" },
@@ -133,10 +115,6 @@ const Sidebar = ({isOpen, setIsOpen}) => {
           { name: "Report an Issue", path: "/employee/report-issue" }
         ]
       },
-      // {
-      //   icon: QrCode, label: "QR Code Scanner",
-      //   subItems: [{ name: "Scan QR Code", path: "/employee/scan-qr" }]
-      // },
       {
         icon: Package, label: "Request Asset",
         subItems: [
@@ -156,7 +134,12 @@ const Sidebar = ({isOpen, setIsOpen}) => {
 
   return (
     <div className="flex h-screen relative">
-      <div ref={sidebarRef} className={`h-screen bg-[var(--primary-dark)] text-[var(--white)] flex flex-col transition-all duration-500 fixed top-0 left-0 ${isOpen ? "w-64" : "w-16"}`}>
+      <div
+        ref={sidebarRef}
+        className={`h-screen bg-[var(--primary-dark)] text-[var(--white)] flex flex-col transition-all duration-500 fixed top-0 left-0 
+          ${isOpen ? "w-64" : "w-16"} 
+          max-h-screen overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800`}
+      >
         <button className="mt-20 ml-2 p-2 text-[var(--white)]" onClick={handleSidebarToggle}>
           {isOpen ? <X size={26} /> : <Menu size={26} />}
         </button>
@@ -168,7 +151,9 @@ const Sidebar = ({isOpen, setIsOpen}) => {
                   <Link to={item.path || "#"} className="flex gap-3">
                     {item.icon && <item.icon size={24} />} {isOpen && item.label}
                   </Link>
-                  {item.subItems && isOpen && <ChevronDown size={18} className={`${openMenu === item.label ? "rotate-180" : ""}`} />}
+                  {item.subItems && isOpen && (
+                    <ChevronDown size={18} className={`${openMenu === item.label ? "rotate-180" : ""}`} />
+                  )}
                 </div>
                 {item.subItems && openMenu === item.label && isOpen && (
                   <ul className="ml-6 mt-2 list-none">
