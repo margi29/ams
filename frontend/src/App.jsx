@@ -11,7 +11,7 @@ import AssignAsset from "./dashboard/Admin/AssignAsset";
 import ReturnAsset from "./dashboard/Admin/ReturnAsset";
 import AssetRequests from "./dashboard/Admin/AssetRequests";
 import QRCodeLogs from "./dashboard/Admin/QRCodeLogs";
-import ScheduledMaintenance from "./dashboard/Admin/ScheduledMaintenance";
+import MaintenanceAndRepair from "./dashboard/Admin/MaintenanceAndRepair";
 import RequestRepair from "./dashboard/Admin/RequestRepair";
 import ManagerDashboard from "./pages/ManagerDashboard";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
@@ -62,7 +62,7 @@ const App = () => {
         <Route path="/admin/return-asset" element={<Layout><ReturnAsset /></Layout>} />
         <Route path="/admin/asset-requests" element={<Layout><AssetRequests /></Layout>} />
         <Route path="/admin/qr-logs" element={<Layout><QRCodeLogs /></Layout>} />
-        <Route path="/admin/scheduled-maintenance" element={<Layout><ScheduledMaintenance /></Layout>} />
+        <Route path="/admin/scheduled-maintenance" element={<Layout><MaintenanceAndRepair /></Layout>} />
         <Route path="/admin/request-repair" element={<Layout><RequestRepair /></Layout>} />
         <Route path="/manager/*" element={<Layout><ManagerDashboard /></Layout>} />
         <Route path="/employee/*" element={<Layout><EmployeeDashboard /></Layout>} />
