@@ -68,9 +68,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       {
         icon: Wrench, label: "Maintenance & Repair", path: "/admin/scheduled-maintenance"
       },
-      {
-        icon: BarChart2, label: "Report", path: "/admin/asset-reports"
-      },
+   
       {
         icon: User, label: "User Management",
         subItems: [
@@ -104,9 +102,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       {
         icon: Wrench, label: "Maintenance Requests", path: "/manager/maintenance-request"
       },
-      {
-        icon: BarChart2, label: "Report", path: "/manager/asset-reports"
-      },
+    
       {
         icon: Settings, label: "Help & Support",
         subItems: [
