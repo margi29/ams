@@ -54,17 +54,17 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         icon: User, label: "Asset Allocation",
         subItems: [
           { name: "Assign Asset", path: "/admin/assign-asset" },
-          { name: "Return Asset", path: "/admin/return-asset" },
+          { name: "Returned Asset", path: "/admin/return-asset" },
           { name: "Asset Requests", path: "/admin/asset-requests" }
         ]
       },
-      {
-        icon: QrCode, label: "QR Code Management",
-        subItems: [
-          { name: "Generate QR Code", path: "/admin/generate-qr" },
-          { name: "QR Code Logs", path: "/admin/qr-logs" }
-        ]
-      },
+      // {
+      //   icon: QrCode, label: "QR Code Management",
+      //   subItems: [
+      //     { name: "Generate QR Code", path: "/admin/generate-qr" },
+      //     { name: "QR Code Logs", path: "/admin/qr-logs" }
+      //   ]
+      // },
       {
         icon: Wrench, label: "Maintenance & Repair", path: "/admin/scheduled-maintenance"
       },
@@ -99,10 +99,20 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         ]
       },
       {
-        icon: QrCode, label: "QR Code Logs", path: "/manager/qr-logs"
+        icon: QrCode, label: "QR Code List", path: "/manager/qr-logs"
       },
       {
         icon: Wrench, label: "Maintenance Requests", path: "/manager/maintenance-request"
+      },
+      {
+        icon: BarChart2, label: "Report", path: "/manager/asset-reports"
+      },
+      {
+        icon: Settings, label: "Help & Support",
+        subItems: [
+          { name: "Guidelines", path: "/manager/guidelines" },
+          { name: "Contact Admin", path: "/manager/contact-support" }
+        ]
       }
     ],
     employee: [
@@ -112,7 +122,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         subItems: [
           { name: "View My Assets", path: "/employee/my-assets" },
           { name: "Return Request", path: "/employee/return-request" },
-          { name: "Report an Issue", path: "/employee/report-issue" }
+          { name: "Maintenance Request", path: "/employee/maintenance-request" }
         ]
       },
       {
