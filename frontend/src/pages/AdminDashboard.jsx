@@ -1,141 +1,105 @@
-import { useState } from "react";
-import {
-  PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
-  BarChart, Bar, XAxis, YAxis, Legend,
-  LineChart, Line, AreaChart, Area
-} from "recharts";
-
-const data = [
-  { name: "Total Assets", value: 150, color: "#3A6D8C" },
-  { name: "Assigned Assets", value: 85, color: "#6A9AB0" },
-  { name: "Pending Requests", value: 20, color: "#5C7D8A" }, // Monochromatic replacement for beige
-  { name: "Under Maintenance", value: 15, color: "#001F3F" },
-];
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Legend, CartesianGrid } from "recharts";
+import { FiDatabase } from "react-icons/fi";
+import { FaTools, FaClipboardList, FaBoxes } from "react-icons/fa";
+import React from "react";
 
 const AdminDashboard = () => {
+  const assetData = [
+    { category: "Laptops", value: 50, color: "#673AB7" },
+    { category: "Desktops", value: 30, color: "#F88379" },
+    { category: "Printers", value: 20, color: "#00B4D8" },
+    { category: "Routers", value: 15, color: "#FFC107" },
+  ];
+
+  const barChartData = [
+    { name: "Jan", assets: 40, assigned: 20, maintenance: 5 },
+    { name: "Feb", assets: 50, assigned: 30, maintenance: 8 },
+    { name: "Mar", assets: 55, assigned: 35, maintenance: 10 },
+    { name: "Apr", assets: 70, assigned: 50, maintenance: 12 },
+  ];
+
+  const recentActivity = [
+    { date: "2025-03-07", action: "Laptop assigned to John Doe" },
+    { date: "2025-03-06", action: "Printer sent for maintenance" },
+    { date: "2025-03-05", action: "New router added to inventory" },
+    { date: "2025-03-04", action: "Desktop assigned to Jane Smith" },
+  ];
+
   return (
-    <div className="h-screen w-90vh overflow-y-auto bg-gray-100 pt-24 px-6">
-      {/* Dashboard Container with Marginal Border, Centered Horizontally */}
-      <div className="max-w-[1200px] mx-auto p-8 bg-white shadow-lg rounded-xl border border-gray-300">
-        
-        {/* Welcome Message */}
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-semibold text-gray-800">Welcome to the Admin Dashboard</h1>
-          <p className="text-lg mt-2 text-gray-600">
-            Monitor asset management, track usage, and oversee system activities efficiently.
-          </p>
-        </div>
-
-        {/* Admin Dashboard Header */}
-        <h2 className="text-2xl font-medium mb-6 text-gray-800 text-center">Admin Dashboard</h2>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-4 gap-6">
-          {data.map((item, index) => (
-            <div
-              key={index}
-              className="p-4 rounded-lg shadow text-white text-center"
-              style={{ backgroundColor: item.color }}
-            >
-              <h3 className="text-lg font-medium">{item.name}</h3>
-              <p className="text-2xl font-semibold">{item.value}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Charts Section */}
-        <div className="mt-8 grid grid-cols-2 gap-6">
-          {/* Asset Distribution */}
-          <div>
-            <h3 className="text-xl font-medium mb-3 text-gray-800">Asset Distribution</h3>
-            <div className="w-full h-60">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={data} dataKey="value" outerRadius={80} label>
-                    {data.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+    <div className="flex flex-col p-6 mt-16 bg-white min-h-screen">
+      <h1 className="text-2xl font-semibold text-[#F88379]">Welcome, Admin!</h1>
+      <h2 className="text-xl font-semibold text-[#F88379] mt-2">Admin Dashboard</h2>
+      
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
+        {[
+          { icon: FiDatabase, label: "Total Assets", value: 120, color: "#673AB7" },
+          { icon: FaBoxes, label: "Assigned Assets", value: 80, color: "#F88379" },
+          { icon: FaClipboardList, label: "Pending Requests", value: 25, color: "#00B4D8" },
+          { icon: FaTools, label: "Under Maintenance", value: 15, color: "#FFC107" },
+        ].map((card, index) => (
+          <div key={index} className="bg-white shadow-lg p-6 rounded-lg flex items-center space-x-4 border-l-4" style={{ borderColor: card.color }}>
+            {React.createElement(card.icon, { className: "text-3xl", style: { color: card.color } })}
+            <div>
+              <h3 className="text-lg font-semibold">{card.label}</h3>
+              <p className="text-xl font-bold">{card.value}</p>
             </div>
           </div>
-          {/* Asset Category Breakdown */}
-          <div>
-            <h3 className="text-xl font-medium mb-3 text-gray-800">Asset Category Breakdown</h3>
-            <div className="w-full h-60">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data}>
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="value">
-                    {data.map((entry, index) => (
- <Cell key={`cell-${index}`} fill={entry.color} />                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+        ))}
+      </div>
+      
+      {/* Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        <div className="bg-white shadow-lg p-6 rounded-lg">
+          <h2 className="text-lg font-semibold mb-4 text-[#673AB7]">Asset Distribution</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie data={assetData} dataKey="value" nameKey="category" cx="50%" cy="50%" innerRadius={70} outerRadius={100} label>
+                {assetData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
 
-        {/* More Charts */}
-        <div className="mt-8 grid grid-cols-2 gap-6">
-          {/* Asset Growth */}
-          <div>
-            <h3 className="text-xl font-medium mb-3 text-gray-800">Asset Growth</h3>
-            <div className="w-full h-60">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={data}>
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="value" stroke="#3A6D8C" />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-          {/* Asset Usage Over Time */}
-          <div>
-            <h3 className="text-xl font-medium mb-3 text-gray-800">Asset Usage Over Time</h3>
-            <div className="w-full h-60">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={data}>
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Area type="monotone" dataKey="value" stroke="#6A9AB0" fill="#6A9AB0" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+        <div className="bg-white shadow-lg p-6 rounded-lg">
+          <h2 className="text-lg font-semibold mb-4 text-[#00B4D8]">Asset Trends & Maintenance</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={barChartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="assets" stroke="#673AB7" />
+              <Line type="monotone" dataKey="assigned" stroke="#F88379" />
+              <Line type="monotone" dataKey="maintenance" stroke="#FFC107" />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
+      </div>
 
-        {/* Recent Activity Table */}
-        <div className="mt-8">
-          <h3 className="text-xl font-medium mb-3 text-gray-800">Recent Activity</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-[#3A6D8C] text-white">
-                  <th className="p-3 border">Date</th>
-                  <th className="p-3 border">Time</th>
-                  <th className="p-3 border">Activity</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="text-center">
-                  <td className="p-3 border">2025-02-24</td>
-                  <td className="p-3 border">10:00 AM</td>
-                  <td className="p-3 border">Assigned Laptop to John Doe</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
+      {/* Recent Activity */}
+      <div className="bg-white shadow-lg p-6 rounded-lg mt-6">
+        <h2 className="text-lg font-semibold mb-4 text-[#F88379]">Recent Activity</h2>
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-white">
+              <th className="p-3 text-left">Date</th>
+              <th className="p-3 text-left">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {recentActivity.map((item, index) => (
+              <tr key={index} className="border-b">
+                <td className="p-3">{item.date}</td>
+                <td className="p-3">{item.action}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

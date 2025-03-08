@@ -53,8 +53,7 @@ const AddAsset = () => {
   };
 
   return (
-    <div className="min-h-screen flex justify-center bg-gray-100 pt-20">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl">
+      <div className="p-6 mt-16 bg-white shadow-lg rounded-xl ">
         <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
           Add New Asset
         </h2>
@@ -234,7 +233,6 @@ const AddAsset = () => {
           </div>
         )}
       </div>
-    </div>
   );
 };
 
