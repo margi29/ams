@@ -38,7 +38,7 @@ const AdminDashboard = () => {
           { icon: FaClipboardList, label: "Pending Requests", value: 25, color: "#00B4D8" },
           { icon: FaTools, label: "Under Maintenance", value: 15, color: "#FFC107" },
         ].map((card, index) => (
-          <div key={index} className="bg-white shadow-lg p-6 rounded-lg flex items-center space-x-4 border-l-4" style={{ borderColor: card.color }}>
+          <div key={index} className="bg-white shadow-xl p-6 rounded-lg flex items-center space-x-4 border-l-4" style={{ borderColor: card.color }}>
             {React.createElement(card.icon, { className: "text-3xl", style: { color: card.color } })}
             <div>
               <h3 className="text-lg font-semibold">{card.label}</h3>
@@ -50,7 +50,7 @@ const AdminDashboard = () => {
       
       {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        <div className="bg-white shadow-lg p-6 rounded-lg">
+        <div className="bg-white shadow-xl p-6 rounded-lg">
           <h2 className="text-lg font-semibold mb-4 text-[#673AB7]">Asset Distribution</h2>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -64,7 +64,7 @@ const AdminDashboard = () => {
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-white shadow-lg p-6 rounded-lg">
+        <div className="bg-white shadow-xl p-6 rounded-lg">
           <h2 className="text-lg font-semibold mb-4 text-[#00B4D8]">Asset Trends & Maintenance</h2>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={barChartData}>
@@ -81,25 +81,32 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <div className="bg-white shadow-lg p-6 rounded-lg mt-6">
-        <h2 className="text-lg font-semibold mb-4 text-[#F88379]">Recent Activity</h2>
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-white">
-              <th className="p-3 text-left">Date</th>
-              <th className="p-3 text-left">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {recentActivity.map((item, index) => (
-              <tr key={index} className="border-b">
-                <td className="p-3">{item.date}</td>
-                <td className="p-3">{item.action}</td>
+      {/* 🔹 Updated Recent Activity Table */}
+      <div className="bg-white shadow-xl p-6 rounded-lg mt-6">
+        <h2 className="text-lg font-semibold mb-4 text-[#673AB7]">Recent Activity</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full border border-gray-300 rounded-lg">
+            <thead>
+              <tr className="bg-[#673AB7] text-white">
+                <th className="p-3 text-left border border-gray-300">Date</th>
+                <th className="p-3 text-left border border-gray-300">Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {recentActivity.map((item, index) => (
+                <tr
+                  key={index}
+                  className={`border border-gray-300 ${
+                    index % 2 === 0 ? "bg-gray-100" : "bg-white"
+                  } hover:bg-gray-200 transition-all duration-200`}
+                >
+                  <td className="p-3 border border-gray-300">{item.date}</td>
+                  <td className="p-3 border border-gray-300">{item.action}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
