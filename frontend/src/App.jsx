@@ -18,6 +18,7 @@ import EmployeeDashboard from "./pages/EmployeeDashboard";
 import NotFound from "./pages/NotFound";
 import "./styles/global.css";
 import "./App.css";
+import UserManagement from "./dashboard/Admin/UserMnagement";
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -64,6 +65,7 @@ const App = () => {
         <Route path="/admin/qr-logs" element={<Layout><QRCodeLogs /></Layout>} />
         <Route path="/admin/scheduled-maintenance" element={<Layout><MaintenanceAndRepair /></Layout>} />
         <Route path="/admin/request-repair" element={<Layout><RequestRepair /></Layout>} />
+        <Route path="/admin/user-management" element={<Layout><UserManagement /></Layout>} />
         <Route path="/manager/*" element={<Layout><ManagerDashboard /></Layout>} />
         <Route path="/employee/*" element={<Layout><EmployeeDashboard /></Layout>} />
         <Route path="*" element={<NotFound />} />

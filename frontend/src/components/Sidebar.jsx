@@ -70,11 +70,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       },
    
       {
-        icon: User, label: "User Management",
-        subItems: [
-          { name: "All Users", path: "/admin/all-users" },
-          { name: "Add User", path: "/admin/add-user" }
-        ]
+        icon: User, label: "User Management",  path: "/admin/user-management"
+        
       },
       {
         icon: Settings, label: "Settings", path: "/admin/settings"
