@@ -59,23 +59,26 @@ const AdminDashboard = () => {
       <h2 className="text-xl font-semibold text-center text-[#673AB7] mt-2">Admin Dashboard</h2>
 
       {/* 🔹 Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
-        {[
-          { icon: FiDatabase, label: "Total Assets", value: 120, color: "#673AB7" },
-          { icon: FaBoxes, label: "Assigned Assets", value: 80, color: "#F88379" },
-          { icon: FaClipboardList, label: "Pending Requests", value: 25, color: "#00B4D8" },
-          { icon: FaTools, label: "Under Maintenance", value: 15, color: "#FFC107" },
-        ].map((card, index) => (
-          <div key={index} className="bg-white shadow-xl p-6 rounded-lg flex items-center space-x-4 relative">
-            <div className="absolute top-0 left-0 h-full w-1" style={{ backgroundColor: card.color }}></div>
-            <card.icon className="text-3xl" style={{ color: card.color }} />
-            <div>
-              <h3 className="text-lg font-semibold">{card.label}</h3>
-              <p className="text-xl font-bold">{card.value}</p>
-            </div>
-          </div>
-        ))}
+<div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
+  {[
+    { icon: FiDatabase, label: "Total Assets", value: 120, color: "#673AB7" },
+    { icon: FaBoxes, label: "Assigned Assets", value: 80, color: "#F88379" },
+    { icon: FaClipboardList, label: "Pending Requests", value: 25, color: "#00B4D8" },
+    { icon: FaTools, label: "Under Maintenance", value: 15, color: "#FFC107" },
+  ].map((card, index) => (
+    <div
+      key={index}
+      className="bg-white shadow-xl p-6 rounded-lg flex items-center space-x-4 relative transition-transform duration-300 hover:scale-105 hover:shadow-2xl"
+    >
+      <div className="absolute top-0 left-0 h-full w-1" style={{ backgroundColor: card.color }}></div>
+      <card.icon className="text-3xl" style={{ color: card.color }} />
+      <div>
+        <h3 className="text-lg font-semibold">{card.label}</h3>
+        <p className="text-xl font-bold">{card.value}</p>
       </div>
+    </div>
+  ))}
+</div>
 
       {/* 🔹 Charts Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
