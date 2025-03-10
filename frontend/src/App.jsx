@@ -6,19 +6,19 @@ import LoginPage from "./pages/LoginPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AllAssets from "./dashboard/Admin/AllAssets";
 import AddNewAsset from "./dashboard/Admin/AddNewAsset";
-import AssetCategories from "./dashboard/Admin/AssetCategories";
 import AssetHistory from "./dashboard/Admin/AssetHistory";
 import AssignAsset from "./dashboard/Admin/AssignAsset";
 import ReturnAsset from "./dashboard/Admin/ReturnAsset";
 import AssetRequests from "./dashboard/Admin/AssetRequests";
 import QRCodeLogs from "./dashboard/Admin/QRCodeLogs";
-import ScheduledMaintenance from "./dashboard/Admin/ScheduledMaintenance";
+import MaintenanceAndRepair from "./dashboard/Admin/MaintenanceAndRepair";
 import RequestRepair from "./dashboard/Admin/RequestRepair";
 import ManagerDashboard from "./pages/ManagerDashboard";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
 import NotFound from "./pages/NotFound";
 import "./styles/global.css";
 import "./App.css";
+import UserManagement from "./dashboard/Admin/UserMnagement";
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -58,14 +58,14 @@ const App = () => {
         <Route path="/admin/*" element={<Layout><AdminDashboard /></Layout>} />
         <Route path="/admin/assets" element={<Layout><AllAssets /></Layout>} />
         <Route path="/admin/add-asset" element={<Layout><AddNewAsset /></Layout>} />
-        <Route path="/admin/categories" element={<Layout><AssetCategories /></Layout>} />
         <Route path="/admin/history" element={<Layout><AssetHistory /></Layout>} />
         <Route path="/admin/assign-asset" element={<Layout><AssignAsset /></Layout>} />
         <Route path="/admin/return-asset" element={<Layout><ReturnAsset /></Layout>} />
         <Route path="/admin/asset-requests" element={<Layout><AssetRequests /></Layout>} />
         <Route path="/admin/qr-logs" element={<Layout><QRCodeLogs /></Layout>} />
-        <Route path="/admin/scheduled-maintenance" element={<Layout><ScheduledMaintenance /></Layout>} />
+        <Route path="/admin/scheduled-maintenance" element={<Layout><MaintenanceAndRepair /></Layout>} />
         <Route path="/admin/request-repair" element={<Layout><RequestRepair /></Layout>} />
+        <Route path="/admin/user-management" element={<Layout><UserManagement /></Layout>} />
         <Route path="/manager/*" element={<Layout><ManagerDashboard /></Layout>} />
         <Route path="/employee/*" element={<Layout><EmployeeDashboard /></Layout>} />
         <Route path="*" element={<NotFound />} />
