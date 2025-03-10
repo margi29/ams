@@ -16,7 +16,7 @@ const Table = ({
       transition={{ delay: 0.2 }}
     >
       <thead>
-        <tr className="bg-[#3A6D8C] text-white">
+        <tr className="bg-[#673AB7] text-white">
           {columns.map((col, index) => (
             <th key={index} className="p-3 border text-center">
               {col.header}
