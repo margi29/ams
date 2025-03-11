@@ -55,8 +55,8 @@ const AdminDashboard = () => {
 
   return (
     <div className="flex flex-col p-6 mt-16 bg-white min-h-screen">
-      <h1 className="text-4xl font-semibold text-center text-[#673AB7]">Welcome, Admin!</h1>
-      <h2 className="text-xl font-semibold text-center text-[#673AB7] mt-2">Admin Dashboard</h2>
+      <h1 className="text-4xl font-semibold text-center [var(--primary-dark)]">Welcome to the Admin Dashboard</h1>
+      <h2 className="text-xl font-semibold text-center text-[var(--primary-dark)] mt-2"> Monitor asset management, track usage, and oversee system activities efficiently</h2>
 
       {/* 🔹 Summary Cards */}
 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
