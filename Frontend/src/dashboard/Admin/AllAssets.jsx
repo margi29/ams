@@ -1,15 +1,17 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { FaDownload } from "react-icons/fa";
 import Table from "../../components/Table";
-import { exportData } from "../../utils/exportData";
+import SearchFilterBar from "../../components/SearchFilterBar";
 
 const statusColors = {
   Available: "text-green-600 font-semibold",
-  Assigned: "text-blue-600 font-semibold",
+  Assigned: "text-[#00B4D8] font-semibold",
   "Under Maintenance": "text-red-600 font-semibold",
   Retired: "text-gray-600 font-semibold",
 };
+
+// Define status options specific to this page
+const statusOptions = ["Available", "Assigned", "Under Maintenance", "Retired"];
 
 const AllAssets = () => {
   const [assets, setAssets] = useState([
@@ -47,10 +49,6 @@ const AllAssets = () => {
       asset.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleExport = () => {
-    exportData(filteredAssets, exportFormat, "all_assets");
-  };
-
   const columns = [
     { header: "Asset Name", accessor: "name" },
     { header: "Category", accessor: "category" },
@@ -64,7 +62,7 @@ const AllAssets = () => {
       render: (row) => (
         <div className="flex gap-2 justify-center">
           <button
-            className="bg-blue-500 text-white px-3 py-1 rounded"
+            className="bg-[#00B4D8] text-white px-3 py-1 rounded"
             onClick={() => handleEdit(row)}
           >
             Edit
@@ -82,52 +80,31 @@ const AllAssets = () => {
 
   return (
     <motion.div
-      className="p-6 mt-16 bg-white shadow-lg rounded-xl"
+      className="p-6 mt-16 bg-white"
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
     >
       <h2 className="text-3xl font-bold mb-4 text-gray-800 text-center">
         All Assets
       </h2>
-      <div className="flex gap-2 mb-4">
-        <input
-          type="text"
-          placeholder="Search assets..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="p-3 flex-grow border rounded-lg focus:outline-none"
-        />
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="p-3 border rounded-lg"
-        >
-          <option value="All">All Status</option>
-          <option value="Available">Available</option>
-          <option value="Assigned">Assigned</option>
-          <option value="Under Maintenance">Under Maintenance</option>
-          <option value="Retired">Retired</option>
-        </select>
-        <select
-          value={exportFormat}
-          onChange={(e) => setExportFormat(e.target.value)}
-          className="p-3 border rounded-lg"
-        >
-          <option value="csv">CSV</option>
-          <option value="pdf">PDF</option>
-          <option value="excel">Excel</option>
-        </select>
-        <button
-          className="bg-blue-500 text-white px-4 flex items-center gap-2 rounded-lg"
-          onClick={handleExport}
-        >
-          <FaDownload /> Export
-        </button>
-      </div>
 
+      {/* Search, Filter, and Export Bar */}
+      <SearchFilterBar
+        search={search}
+        setSearch={setSearch}
+        filter={filter}
+        setFilter={setFilter}
+        exportFormat={exportFormat}
+        setExportFormat={setExportFormat}
+        data={filteredAssets} // Pass the filtered data for exporting
+        filename="All_Assets_Report" // 🔹 Dynamic filename
+        statusOptions={statusOptions}
+      />
+
+      {/* Asset Table */}
       <Table columns={columns} data={filteredAssets} />
 
-      {/* Modal */}
+      {/* Edit Asset Modal */}
       {modalOpen && (
         <div className="fixed inset-0 bg-white flex justify-center items-center">
           <motion.div
@@ -162,10 +139,11 @@ const AllAssets = () => {
               }
               className="w-full p-2 border rounded-lg mb-4"
             >
-              <option value="Available">Available</option>
-              <option value="Assigned">Assigned</option>
-              <option value="Under Maintenance">Under Maintenance</option>
-              <option value="Retired">Retired</option>
+              {statusOptions.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
             </select>
             <div className="flex justify-end gap-3">
               <button
@@ -175,7 +153,7 @@ const AllAssets = () => {
                 Cancel
               </button>
               <button
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg"
+                className="px-4 py-2 bg-[#00B4D8] text-white rounded-lg"
                 onClick={handleSave}
               >
                 Save Changes

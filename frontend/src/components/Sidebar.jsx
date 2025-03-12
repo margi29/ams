@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, ChevronDown, Home, Settings, User, Package, QrCode, Wrench, BarChart2, LogOut } from "lucide-react";
+import { Menu, X, ChevronDown, Home, Settings, User, Package, QrCode, Wrench, LogOut } from "lucide-react";
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const [openMenu, setOpenMenu] = useState(null);
@@ -21,23 +21,18 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     });
   };
 
-  const handleClickOutside = (event) => {
-    if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
-      setIsOpen(false);
-      setOpenMenu(null);
-    }
-  };
-
   useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+    const handleClickOutside = (event) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+        setIsOpen(false);
+        setOpenMenu(null);
+      }
     };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const onLogout = () => {
-    navigate("/");
-  };
+  const onLogout = () => navigate("/");
 
   const menuItems = {
     admin: [
@@ -58,24 +53,9 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           { name: "Asset Requests", path: "/admin/asset-requests" }
         ]
       },
-      // {
-      //   icon: QrCode, label: "QR Code Management",
-      //   subItems: [
-      //     { name: "Generate QR Code", path: "/admin/generate-qr" },
-      //     { name: "QR Code Logs", path: "/admin/qr-logs" }
-      //   ]
-      // },
-      {
-        icon: Wrench, label: "Maintenance & Repair", path: "/admin/scheduled-maintenance"
-      },
-   
-      {
-        icon: User, label: "User Management",  path: "/admin/user-management"
-        
-      },
-      {
-        icon: Settings, label: "Settings", path: "/admin/settings"
-      }
+      { icon: Wrench, label: "Maintenance & Repair", path: "/admin/scheduled-maintenance" },
+      { icon: User, label: "User Management", path: "/admin/user-management" },
+      { icon: Settings, label: "Settings", path: "/admin/settings" }
     ],
     manager: [
       { icon: Home, label: "Dashboard", path: "/manager/dashboard" },
@@ -93,13 +73,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           { name: "Return Asset", path: "/manager/return-asset" }
         ]
       },
-      {
-        icon: QrCode, label: "QR Code List", path: "/manager/qr-logs"
-      },
-      {
-        icon: Wrench, label: "Maintenance Requests", path: "/manager/maintenance-request"
-      },
-    
+      { icon: QrCode, label: "QR Code List", path: "/manager/qr-logs" },
+      { icon: Wrench, label: "Maintenance Requests", path: "/manager/maintenance-request" },
       {
         icon: Settings, label: "Help & Support",
         subItems: [
@@ -138,41 +113,59 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   return (
     <div className="flex h-screen relative">
       <div
-        ref={sidebarRef}
-        className={`h-screen bg-[var(--primary-dark)] text-[var(--white)] flex flex-col transition-all duration-500 fixed top-0 left-0 
-          ${isOpen ? "w-64" : "w-16"} 
-          max-h-screen overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800`}
-      >
-        <button className="mt-20 ml-2 p-2 text-[var(--white)]" onClick={handleSidebarToggle}>
+  ref={sidebarRef}
+  className={`h-screen bg-[#302757] text-white flex flex-col transition-all duration-500 fixed top-16 left-0 
+    ${isOpen ? "w-65" : "w-15"} 
+    max-h-[calc(100vh-64px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 shadow-lg`}
+>
+
+        <button className="mt-4 ml-2 p-2 text-white" onClick={handleSidebarToggle}>
           {isOpen ? <X size={26} /> : <Menu size={26} />}
         </button>
         <nav className="flex-1 pt-4 pb-2">
           <ul className="p-0 m-0 list-none">
-            {menuItems[role]?.map((item, index) => (
-              <li key={index} className="p-3 rounded-md hover:bg-[var(--primary-medium)] cursor-pointer ml-1 mb-2">
-                <div className="flex justify-between items-center" onClick={() => toggleSubMenu(item.label)}>
-                  <Link to={item.path || "#"} className="flex gap-3">
-                    {item.icon && <item.icon size={24} />} {isOpen && item.label}
-                  </Link>
-                  {item.subItems && isOpen && (
-                    <ChevronDown size={18} className={`${openMenu === item.label ? "rotate-180" : ""}`} />
+            {menuItems[role]?.map((item, index) => {
+              const isActive = location.pathname === item.path || 
+                (item.subItems && item.subItems.some(subItem => location.pathname === subItem.path));
+
+              return (
+                <li key={index} className="cursor-pointer ml-1 mb-2">
+                  <div
+                    className={`flex justify-between rounded-md p-3 items-center transition-all
+                      ${isActive ? "bg-[#4D3F8C]" : "hover:bg-[#4D3F8C]"}`}
+                    onClick={() => toggleSubMenu(item.label)}
+                  >
+                    <Link to={item.path || "#"} className="flex gap-3 items-center w-full">
+                      {item.icon && <item.icon size={24} />}
+                      {isOpen && item.label}
+                    </Link>
+                    {item.subItems && isOpen && (
+                      <ChevronDown size={18} className={`${openMenu === item.label ? "rotate-180" : ""}`} />
+                    )}
+                  </div>
+                  {item.subItems && openMenu === item.label && isOpen && (
+                    <ul className="ml-5 mt-2 list-none">
+                      {item.subItems.map((subItem, subIndex) => {
+                        const isSubActive = location.pathname === subItem.path;
+                        return (
+                          <li
+                            key={subIndex}
+                            className={`text-gray-100 p-2 m-2 rounded-md cursor-pointer transition-all 
+                              ${isSubActive ? "bg-[#5A4A99]" : "hover:bg-[#4D3F8C]"}`}
+                          >
+                            <Link to={subItem.path}>{subItem.name}</Link>
+                          </li>
+                        );
+                      })}
+                    </ul>
                   )}
-                </div>
-                {item.subItems && openMenu === item.label && isOpen && (
-                  <ul className="ml-6 mt-2 list-none">
-                    {item.subItems.map((subItem, subIndex) => (
-                      <li key={subIndex} className="text-[var(--background-light)] p-2 cursor-pointer hover:text-[var(--accent)]">
-                        <Link to={subItem.path}>{subItem.name}</Link>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         </nav>
         <div className="mt-auto pb-4">
-          <button onClick={onLogout} className="w-full flex items-center gap-3 p-3 text-red-500 hover:bg-[var(--primary-medium)]">
+          <button onClick={onLogout} className="w-full flex items-center gap-3 p-3 text-red-500 hover:bg-red-100">
             <LogOut size={24} /> {isOpen && "Logout"}
           </button>
         </div>

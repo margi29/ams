@@ -195,7 +195,7 @@ const AddAsset = () => {
           <div className="col-span-2 flex justify-center">
             <button
               type="submit"
-              className="px-6 py-3 bg-blue-600 text-white text-lg rounded-lg shadow-md hover:bg-blue-700"
+              className="px-6 py-3 bg-green-500 text-white text-lg rounded-lg shadow-md hover:bg-green-600"
             >
               Add Asset
             </button>

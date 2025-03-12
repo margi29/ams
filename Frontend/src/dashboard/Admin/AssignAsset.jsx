@@ -18,7 +18,7 @@ const AssignAsset = () => {
 
   return (
     <motion.div 
-      className="p-6 mt-16 bg-white shadow-lg rounded-xl"
+      className="p-6 mt-16 bg-white"
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
     >
@@ -72,9 +72,12 @@ const AssignAsset = () => {
           ></textarea>
         </div>
 
-        <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-lg w-full">
-          Assign Asset
-        </button>
+        <div className="flex justify-center">
+  <button type="submit" className="bg-green-500 text-white px-6 py-2 rounded-lg">
+    Assign Asset
+  </button>
+</div>
+
       </form>
     </motion.div>
   );

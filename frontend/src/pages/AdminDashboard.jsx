@@ -54,7 +54,7 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <div className="flex flex-col p-6 mt-16 bg-white min-h-screen">
+    <div className="flex flex-col p-6 mt-25 bg-white min-h-screen">
       <h1 className="text-4xl font-semibold text-center [var(--primary-dark)]">Welcome to the Admin Dashboard</h1>
       <h2 className="text-xl font-semibold text-center text-[var(--primary-dark)] mt-2"> Monitor asset management, track usage, and oversee system activities efficiently</h2>
 
@@ -82,7 +82,7 @@ const AdminDashboard = () => {
 
       {/* 🔹 Charts Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        <Card title="Asset Distribution" className="text-[#673AB7]">
+        <Card title="Asset Distribution" className="text-purple-900">
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie data={assetData} dataKey="value" nameKey="category" cx="50%" cy="50%" innerRadius={70} outerRadius={100} label>
@@ -95,7 +95,7 @@ const AdminDashboard = () => {
           </ResponsiveContainer>
         </Card>
 
-        <Card title="Asset Overview (Bar Chart)" className="text-[#00B4D8]">
+        <Card title="Asset Overview (Bar Chart)" className="text-purple-900">
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={barChartData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -112,7 +112,7 @@ const AdminDashboard = () => {
         </Card>
       </div>
 
-      <Card title="Asset Trends & Maintenance (Line Chart)" className="mt-6 text-[#00B4D8]">
+      <Card title="Asset Trends & Maintenance (Line Chart)" className="mt-6 text-purple-900">
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={lineChartData}>
             <CartesianGrid strokeDasharray="3 3" />

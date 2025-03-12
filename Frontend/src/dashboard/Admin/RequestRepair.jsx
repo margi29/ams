@@ -12,7 +12,7 @@ const RequestRepair = () => {
 
   return (
     <motion.div 
-      className="p-6 mt-16 bg-white shadow-lg rounded-xl"
+      className="p-6 mt-16 bg-white"
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
     >
