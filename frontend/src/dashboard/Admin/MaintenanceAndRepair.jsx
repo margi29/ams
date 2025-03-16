@@ -15,13 +15,19 @@ const MaintenanceAndRepair = () => {
     { id: 3, asset: "Office AC", task: "Filter replacement", date: "2024-03-20", status: "Pending" }
   ]);
 
-  // Handle status change
+  // Handle status change with confirmation
   const handleStatusChange = (id, newStatus) => {
-    setSchedule((prevSchedule) =>
-      prevSchedule.map((entry) =>
-        entry.id === id ? { ...entry, status: newStatus } : entry
-      )
-    );
+    const confirmationMessage = newStatus === "Scheduled"
+      ? "Are you sure you want to schedule this task?"
+      : "Are you sure you want to mark this task as completed?";
+
+    if (window.confirm(confirmationMessage)) {
+      setSchedule((prevSchedule) =>
+        prevSchedule.map((entry) =>
+          entry.id === id ? { ...entry, status: newStatus } : entry
+        )
+      );
+    }
   };
 
   // Filtered data
@@ -79,7 +85,7 @@ const MaintenanceAndRepair = () => {
 
   return (
     <motion.div 
-      className="p-6 mt-16 bg-white"
+      className="p-6 mt-16 bg-white rounded-lg shadow-md"
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
     >

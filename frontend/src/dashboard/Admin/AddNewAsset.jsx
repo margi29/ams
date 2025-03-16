@@ -54,11 +54,11 @@ const AddAsset = () => {
 
   return (
       <div className="p-6 mt-16 bg-white shadow-lg rounded-xl ">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
+        <h2 className="text-3xl font-bold mb-4 text-gray-800 text-center">
           Add New Asset
         </h2>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-6">
+        <form onSubmit={handleSubmit} className="grid grid-cols-2 mt-10 gap-6">
           <div>
             <label className="block text-gray-700 font-medium">
               Asset ID *

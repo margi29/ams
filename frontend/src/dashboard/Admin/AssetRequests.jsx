@@ -17,6 +17,12 @@ const AssetRequests = () => {
   const [exportFormat, setExportFormat] = useState("csv");
 
   const handleStatusChange = (id, newStatus) => {
+    const confirmation = window.confirm(
+      `Are you sure you want to ${newStatus.toLowerCase()} this request?`
+    );
+
+    if (!confirmation) return;
+
     setRequests((prevRequests) =>
       prevRequests.map((req) =>
         req.id === id ? { ...req, status: newStatus } : req
@@ -69,7 +75,7 @@ const AssetRequests = () => {
 
   return (
     <motion.div 
-      className="p-6 mt-16 bg-white"
+      className="p-6 mt-16 bg-white rounded-lg shadow-md"
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
     >
@@ -77,7 +83,6 @@ const AssetRequests = () => {
         Asset Requests
       </h2>
 
-      {/* Reusing SearchFilterBar */}
       <SearchFilterBar
         search={search}
         setSearch={setSearch}
@@ -85,12 +90,11 @@ const AssetRequests = () => {
         setFilter={setFilter}
         exportFormat={exportFormat}
         setExportFormat={setExportFormat}
-        data={filteredRequests} // ✅ Passing filtered data for export
-        filename="asset_requests" // ✅ Added filename for export
+        data={filteredRequests}
+        filename="asset_requests"
         statusOptions={statusOptions}
       />
 
-      {/* Display Table or No Data Message */}
       {filteredRequests.length > 0 ? (
         <Table columns={columns} data={filteredRequests} />
       ) : (

@@ -34,7 +34,7 @@ const ReturnAsset = () => {
 
   return (
     <motion.div
-      className="p-6 mt-16 bg-white"
+      className="p-6 mt-16 bg-white rounded-lg shadow-md"
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
     >

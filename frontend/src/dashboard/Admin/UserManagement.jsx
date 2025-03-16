@@ -100,7 +100,7 @@ const UserManagement = () => {
 
   return (
     <motion.div
-      className="p-6 mt-16 bg-white"
+      className="p-6 mt-16 bg-white rounded-lg shadow-md"
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
     >
@@ -206,20 +206,14 @@ const UserManagement = () => {
             <h3 className="text-xl font-semibold mb-4">Add New User</h3>
             <label className="block mb-1">Name</label>
             <input className="w-full p-2 border rounded mb-1" placeholder="Name" value={newUser.name} onChange={(e) => setNewUser({ ...newUser, name: e.target.value })} />
-            <label className="block mb-1">Email</label>
-<select
+           <label className="block mb-1">Email</label>
+<input
+  className="w-full p-2 border rounded mb-1"
+  placeholder="Enter email" 
   value={newUser.email}
-  onChange={(e) =>
-    setNewUser({ ...newUser, email: e.target.value })
-  }
-  className="w-full p-2 border rounded-lg mb-1"
->
-  {users.map((user) => (
-    <option key={user.email} value={user.email}>
-      {user.email}
-    </option>
-  ))}
-</select>
+  onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+/>
+
 <label className="block mb-1">Role</label>
             <select className="w-full p-2 border rounded mb-4" value={newUser.role} onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}>
               {roleOptions.map((role) => <option key={role} value={role}>{role}</option>)}
