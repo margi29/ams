@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FaDownload } from "react-icons/fa";
 import { QRCodeCanvas } from "qrcode.react";
 import Table from "../../components/Table";
-// import { exportData } from "../../utils/exportData";
+import SearchFilterBar from "../../components/SearchFilterBar";  // Import the new component
 
 const statusColors = {
   Available: "text-green-600 font-semibold",
@@ -35,8 +34,6 @@ const AllAssets = () => {
     };
     fetchAssets();
   }, []);
-  
-  
 
   // ✅ Edit asset in backend
   const handleEdit = (asset) => {
@@ -91,10 +88,6 @@ const AllAssets = () => {
     }
   };
   
-  
-  
-  
-
   // ✅ Download QR Code
   const downloadQRCode = (id) => {
     const canvas = document.getElementById(`qr-${id}`);
@@ -112,10 +105,6 @@ const AllAssets = () => {
       (filter === "All" || asset.status === filter) &&
       asset.name.toLowerCase().includes(search.toLowerCase())
   );
-  
-  const handleExport = () => {
-    exportData(filteredAssets, exportFormat, "all_assets");
-  };
 
   const columns = [
     { header: "Asset ID", accessor: "asset_id" }, // ✅ Fetch asset_id from database
@@ -167,7 +156,6 @@ const AllAssets = () => {
       ),
     },
   ];
-  
 
   return (
     <motion.div
@@ -178,41 +166,19 @@ const AllAssets = () => {
       <h2 className="text-3xl font-bold mb-4 text-gray-800 text-center">
         All Assets
       </h2>
-      <div className="flex gap-2 mb-4">
-        <input
-          type="text"
-          placeholder="Search assets..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="p-3 flex-grow border rounded-lg focus:outline-none"
-        />
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="p-3 border rounded-lg"
-        >
-          <option value="All">All Status</option>
-          <option value="Available">Available</option>
-          <option value="Assigned">Assigned</option>
-          <option value="Under Maintenance">Under Maintenance</option>
-          <option value="Retired">Retired</option>
-        </select>
-        <select
-          value={exportFormat}
-          onChange={(e) => setExportFormat(e.target.value)}
-          className="p-3 border rounded-lg"
-        >
-          <option value="csv">CSV</option>
-          <option value="pdf">PDF</option>
-          <option value="excel">Excel</option>
-        </select>
-        <button
-          className="bg-blue-500 text-white px-4 flex items-center gap-2 rounded-lg"
-          onClick={handleExport}
-        >
-          <FaDownload /> Export
-        </button>
-      </div>
+
+      {/* Integrating SearchFilterBar Component */}
+      <SearchFilterBar
+        search={search}
+        setSearch={setSearch}
+        filter={filter}
+        setFilter={setFilter}
+        exportFormat={exportFormat}
+        setExportFormat={setExportFormat}
+        data={filteredAssets}
+        filename="all_assets"
+        statusOptions={["Available", "Assigned", "Under Maintenance", "Retired"]}
+      />
 
       <Table columns={columns} data={filteredAssets} />
 
@@ -269,4 +235,3 @@ const AllAssets = () => {
 };
 
 export default AllAssets;
-
