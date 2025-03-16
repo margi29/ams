@@ -1,45 +1,26 @@
-const express = require('express');
-const ConnectMongo = require('./src/config/db') 
-// const Users = require('./model')
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+require("dotenv").config();
 
-require('dotenv').config()
+const assetRoutes = require("./src/routes/assetRoutes"); // Import asset routes
 
 const app = express();
+app.use(cors());
+app.use(bodyParser.json());
 
-// to read request body
-// app.use(express.json())
+// MongoDB Connection
+mongoose.connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+}).then(() => console.log("MongoDB Connected"))
+.catch(err => console.log(err));
+
+// Use Routes
+app.use("/api/assets", assetRoutes); // Now assets-related routes are handled in a separate file
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 
-ConnectMongo()
-
-app.listen(process.env.PORT,()=>{
-    console.log(`Server is running on port ${process.env.PORT}`)
-})
-
-// getting user data
-app.get("/", async (req, res) => {
-    try {
-      const data = await Users.find({});
-      res.send(data);
-    } catch (error) {
-      res.send(error);
-    }
-  });
-  
-  // posting user data
-  // app.post("/", async (req, res) => {
-  //   try {
-  //     const payload = req.body; //Payload - data send from the frontend
-  
-  //     const User = new Users(payload);
-  //     await User.save();
-  
-  //     res.status(200).json({ status: "success" });
-  //   } catch (error) {
-  //     res.send(error);
-  //   }
-  // });
-  
-  // app.listen(process.env.PORT, () => {
-  //   console.log(`server is up and running on port ${process.env.PORT}`);
-  // });

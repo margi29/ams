@@ -22,218 +22,229 @@ const AddAsset = () => {
     setAsset((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const checkUniqueAssetId = async (assetId) => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/assets/check-id/${assetId}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = await response.json();  // 💥 Error happens here if response is not JSON
+      return data.isUnique;
+    } catch (error) {
+      console.error("Error checking asset ID:", error);
+      return false;
+    }
+  };
+  
 
-    if (
-      !asset.asset_id ||
-      !asset.name ||
-      !asset.manufacturer ||
-      !asset.model_no ||
-      !asset.category ||
-      !asset.purchase_date
-    ) {
-      alert("Please fill all required fields.");
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const isUnique = await checkUniqueAssetId(asset.asset_id);
+    if (!isUnique) {
+      alert("Asset ID already exists! Please enter a unique ID.");
       return;
     }
 
-    setSubmittedAsset(asset);
-    console.log("Asset Submitted:", asset);
-  };
+    console.log("Sending request to backend...");
+    const response = await fetch("http://localhost:3000/api/assets", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(asset),
+    });
 
-  const downloadQRCode = () => {
-    const canvas = document.getElementById("qrCode");
-    const pngUrl = canvas.toDataURL("image/png");
-    const downloadLink = document.createElement("a");
-    downloadLink.href = pngUrl;
-    downloadLink.download = `${asset.asset_id}_QRCode.png`;
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
-  };
+    const responseData = await response.json();
+    console.log("Server response:", responseData);
 
-  return (
-      <div className="p-6 mt-16 bg-white shadow-lg rounded-xl ">
-        <h2 className="text-3xl font-bold mb-4 text-gray-800 text-center">
-          Add New Asset
-        </h2>
+    if (!response.ok) {
+      throw new Error(responseData.message || "Error adding asset");
+    }
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-2 mt-10 gap-6">
-          <div>
-            <label className="block text-gray-700 font-medium">
-              Asset ID *
-            </label>
-            <input
-              type="text"
-              name="asset_id"
-              value={asset.asset_id}
-              onChange={handleChange}
-              required
-              className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-            />
-          </div>
+    alert("Asset added successfully!");
 
-          <div>
-            <label className="block text-gray-700 font-medium">
-              Asset Name *
-            </label>
-            <input
-              type="text"
-              name="name"
-              value={asset.name}
-              onChange={handleChange}
-              required
-              className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-            />
-          </div>
+    // Store submitted asset in state to show QR code
+    setSubmittedAsset(responseData.asset);
 
-          <div>
-            <label className="block text-gray-700 font-medium">
-              Manufacturer *
-            </label>
-            <input
-              type="text"
-              name="manufacturer"
-              value={asset.manufacturer}
-              onChange={handleChange}
-              required
-              className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-            />
-          </div>
+  } catch (error) {
+    console.error("Error adding asset:", error);
+    alert("Failed to add asset. Check console for details.");
+  }
+};
 
-          <div>
-            <label className="block text-gray-700 font-medium">
-              Model No. *
-            </label>
-            <input
-              type="text"
-              name="model_no"
-              value={asset.model_no}
-              onChange={handleChange}
-              required
-              className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-            />
-          </div>
+const downloadQRCode = () => {
+  const canvas = document.getElementById("qrCode");
+  const pngUrl = canvas.toDataURL("image/png");
+  const downloadLink = document.createElement("a");
+  downloadLink.href = pngUrl;
+  downloadLink.download = `${asset.asset_id}_QRCode.png`;
+  document.body.appendChild(downloadLink);
+  downloadLink.click();
+  document.body.removeChild(downloadLink);
+};
 
-          <div>
-            <label className="block text-gray-700 font-medium">
-              Category *
-            </label>
-            <input
-              type="text"
-              name="category"
-              value={asset.category}
-              onChange={handleChange}
-              required
-              className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-            />
-          </div>
+return (
+  <div className="p-6 mt-16 bg-white shadow-lg rounded-xl">
+    <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
+      Add New Asset
+    </h2>
 
-          <div>
-            <label className="block text-gray-700 font-medium">Status</label>
-            <select
-              name="status"
-              value={asset.status}
-              onChange={handleChange}
-              className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-            >
-              <option value="Available">Available</option>
-              <option value="Under Maintenance">Under Maintenance</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-gray-700 font-medium">
-              Purchase Date *
-            </label>
-            <input
-              type="date"
-              name="purchase_date"
-              value={asset.purchase_date}
-              onChange={handleChange}
-              required
-              className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-            />
-          </div>
-
-          <div>
-            <label className="block text-gray-700 font-medium">
-              Warranty Expiry
-            </label>
-            <input
-              type="date"
-              name="warranty_expiry"
-              value={asset.warranty_expiry}
-              onChange={handleChange}
-              className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-            />
-          </div>
-          <div className="col-span-2">
-            <label className="block text-gray-700 font-medium">Location</label>
-            <input
-              type="text"
-              name="location"
-              value={asset.location}
-              onChange={handleChange}
-              className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-            />
-          </div>
-
-
-          <div className="col-span-2">
-            <label className="block text-gray-700 font-medium">
-              Description (Optional)
-            </label>
-            <textarea
-              name="description"
-              value={asset.description}
-              onChange={handleChange}
-              className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-            />
-          </div>
-
-          <div className="col-span-2 flex justify-center">
-            <button
-              type="submit"
-              className="px-6 py-3 bg-green-500 text-white text-lg rounded-lg shadow-md hover:bg-green-600"
-            >
-              Add Asset
-            </button>
-          </div>
-        </form>
-
-        {/* QR Code Display */}
-        {submittedAsset && (
-          <div className="mt-6 flex flex-col items-center">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">
-              Asset QR Code
-            </h3>
-            <div className="p-4 bg-white rounded-lg shadow-md flex justify-center">
-              <QRCodeCanvas
-                id="qrCode"
-                value={`Asset ID: ${submittedAsset.asset_id}
-                        Name: ${submittedAsset.name}
-                        Manufacturer: ${submittedAsset.manufacturer}
-                        Model No.: ${submittedAsset.model_no}
-                        Category: ${submittedAsset.category}
-                        Status: ${submittedAsset.status}
-                        Purchase Date: ${submittedAsset.purchase_date}
-                        Warranty Expiry: ${submittedAsset.warranty_expiry}
-                        Location: ${submittedAsset.location}
-                        Description: ${submittedAsset.description || "N/A"}`}
-                size={200}
-              />
-            </div>
-            <button
-              onClick={downloadQRCode}
-              className="mt-4 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-            >
-              Download QR Code
-            </button>
-          </div>
-        )}
+    <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-6">
+      <div>
+        <label className="block text-gray-700 font-medium">Asset ID *</label>
+        <input
+          type="text"
+          name="asset_id"
+          value={asset.asset_id}
+          onChange={handleChange}
+          required
+          className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+        />
       </div>
-  );
+
+      <div>
+        <label className="block text-gray-700 font-medium">Asset Name *</label>
+        <input
+          type="text"
+          name="name"
+          value={asset.name}
+          onChange={handleChange}
+          required
+          className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      <div>
+        <label className="block text-gray-700 font-medium">Manufacturer *</label>
+        <input
+          type="text"
+          name="manufacturer"
+          value={asset.manufacturer}
+          onChange={handleChange}
+          required
+          className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      <div>
+        <label className="block text-gray-700 font-medium">Model No. *</label>
+        <input
+          type="text"
+          name="model_no"
+          value={asset.model_no}
+          onChange={handleChange}
+          required
+          className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      <div>
+        <label className="block text-gray-700 font-medium">Category *</label>
+        <input
+          type="text"
+          name="category"
+          value={asset.category}
+          onChange={handleChange}
+          required
+          className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      <div>
+        <label className="block text-gray-700 font-medium">Status</label>
+        <select
+          name="status"
+          value={asset.status}
+          onChange={handleChange}
+          className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+        >
+          <option value="Available">Available</option>
+          <option value="Under Maintenance">Under Maintenance</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-gray-700 font-medium">Purchase Date *</label>
+        <input
+          type="date"
+          name="purchase_date"
+          value={asset.purchase_date}
+          onChange={handleChange}
+          required
+          className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      <div>
+        <label className="block text-gray-700 font-medium">Warranty Expiry</label>
+        <input
+          type="date"
+          name="warranty_expiry"
+          value={asset.warranty_expiry}
+          onChange={handleChange}
+          className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      <div className="col-span-2">
+        <label className="block text-gray-700 font-medium">Location</label>
+        <input
+          type="text"
+          name="location"
+          value={asset.location}
+          onChange={handleChange}
+          className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      <div className="col-span-2">
+        <label className="block text-gray-700 font-medium">Description (Optional)</label>
+        <textarea
+          name="description"
+          value={asset.description}
+          onChange={handleChange}
+          className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      <div className="col-span-2 flex justify-center">
+        <button
+          type="submit"
+          className="px-6 py-3 bg-blue-600 text-white text-lg rounded-lg shadow-md hover:bg-blue-700"
+        >
+          Add Asset
+        </button>
+      </div>
+    </form>
+
+    {submittedAsset && (
+      <div className="mt-6 flex flex-col items-center">
+        <h3 className="text-xl font-semibold text-gray-800 mb-4">Asset QR Code</h3>
+        <QRCodeCanvas
+  id="qrCode"
+  value={`Asset ID: ${submittedAsset.asset_id}
+Name: ${submittedAsset.name}
+Manufacturer: ${submittedAsset.manufacturer}
+Model No.: ${submittedAsset.model_no}
+Category: ${submittedAsset.category}
+Status: ${submittedAsset.status}
+Purchase Date: ${submittedAsset.purchase_date}
+Warranty Expiry: ${submittedAsset.warranty_expiry || "N/A"}
+Location: ${submittedAsset.location}
+Description: ${submittedAsset.description || "N/A"}`}
+  size={200}
+/>
+
+
+
+        <button onClick={downloadQRCode} className="mt-4 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+          Download QR Code
+        </button>
+      </div>
+    )}
+  </div>
+ );
 };
 
 export default AddAsset;
+
