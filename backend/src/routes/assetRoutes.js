@@ -2,11 +2,23 @@ const express = require("express");
 const router = express.Router();
 const Asset = require("../models/Asset");
 
-// Get all assets
+// Route to get all assets
 router.get("/", async (req, res) => {
-  const assets = await Asset.find();
-  res.json(assets);
+    console.log("GET /api/assets called 🚀");
+    
+    try {
+        const assets = await Asset.find();
+        console.log("Fetched Assets:", assets); // Log what is fetched
+
+        res.json(assets);
+    } catch (err) {
+        console.error("Error fetching assets:", err);
+        res.status(500).json({ message: "Server error", error: err.message });
+    }
 });
+
+  
+
 
 // Get a single asset by ID
 router.get("/:id", async (req, res) => {
@@ -53,5 +65,8 @@ router.delete("/:id", async (req, res) => {
     }
   });
   
+
+  console.log("Asset Model:", Asset);
+
 
 module.exports = router;
