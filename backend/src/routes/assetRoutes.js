@@ -17,13 +17,10 @@ router.get("/", async (req, res) => {
     }
 });
 
-  
-
-
 // Get a single asset by ID
 router.get("/:id", async (req, res) => {
-  const asset = await Asset.findById(req.params.id);
-  res.json(asset);
+    const asset = await Asset.findById(req.params.id);
+    res.json(asset);
 });
 
 // Create a new asset
@@ -36,6 +33,25 @@ router.post("/", async (req, res) => {
       res.status(500).json({ message: "Error adding asset", error });
     }
   });
+
+// Check if asset ID is unique
+router.get("/check-id/:id", async (req, res) => {
+  const assetId = req.params.id;
+  
+  try {
+    // Check if the asset ID already exists in the database
+    const existingAsset = await Asset.findOne({ asset_id: assetId });
+
+    if (existingAsset) {
+      return res.json({ isUnique: false }); // Asset ID already exists
+    } else {
+      return res.json({ isUnique: true }); // Asset ID is unique
+    }
+  } catch (err) {
+    console.error("Error checking asset ID:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 // Update an asset
 router.put("/:id", async (req, res) => {
@@ -66,7 +82,6 @@ router.delete("/:id", async (req, res) => {
   });
   
 
-  console.log("Asset Model:", Asset);
-
+console.log("Asset Model:", Asset);
 
 module.exports = router;
