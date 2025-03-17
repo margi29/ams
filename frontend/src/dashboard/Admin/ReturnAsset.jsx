@@ -9,9 +9,9 @@ const ReturnAsset = () => {
   const [exportFormat, setExportFormat] = useState("csv");
 
   const logs = [
-    { id: 1, asset: "Dell Laptop", date: "2024-02-20", condition: "Good", employee: "John Doe", note: "No issues" },
-    { id: 2, asset: "Office Chair", date: "2024-02-18", condition: "Minor Damage", employee: "Jane Smith", note: "Slight tear on cushion" },
-    { id: 3, asset: "Projector", date: "2024-02-22", condition: "Needs Repair", employee: "Emily Davis", note: "Bulb malfunctioning" },
+    { id: 1, asset: "Dell Laptop", date: "2024-02-20", employee: "John Doe" },
+    { id: 2, asset: "Office Chair", date: "2024-02-18", employee: "Jane Smith" },
+    { id: 3, asset: "Projector", date: "2024-02-22", employee: "Emily Davis" },
   ];
 
   const filteredLogs = logs.filter(
@@ -21,15 +21,7 @@ const ReturnAsset = () => {
   const columns = [
     { header: "Asset", accessor: "asset" },
     { header: "Return Date", accessor: "date" },
-    {
-      header: "Condition",
-      accessor: "condition",
-      className: (value) =>
-        value === "Good" ? "text-green-600 font-semibold" :
-        value === "Minor Damage" ? "text-yellow-600 font-semibold" : "text-red-600 font-semibold",
-    },
     { header: "Employee", accessor: "employee" },
-    { header: "Notes", accessor: "note" },
   ];
 
   return (
