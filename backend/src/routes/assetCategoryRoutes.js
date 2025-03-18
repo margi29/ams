@@ -1,48 +1,18 @@
-// routes/assetCategoryRoutes.js
 const express = require('express');
-const AssetCategory = require('../models/AssetCategory');
+const {
+  getAllCategories,
+  createCategory,
+  deleteCategoryById
+} = require('../controllers/categoryController');
 const router = express.Router();
 
 // GET all categories
-router.get('/', async (req, res) => {
-  try {
-    const categories = await AssetCategory.find();
-    res.json(categories);
-  } catch (error) {
-    res.status(500).json({ error: 'Error fetching categories' });
-  }
-});
+router.get('/', getAllCategories);
 
 // POST a new category
-router.post('/', async (req, res) => {
-  const { name } = req.body;
-  if (!name) return res.status(400).json({ error: 'Category name is required' });
-
-  try {
-    const existingCategory = await AssetCategory.findOne({ name });
-    if (existingCategory) {
-      return res.status(400).json({ error: 'Category already exists' });
-    }
-
-    const newCategory = new AssetCategory({ name });
-    await newCategory.save();
-    res.status(201).json(newCategory);
-  } catch (error) {
-    res.status(500).json({ error: 'Error adding category' });
-  }
-});
+router.post('/', createCategory);
 
 // DELETE a category by ID
-router.delete('/:id', async (req, res) => {
-  try {
-    const category = await AssetCategory.findByIdAndDelete(req.params.id);
-    if (!category) {
-      return res.status(404).json({ error: 'Category not found' });
-    }
-    res.json({ message: 'Category deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ error: 'Error deleting category' });
-  }
-});
+router.delete('/:id', deleteCategoryById);
 
 module.exports = router;
