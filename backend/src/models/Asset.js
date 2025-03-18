@@ -1,17 +1,32 @@
 const mongoose = require("mongoose");
 
 const AssetSchema = new mongoose.Schema({
-  asset_id: { type: String, unique: true, required: true }, // ✅ Ensure asset_id is unique
-  name: String,
+  asset_id: { type: String, unique: true, required: true }, // ✅ Unique asset identifier
+  name: { type: String, required: true }, // ✅ Asset name is required
   manufacturer: String,
   model_no: String,
-  category: String,
-  status: String,
+  category: { type: String, required: true }, // ✅ Category is required
+  status: {
+    type: String,
+    enum: ["Available", "Assigned", "Under Maintenance", "Discarded"],
+    default: "Available",
+  }, // ✅ Better status management with enums
   purchase_date: Date,
   warranty_expiry: Date,
   location: String,
   description: String,
-  qr_code: String
-});
+  qr_code: String,
+
+  // ✅ Assigned details
+  assigned_to: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  }, // Reference to the User ObjectId
+  assigned_date: { type: Date, default: null }, // ✅ Date when assigned
+  note: String, // ✅ Optional note for assignment details
+
+  // ✅ Timestamps to track changes
+}, { timestamps: true });
 
 module.exports = mongoose.model("Asset", AssetSchema);
