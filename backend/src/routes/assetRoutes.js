@@ -14,34 +14,34 @@ const {
 
 const router = express.Router();
 
-// ✅ Fetch all asset IDs
+// ✅ Route to fetch all asset IDs
 router.get("/all-ids", getAllAssetIds);
 
-// ✅ Get the last asset ID
+// ✅ Route to get the last asset ID
 router.get("/last-id", getLastAssetId);
 
-// ✅ Get all assets
+// ✅ Route to fetch all assets
 router.get("/", getAllAssets);
 
-// ✅ Get a single asset by ID
-router.get("/:id", getAssetById);
-
-// ✅ Check if an asset ID is unique
-router.get("/check-id/:id", checkAssetId);
-
-// ✅ Create a new asset
-router.post("/", createAsset);
-
-// ✅ Get available assets (optional category filter)
+// ✅ Route to fetch only available assets for assignment
 router.get("/available", getAvailableAssets);
 
-// ✅ Get asset categories and their assets
+// ✅ Route to fetch unique categories and their assets
 router.get("/categories", getCategoriesWithAssets);
 
-// ✅ Update an asset
+// ✅ Route to fetch a single asset by ID
+router.get("/:id", getAssetById);
+
+// ✅ Route to check if asset ID is unique
+router.get("/check-id/:id", checkAssetId);
+
+// ✅ Route to create a new asset
+router.post("/", createAsset);
+
+// ✅ Route to update an asset
 router.put("/:id", updateAsset);
 
-// ✅ Delete an asset
+// ✅ Route to delete an asset
 router.delete("/:id", deleteAsset);
 
 module.exports = router;

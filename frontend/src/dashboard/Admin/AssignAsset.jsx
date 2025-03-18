@@ -17,14 +17,13 @@ const AssignAsset = () => {
   const [loadingAssets, setLoadingAssets] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(false);
 
-  // ✅ Fetch Categories from Asset Categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await axios.get("http://localhost:3000/api/categories");
+        const res = await axios.get("http://localhost:3000/api/assets/categories");
         setCategories(res.data);
       } catch (error) {
-        console.error("❌ Error fetching categories:", error);
+        console.error("Error fetching categories:", error);
       }
     };
 
@@ -35,7 +34,7 @@ const AssignAsset = () => {
         const employeeUsers = res.data.filter((user) => user.role === "Employee");
         setUsers(employeeUsers);
       } catch (error) {
-        console.error("❌ Error fetching employees:", error);
+        console.error("Error fetching employees:", error);
       } finally {
         setLoadingUsers(false);
       }
@@ -45,7 +44,6 @@ const AssignAsset = () => {
     fetchEmployees();
   }, []);
 
-  // ✅ Handle Category Selection and Fetch Assets
   const handleCategoryChange = async (e) => {
     const selectedCategory = e.target.value;
     setCategory(selectedCategory);
@@ -63,25 +61,24 @@ const AssignAsset = () => {
       const res = await axios.get(`http://localhost:3000/api/assets/available?category=${selectedCategory}`);
       setAssets(res.data);
     } catch (error) {
-      console.error("❌ Error fetching available assets:", error);
+      console.error("Error fetching available assets:", error);
       setAssets([]);
     } finally {
       setLoadingAssets(false);
     }
   };
 
-  // ✅ Form Validation
   const validateForm = () => {
     const newErrors = {};
     if (!category) newErrors.category = "Category is required!";
     if (!asset) newErrors.asset = "Asset is required!";
     if (!user) newErrors.user = "Employee selection is required!";
     if (!date) newErrors.date = "Assignment date is required!";
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // ✅ Handle Form Submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -93,22 +90,21 @@ const AssignAsset = () => {
 
     try {
       const payload = {
-        assetId: asset,
-        assignedTo: user,
+        assetId: asset, // Now asset is an ObjectId
+        assignedTo: user, // Now user is an ObjectId
         assignmentDate: date,
         note,
       };
 
       await axios.post("http://localhost:3000/api/allocation/assign", payload);
-      alert("✅ Asset assigned successfully!");
+      alert("Asset assigned successfully!");
       resetForm();
     } catch (error) {
-      console.error("❌ Error assigning asset:", error);
+      console.error("Error assigning asset:", error);
       alert("Failed to assign asset.");
     }
   };
 
-  // ✅ Reset Form
   const resetForm = () => {
     setCategory("");
     setAsset("");
@@ -127,7 +123,7 @@ const AssignAsset = () => {
       <h2 className="text-3xl font-bold mb-4 text-gray-800 text-center">Assign Asset</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         
-        {/* ✅ Select Category */}
+        {/* Select Category */}
         <div>
           <label className="block font-medium">
             Select Category <span className="text-red-500">*</span>
@@ -139,22 +135,25 @@ const AssignAsset = () => {
           >
             <option value="">-- Choose a Category --</option>
             {categories.map((cat) => (
-              <option key={cat._id} value={cat.name}>
-                {cat.name}
+              <option key={cat._id} value={cat.category}>
+                {cat.category}
               </option>
             ))}
           </select>
           {errors.category && <p className="text-red-500 mt-1">{errors.category}</p>}
         </div>
 
-        {/* ✅ Select Asset */}
+        {/* Select Asset */}
         <div>
           <label className="block font-medium">
             Select Asset <span className="text-red-500">*</span>
           </label>
           <select
             value={asset}
-            onChange={(e) => setAsset(e.target.value)}
+            onChange={(e) => {
+              setAsset(e.target.value);
+              setErrors({ ...errors, asset: "" });
+            }}
             className={`w-full p-3 border rounded-lg ${errors.asset ? "border-red-500" : ""}`}
             disabled={!category || loadingAssets || assets.length === 0}
           >
@@ -169,14 +168,17 @@ const AssignAsset = () => {
           {errors.asset && <p className="text-red-500 mt-1">{errors.asset}</p>}
         </div>
 
-        {/* ✅ Assign To */}
+        {/* Assign To */}
         <div>
           <label className="block font-medium">
             Assign To (Employee) <span className="text-red-500">*</span>
           </label>
           <select
             value={user}
-            onChange={(e) => setUser(e.target.value)}
+            onChange={(e) => {
+              setUser(e.target.value);
+              setErrors({ ...errors, user: "" });
+            }}
             className={`w-full p-3 border rounded-lg ${errors.user ? "border-red-500" : ""}`}
             disabled={loadingUsers || users.length === 0}
           >
@@ -191,7 +193,7 @@ const AssignAsset = () => {
           {errors.user && <p className="text-red-500 mt-1">{errors.user}</p>}
         </div>
 
-        {/* ✅ Assignment Date */}
+        {/* Assignment Date */}
         <div>
           <label className="block font-medium">
             Assignment Date <span className="text-red-500">*</span>
@@ -199,13 +201,16 @@ const AssignAsset = () => {
           <input
             type="date"
             value={date}
-            onChange={(e) => setDate(e.target.value)}
+            onChange={(e) => {
+              setDate(e.target.value);
+              setErrors({ ...errors, date: "" });
+            }}
             className={`w-full p-3 border rounded-lg ${errors.date ? "border-red-500" : ""}`}
           />
           {errors.date && <p className="text-red-500 mt-1">{errors.date}</p>}
         </div>
 
-        {/* ✅ Additional Notes */}
+        {/* Additional Notes */}
         <div>
           <label className="block font-medium">Additional Notes</label>
           <textarea
@@ -216,7 +221,7 @@ const AssignAsset = () => {
           ></textarea>
         </div>
 
-        {/* ✅ Submit Button */}
+        {/* Submit Button */}
         <div className="flex justify-center">
           <button type="submit" className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg">
             Assign Asset

@@ -17,7 +17,7 @@ exports.returnAsset = async (req, res) => {
   try {
     const { assetId, employeeId } = req.body;
 
-    if (!assetId || !employeeId ) {
+    if (!assetId || !employeeId) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 

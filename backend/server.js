@@ -10,8 +10,6 @@ const assetRoutes = require("./src/routes/assetRoutes");
 const userRoutes = require("./src/routes/userRoutes"); // Future user routes
 const allocationRoutes = require("./src/routes/allocationRoutes");
 const returnedAssetsRoutes = require("./src/routes/returnedAssetsRoutes");
-const assetHistoryRoutes = require("./src/routes/AssetHistoryRoutes");
-const assetCategoryRoutes = require('./src/routes/assetCategoryRoutes'); 
 
 const app = express();
 
@@ -41,9 +39,6 @@ app.use("/api/assets", assetRoutes);
 app.use("/api/users", userRoutes); // Add user routes
 app.use("/api/allocation", allocationRoutes);
 app.use("/api/returnedassets", returnedAssetsRoutes);
-app.use('/api/categories', assetCategoryRoutes);
-app.use("/api/asset-history", assetHistoryRoutes);
-
 
 // ✅ 404 Error Handling
 app.use((req, res) => {
