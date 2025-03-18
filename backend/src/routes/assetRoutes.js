@@ -191,6 +191,6 @@ router.get("/assets", async (req, res) => {
 
 
 
-console.log("Asset Model:", Asset);
+// console.log("Asset Model:", Asset);
 
 module.exports = router;
