@@ -9,8 +9,8 @@ import AddNewAsset from "./dashboard/Admin/AddNewAsset";
 import AssetHistory from "./dashboard/Admin/AssetHistory";
 import AssignAsset from "./dashboard/Admin/AssignAsset";
 import AssetRequests from "./dashboard/Admin/AssetRequests";
+import QRCodeList from "./dashboard/Admin/QRCodeList";
 import MaintenanceAndRepair from "./dashboard/Admin/MaintenanceAndRepair";
-import ManagerDashboard from "./pages/ManagerDashboard";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
 import NotFound from "./pages/NotFound";
 import "./styles/global.css";
@@ -66,9 +66,9 @@ const App = () => {
         <Route path="/admin/assign-asset" element={<Layout><AssignAsset /></Layout>} />
         <Route path="/admin/return-asset" element={<Layout><ReturnAsset /></Layout>} />
         <Route path="/admin/asset-requests" element={<Layout><AssetRequests /></Layout>} />
+        <Route path="/admin/qr-logs" element={<Layout><QRCodeList /></Layout>} />
         <Route path="/admin/scheduled-maintenance" element={<Layout><MaintenanceAndRepair /></Layout>} />
         <Route path="/admin/user-management" element={<Layout><UserManagement /></Layout>} />
-        <Route path="/manager/*" element={<Layout><ManagerDashboard /></Layout>} />
         <Route path="/employee/*" element={<Layout><EmployeeDashboard /></Layout>} />
         <Route path="*" element={<NotFound />} />
       </Routes>

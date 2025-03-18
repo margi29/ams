@@ -9,7 +9,6 @@ const Login = () => {
   // Hardcoded user credentials
   const users = {
     "admin@example.com": { role: "admin", password: "admin123" },
-    "manager@example.com": { role: "manager", password: "manager123" },
     "employee@example.com": { role: "employee", password: "employee123" },
   };
 

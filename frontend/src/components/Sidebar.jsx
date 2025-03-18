@@ -53,36 +53,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           { name: "Asset Requests", path: "/admin/asset-requests" }
         ]
       },
+      { icon: QrCode, label: "QR Code List", path: "/admin/qr-logs" },
       { icon: Wrench, label: "Maintenance & Repair", path: "/admin/scheduled-maintenance" },
       { icon: User, label: "User Management", path: "/admin/user-management" },
       { icon: Settings, label: "Settings", path: "/admin/settings" }
     ],
-    manager: [
-      { icon: Home, label: "Dashboard", path: "/manager/dashboard" },
-      {
-        icon: Package, label: "Asset Requests",
-        subItems: [
-          { name: "Request New Asset", path: "/manager/request-asset" },
-          { name: "Pending Requests", path: "/manager/pending-requests" }
-        ]
-      },
-      {
-        icon: User, label: "Assigned Assets",
-        subItems: [
-          { name: "View Assigned Assets", path: "/manager/assigned-assets" },
-          { name: "Return Asset", path: "/manager/return-asset" }
-        ]
-      },
-      { icon: QrCode, label: "QR Code List", path: "/manager/qr-logs" },
-      { icon: Wrench, label: "Maintenance Requests", path: "/manager/maintenance-request" },
-      {
-        icon: Settings, label: "Help & Support",
-        subItems: [
-          { name: "Guidelines", path: "/manager/guidelines" },
-          { name: "Contact Admin", path: "/manager/contact-support" }
-        ]
-      }
-    ],
+    
     employee: [
       { icon: Home, label: "Dashboard", path: "/employee/dashboard" },
       {

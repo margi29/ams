@@ -5,17 +5,16 @@ import SearchFilterBar from "../../components/SearchFilterBar";
 
 const roleColors = {
   Admin: "text-red-600 font-semibold",
-  Manager: "text-[#00B4D8] font-semibold",
-  Employee: "text-green-600 font-semibold",
+  Employee:"text-[#00B4D8] font-semibold",
 };
 
 // Role filter options
-const roleOptions = ["Admin", "Manager", "Employee"];
+const roleOptions = ["Admin","Employee"];
 
 const UserManagement = () => {
   const [users, setUsers] = useState([
     { id: 1, name: "John Doe", email: "john@example.com", role: "Admin" },
-    { id: 2, name: "Jane Smith", email: "jane@example.com", role: "Manager" },
+    { id: 2, name: "Jane Smith", email: "jane@example.com", role: "Employee" },
     { id: 3, name: "Mike Johnson", email: "mike@example.com", role: "Employee" },
     { id: 4, name: "Emily Davis", email: "emily@example.com", role: "Employee" },
   ]);
