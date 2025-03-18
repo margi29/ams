@@ -14,6 +14,8 @@ const AssignAsset = () => {
   const [users, setUsers] = useState([]);
 
   const [errors, setErrors] = useState({});
+  const [loadingAssets, setLoadingAssets] = useState(false);
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -26,12 +28,15 @@ const AssignAsset = () => {
     };
 
     const fetchEmployees = async () => {
+      setLoadingUsers(true);
       try {
         const res = await axios.get("http://localhost:3000/api/users");
         const employeeUsers = res.data.filter((user) => user.role === "Employee");
-        setUsers(employeeUsers.map((emp) => emp.name));
+        setUsers(employeeUsers);
       } catch (error) {
         console.error("Error fetching employees:", error);
+      } finally {
+        setLoadingUsers(false);
       }
     };
 
@@ -51,14 +56,15 @@ const AssignAsset = () => {
       return;
     }
 
+    setLoadingAssets(true);
     try {
-      const res = await axios.get(
-        `http://localhost:3000/api/assets/available?category=${selectedCategory}`
-      );
+      const res = await axios.get(`http://localhost:3000/api/assets/available?category=${selectedCategory}`);
       setAssets(res.data);
     } catch (error) {
       console.error("Error fetching available assets:", error);
       setAssets([]);
+    } finally {
+      setLoadingAssets(false);
     }
   };
 
@@ -77,9 +83,20 @@ const AssignAsset = () => {
     e.preventDefault();
     if (!validateForm()) return;
 
+    if (!asset || !user) {
+      alert("Invalid asset or user selection.");
+      return;
+    }
+
     try {
-      const payload = { category, asset, assignedTo: user, assignmentDate: date, note };
-      await axios.post("http://localhost:3000/api/assets/assign", payload);
+      const payload = {
+        assetId: asset, // Now asset is an ObjectId
+        assignedTo: user, // Now user is an ObjectId
+        assignmentDate: date,
+        note,
+      };
+
+      await axios.post("http://localhost:3000/api/allocation/assign", payload);
       alert("Asset assigned successfully!");
       resetForm();
     } catch (error) {
@@ -105,6 +122,7 @@ const AssignAsset = () => {
     >
       <h2 className="text-3xl font-bold mb-4 text-gray-800 text-center">Assign Asset</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
+        
         {/* Select Category */}
         <div>
           <label className="block font-medium">
@@ -116,8 +134,8 @@ const AssignAsset = () => {
             className={`w-full p-3 border rounded-lg ${errors.category ? "border-red-500" : ""}`}
           >
             <option value="">-- Choose a Category --</option>
-            {categories.map((cat, index) => (
-              <option key={index} value={cat.category}>
+            {categories.map((cat) => (
+              <option key={cat._id} value={cat.category}>
                 {cat.category}
               </option>
             ))}
@@ -130,25 +148,23 @@ const AssignAsset = () => {
           <label className="block font-medium">
             Select Asset <span className="text-red-500">*</span>
           </label>
-          <input
-            list="asset-options"
+          <select
             value={asset}
             onChange={(e) => {
               setAsset(e.target.value);
               setErrors({ ...errors, asset: "" });
             }}
-            placeholder="Select or enter an asset"
             className={`w-full p-3 border rounded-lg ${errors.asset ? "border-red-500" : ""}`}
-            disabled={!category || assets.length === 0}
-          />
-          <datalist id="asset-options">
-            {assets.map((item, index) => (
-              <option key={index} value={item.name} />
+            disabled={!category || loadingAssets || assets.length === 0}
+          >
+            <option value="">-- Choose an Asset --</option>
+            {loadingAssets ? <option disabled>Loading assets...</option> : null}
+            {assets.map((item) => (
+              <option key={item._id} value={item._id}>
+                {item.name}
+              </option>
             ))}
-          </datalist>
-          {assets.length === 0 && category && (
-            <p className="text-red-500 mt-2">No available assets in this category.</p>
-          )}
+          </select>
           {errors.asset && <p className="text-red-500 mt-1">{errors.asset}</p>}
         </div>
 
@@ -157,22 +173,23 @@ const AssignAsset = () => {
           <label className="block font-medium">
             Assign To (Employee) <span className="text-red-500">*</span>
           </label>
-          <input
-            list="user-options"
+          <select
             value={user}
             onChange={(e) => {
               setUser(e.target.value);
               setErrors({ ...errors, user: "" });
             }}
-            placeholder="Select or enter a user"
             className={`w-full p-3 border rounded-lg ${errors.user ? "border-red-500" : ""}`}
-            disabled={!category}
-          />
-          <datalist id="user-options">
-            {users.map((item, index) => (
-              <option key={index} value={item} />
+            disabled={loadingUsers || users.length === 0}
+          >
+            <option value="">-- Choose an Employee --</option>
+            {loadingUsers ? <option disabled>Loading employees...</option> : null}
+            {users.map((item) => (
+              <option key={item._id} value={item._id}>
+                {item.name}
+              </option>
             ))}
-          </datalist>
+          </select>
           {errors.user && <p className="text-red-500 mt-1">{errors.user}</p>}
         </div>
 
@@ -189,7 +206,6 @@ const AssignAsset = () => {
               setErrors({ ...errors, date: "" });
             }}
             className={`w-full p-3 border rounded-lg ${errors.date ? "border-red-500" : ""}`}
-            disabled={!category}
           />
           {errors.date && <p className="text-red-500 mt-1">{errors.date}</p>}
         </div>
@@ -202,16 +218,12 @@ const AssignAsset = () => {
             onChange={(e) => setNote(e.target.value)}
             placeholder="Optional notes..."
             className="w-full p-3 border rounded-lg"
-            disabled={!category}
           ></textarea>
         </div>
 
         {/* Submit Button */}
         <div className="flex justify-center">
-          <button
-            type="submit"
-            className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg"
-          >
+          <button type="submit" className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg">
             Assign Asset
           </button>
         </div>

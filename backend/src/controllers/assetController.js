@@ -143,39 +143,6 @@ const deleteAsset = async (req, res) => {
   }
 };
 
-// POST - Assign asset to a user
-const assignAsset = async (req, res) => {
-    const { category, asset, assignedTo, assignmentDate, note } = req.body;
-  
-    if (!category || !asset || !assignedTo || !assignmentDate) {
-      return res.status(400).json({ error: "All fields are required." });
-    }
-  
-    try {
-      const assetToAssign = await Asset.findOne({
-        category,
-        name: asset,
-        status: "Available",
-      });
-  
-      if (!assetToAssign) {
-        return res.status(404).json({ error: "Asset not found or unavailable." });
-      }
-  
-      // ✅ Update asset status to 'Assigned'
-      assetToAssign.status = "Assigned";
-      assetToAssign.assignedTo = assignedTo;
-      assetToAssign.assignmentDate = assignmentDate;
-      assetToAssign.note = note || "";
-      await assetToAssign.save();
-  
-      res.status(200).json({ message: "Asset assigned successfully!" });
-    } catch (error) {
-      console.error("Error assigning asset:", error);
-      res.status(500).json({ error: "Internal server error." });
-    }
-  };
-
 module.exports = {
   getAllAssets,
   getAvailableAssets,
@@ -184,6 +151,5 @@ module.exports = {
   createAsset,
   checkAssetId,
   updateAsset,
-  deleteAsset,
-  assignAsset
+  deleteAsset
 };

@@ -8,6 +8,8 @@ require("dotenv").config();
 // Import Routes
 const assetRoutes = require("./src/routes/assetRoutes");
 const userRoutes = require("./src/routes/userRoutes"); // Future user routes
+const allocationRoutes = require("./src/routes/allocationRoutes");
+const returnedAssetsRoutes = require("./src/routes/returnedAssetsRoutes");
 
 const app = express();
 
@@ -35,6 +37,8 @@ app.get("/", (req, res) => {
 // ✅ API Routes
 app.use("/api/assets", assetRoutes);
 app.use("/api/users", userRoutes); // Add user routes
+app.use("/api/allocation", allocationRoutes);
+app.use("/api/returnedassets", returnedAssetsRoutes);
 
 // ✅ 404 Error Handling
 app.use((req, res) => {

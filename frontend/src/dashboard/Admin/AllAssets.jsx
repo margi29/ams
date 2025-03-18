@@ -43,20 +43,35 @@ const AllAssets = () => {
 
   const handleSave = async () => {
     try {
-      await fetch(`http://localhost:3000/api/assets/${editingAsset._id}`, {
+      // Check if the status is changed to "Available"
+      if (editingAsset.status === "Available") {
+        editingAsset.assigned_to = null;
+        editingAsset.assigned_date = null;
+        editingAsset.note = "";
+      }
+  
+      const response = await fetch(`http://localhost:3000/api/assets/${editingAsset._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(editingAsset),
       });
-
+  
+      if (!response.ok) {
+        throw new Error("Failed to update asset");
+      }
+  
+      const updatedAsset = await response.json();
+  
       setAssets((prevAssets) =>
-        prevAssets.map((a) => (a._id === editingAsset._id ? editingAsset : a))
+        prevAssets.map((a) => (a._id === editingAsset._id ? updatedAsset.asset : a))
       );
+  
       setModalOpen(false);
     } catch (error) {
       console.error("Error updating asset:", error);
+      alert("Failed to update asset!");
     }
-  };
+  };  
 
   // ✅ Delete asset from backend
   const handleDelete = async (asset_id) => {

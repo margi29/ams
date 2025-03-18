@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import Card from "../../components/Card";
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 
 // Mock data for assigned assets
 const mockAssignedAssets = [
@@ -50,26 +50,32 @@ const MaintenanceRequest = () => {
   };
 
   return (
-    <div className="p-6 min-h-screen overflow-auto">
+    <motion.div
+      className="p-6 mt-16 bg-white rounded-lg shadow-md"
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
       {/* Header Section */}
-      <h1 className="text-4xl font-semibold text-center text-[var(--primary-dark)]">
+      <h1 className="text-3xl font-bold text-center text-gray-800">
         Maintenance Request
       </h1>
-      <h2 className="text-xl text-center mt-2 text-gray-600">
-        Submit a request to send an asset for maintenance
-      </h2>
+      <p className="text-center text-gray-600 mt-2">
+        Submit a request to send an asset for maintenance.
+      </p>
 
       {/* Maintenance Form */}
-      <Card title="Send for Maintenance" className="mt-6">
+      <div className="mt-6 space-y-4">
+        {/* Select Asset Dropdown */}
         <div>
-          {/* Select Asset Dropdown */}
-          <label className="block text-gray-700 font-semibold mb-2">Select Asset</label>
+          <label className="block font-medium">
+            Select Asset <span className="text-red-500">*</span>
+          </label>
           <select
             value={selectedAsset}
             onChange={handleChange}
-            className="w-full p-3 border rounded-lg"
+            className="w-full p-3 border rounded-lg border-gray-300"
           >
-            <option value="">Select an Asset</option>
+            <option value="">-- Choose an Asset --</option>
             {assignedAssets.map((asset) => (
               <option key={asset.id} value={asset.id}>
                 {asset.name}
@@ -81,14 +87,12 @@ const MaintenanceRequest = () => {
         {/* Send for Maintenance Button */}
         <button
           onClick={handleSendForMaintenance}
-          className="mt-6 w-full bg-[#673AB7] text-white font-bold py-3 rounded-lg hover:bg-[#5E35B1] transition"
+          className="w-full bg-[#673AB7] hover:bg-[#5E35B1] text-white font-bold py-3 rounded-lg transition"
         >
           Send for Maintenance
         </button>
-      </Card>
-
-      
-    </div>
+      </div>
+    </motion.div>
   );
 };
 

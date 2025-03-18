@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import Card from "../../components/Card";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
 // Mock Data for Available Assets
 const mockAvailableAssets = [
@@ -39,63 +39,71 @@ const RequestNewAsset = () => {
     }
     console.log("Asset Request Submitted:", { selectedAsset, reason });
     alert(`Your request for ${selectedAsset} has been submitted.\nReason: ${reason}`);
-    navigate("/employee"); // Redirect to the Employee Dashboard
+    navigate("/employee"); // Redirect to Employee Dashboard
   };
 
   return (
-    <div className="p-6 min-h-screen overflow-auto">
-      <h1 className="text-4xl font-semibold text-center text-[var(--primary-dark)]">
+    <motion.div
+      className="p-6 mt-16 bg-white rounded-lg shadow-lg"
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      {/* Header */}
+      <h1 className="text-3xl font-bold text-center text-gray-800">
         Request New Asset
       </h1>
-      <h2 className="text-xl text-center mt-2 text-gray-600">
-        Select an available asset and provide a reason to submit your request
-      </h2>
+      <p className="text-center text-gray-600 mt-2">
+        Select an available asset and provide a reason to submit your request.
+      </p>
 
-      <Card title="Asset Request Form" className="mt-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* 🔹 Select Asset */}
-          <div>
-            <label className="block text-gray-700 font-semibold">Select Asset</label>
-            <select
-              value={selectedAsset}
-              onChange={handleSelect}
-              className="w-full p-3 border rounded-lg mt-1"
-              required
-            >
-              <option value="">Select an Asset</option>
-              {availableAssets.map((asset) => (
-                <option key={asset.id} value={asset.name}>
-                  {asset.name}
-                </option>
-              ))}
-            </select>
-          </div>
+      {/* Asset Request Form */}
+      <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+        {/* 🔹 Select Asset */}
+        <div>
+          <label className="block font-medium">
+            Select Asset <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={selectedAsset}
+            onChange={handleSelect}
+            className="w-full p-3 border rounded-lg border-gray-300 mt-1"
+            required
+          >
+            <option value="">-- Choose an Asset --</option>
+            {availableAssets.map((asset) => (
+              <option key={asset.id} value={asset.name}>
+                {asset.name}
+              </option>
+            ))}
+          </select>
+        </div>
 
-          {/* 🔹 Reason for Request */}
-          <div>
-            <label className="block text-gray-700 font-semibold">Reason for Request</label>
-            <textarea
-              value={reason}
-              onChange={handleReasonChange}
-              className="w-full p-3 border rounded-lg mt-1 resize-none"
-              rows="4"
-              placeholder="Explain why you need this asset..."
-              required
-            />
-          </div>
+        {/* 🔹 Reason for Request */}
+        <div>
+          <label className="block font-medium">
+            Reason for Request <span className="text-red-500">*</span>
+          </label>
+          <textarea
+            value={reason}
+            onChange={handleReasonChange}
+            className="w-full p-3 border rounded-lg border-gray-300 mt-1 resize-none"
+            rows="4"
+            placeholder="Explain why you need this asset..."
+            required
+          />
+        </div>
 
-          {/* 🔹 Submit Button */}
-          <div className="text-center">
-            <button
-              type="submit"
-              className="bg-[#673AB7] text-white font-bold py-3 px-6 rounded-lg hover:bg-[#5E35B1] transition"
-            >
-              Submit Request
-            </button>
-          </div>
-        </form>
-      </Card>
-    </div>
+        {/* 🔹 Submit Button */}
+        <div className="text-center">
+          <button
+            type="submit"
+            className="w-full bg-[#673AB7] hover:bg-[#5E35B1] text-white font-bold py-3 rounded-lg transition"
+          >
+            Submit Request
+          </button>
+        </div>
+      </form>
+    </motion.div>
   );
 };
 

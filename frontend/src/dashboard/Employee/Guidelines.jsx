@@ -52,7 +52,7 @@ const Guidelines = () => {
 
   return (
     <motion.div
-      className="p-6 min-h-screen overflow-auto bg-white rounded-lg shadow-md"
+      className="p-6 min-h-screen mt-16 overflow-auto bg-white rounded-lg shadow-md"
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
     >

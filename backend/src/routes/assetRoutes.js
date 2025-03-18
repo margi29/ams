@@ -8,8 +8,7 @@ const {
   deleteAsset,
   getCategoriesWithAssets,
   checkAssetId,
-  getAvailableAssets, // ✅ Import new function
-  assignAsset, // ✅ Import assignAsset function
+  getAvailableAssets // ✅ Import assignAsset function
 } = require("../controllers/assetController");
 
 // ✅ Route to fetch all assets
@@ -35,8 +34,5 @@ router.put("/:id", updateAsset);
 
 // ✅ Route to delete an asset
 router.delete("/:id", deleteAsset);
-
-// ✅ Route to assign an asset to a user
-router.post("/assign", assignAsset);
 
 module.exports = router;

@@ -48,128 +48,119 @@ const ContactAdmin = () => {
   };
 
   return (
-    <div className="p-8 bg-[#DBDAE4] min-h-screen flex justify-center items-center">
-      <motion.div
-        className="w-full max-w-3xl bg-white shadow-lg rounded-lg overflow-hidden"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="p-8">
-          <h2 className="text-3xl font-semibold text-[#302757] mb-6 text-center">
-            Contact Admin for Asset Request or Query
-          </h2>
+    <motion.div
+      className="p-6 mt-16 bg-white rounded-lg shadow-lg"
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      {/* Header */}
+      <h1 className="text-3xl font-bold text-center text-gray-800">
+        Contact Admin for Asset Request or Query
+      </h1>
+      <p className="text-center text-gray-600 mt-2">
+        Fill out the form below to submit your request or query.
+      </p>
 
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6">
-            <motion.div
-              className="form-group"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-              transition={{ duration: 0.3 }}
-            >
-              <label className="block text-[#302757] font-medium">Asset Name *</label>
-              <input
-                type="text"
-                name="asset_name"
-                value={formData.asset_name}
-                onChange={handleChange}
-                required
-                className="w-full mt-1 p-3 border border-[#66708F] rounded-md focus:ring-[#F7BF10] focus:outline-none"
-              />
-            </motion.div>
-
-            <motion.div
-              className="form-group"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-              transition={{ duration: 0.3 }}
-            >
-              <label className="block text-[#302757] font-medium">Asset Category *</label>
-              <input
-                type="text"
-                name="asset_category"
-                value={formData.asset_category}
-                onChange={handleChange}
-                required
-                className="w-full mt-1 p-3 border border-[#66708F] rounded-md focus:ring-[#F7BF10] focus:outline-none"
-              />
-            </motion.div>
-
-            <motion.div
-              className="form-group"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-              transition={{ duration: 0.3 }}
-            >
-              <label className="block text-[#302757] font-medium">Request Type *</label>
-              <select
-                name="request_type"
-                value={formData.request_type}
-                onChange={handleChange}
-                className="w-full mt-1 p-3 border border-[#66708F] rounded-md focus:ring-[#F7BF10] focus:outline-none"
-              >
-                <option value="Request New Asset">Request New Asset</option>
-                <option value="Denied Asset Query">Denied Asset Query</option>
-                <option value="Other Queries">Other Queries</option>
-              </select>
-            </motion.div>
-
-            <motion.div
-              className="col-span-1"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-              transition={{ duration: 0.3 }}
-            >
-              <label className="block text-[#302757] font-medium">Request Details *</label>
-              <textarea
-                name="request_details"
-                value={formData.request_details}
-                onChange={handleChange}
-                required
-                className="w-full mt-1 p-3 border border-[#66708F] rounded-md focus:ring-[#F7BF10] focus:outline-none h-32"
-              />
-            </motion.div>
-
-            <motion.div
-              className="flex justify-center mt-6"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-              transition={{ duration: 0.3 }}
-            >
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-8 py-4 bg-[#673AB7] text-white text-lg rounded-lg shadow-md hover:bg-[#5E35B1] transition-all"
-              >
-                {isSubmitting ? "Submitting..." : "Submit Request"}
-              </button>
-            </motion.div>
-          </form>
-
-          {submittedRequest && (
-            <motion.div
-              className="mt-6 p-6 bg-[#DBDAE4] rounded-xl text-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              <h3 className="text-xl font-semibold text-[#302757] mb-4">
-                Request Submitted Successfully!
-              </h3>
-              <p className="text-[#302757] mb-2">
-                Your request for <strong>{submittedRequest.asset_name}</strong> has been submitted.
-              </p>
-              <p className="text-[#302757] mb-2">
-                Request Type: <strong>{submittedRequest.request_type}</strong>
-              </p>
-              <p className="text-[#302757]">
-                Status: <strong>{submittedRequest.status}</strong>
-              </p>
-            </motion.div>
-          )}
+      {/* Asset Request Form */}
+      <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+        {/* 🔹 Asset Name */}
+        <div>
+          <label className="block font-medium">
+            Asset Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            name="asset_name"
+            value={formData.asset_name}
+            onChange={handleChange}
+            required
+            className="w-full p-3 border rounded-lg border-gray-300 mt-1"
+          />
         </div>
-      </motion.div>
-    </div>
+
+        {/* 🔹 Asset Category */}
+        <div>
+          <label className="block font-medium">
+            Asset Category <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            name="asset_category"
+            value={formData.asset_category}
+            onChange={handleChange}
+            required
+            className="w-full p-3 border rounded-lg border-gray-300 mt-1"
+          />
+        </div>
+
+        {/* 🔹 Request Type */}
+        <div>
+          <label className="block font-medium">
+            Request Type <span className="text-red-500">*</span>
+          </label>
+          <select
+            name="request_type"
+            value={formData.request_type}
+            onChange={handleChange}
+            className="w-full p-3 border rounded-lg border-gray-300 mt-1"
+          >
+            <option value="Request New Asset">Request New Asset</option>
+            <option value="Denied Asset Query">Denied Asset Query</option>
+            <option value="Other Queries">Other Queries</option>
+          </select>
+        </div>
+
+        {/* 🔹 Request Details */}
+        <div>
+          <label className="block font-medium">
+            Request Details <span className="text-red-500">*</span>
+          </label>
+          <textarea
+            name="request_details"
+            value={formData.request_details}
+            onChange={handleChange}
+            required
+            className="w-full p-3 border rounded-lg border-gray-300 mt-1 resize-none"
+            rows="4"
+            placeholder="Provide additional details regarding your request..."
+          />
+        </div>
+
+        {/* 🔹 Submit Button */}
+        <div className="text-center">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full bg-[#673AB7] hover:bg-[#5E35B1] text-white font-bold py-3 rounded-lg transition"
+          >
+            {isSubmitting ? "Submitting..." : "Submit Request"}
+          </button>
+        </div>
+      </form>
+
+      {/* Success Message */}
+      {submittedRequest && (
+        <motion.div
+          className="mt-6 p-6 bg-[#DBDAE4] rounded-xl text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h3 className="text-xl font-semibold text-[#302757] mb-4">
+            Request Submitted Successfully!
+          </h3>
+          <p className="text-[#302757] mb-2">
+            Your request for <strong>{submittedRequest.asset_name}</strong> has been submitted.
+          </p>
+          <p className="text-[#302757] mb-2">
+            Request Type: <strong>{submittedRequest.request_type}</strong>
+          </p>
+          <p className="text-[#302757]">
+            Status: <strong>{submittedRequest.status}</strong>
+          </p>
+        </motion.div>
+      )}
+    </motion.div>
   );
 };
 
