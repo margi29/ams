@@ -8,7 +8,6 @@ import {
   MdBuild,
   MdCheckCircle,
 } from "react-icons/md";
-import Card from "../../components/Card";
 
 const guidelinesData = [
   {
@@ -52,12 +51,12 @@ const Guidelines = () => {
 
   return (
     <motion.div
-      className="p-6 min-h-screen mt-16 overflow-auto bg-white rounded-lg shadow-md"
+      className="p-6 mt-16 overflow-auto bg-white rounded-lg shadow-md"
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
     >
       {/* Title Section */}
-      <h1 className="text-3xl font-semibold text-center text-gray-800">
+      <h1 className="text-3xl font-bold text-center text-gray-800">
          Company Guidelines
       </h1>
       <h2 className="text-lg text-center mt-2 text-gray-600">
@@ -65,11 +64,11 @@ const Guidelines = () => {
       </h2>
 
       {/* Guidelines Section */}
-      <Card title="General Asset Management Guidelines" className="mt-6">
+      <div title="General Asset Management Guidelines" className="mt-6">
         {guidelinesData.map((item, index) => (
           <motion.div
             key={index}
-            className="mb-4 border-b pb-4 last:border-b-0"
+            className=" border-b pb-4 last:border-b-0"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: index * 0.1 }}
@@ -106,7 +105,7 @@ const Guidelines = () => {
             </motion.div>
           </motion.div>
         ))}
-      </Card>
+      </div>
     </motion.div>
   );
 };
