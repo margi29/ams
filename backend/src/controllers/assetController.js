@@ -1,155 +1,121 @@
 const Asset = require("../models/Asset");
+const QRCode = require("qrcode");
+const asyncHandler = require("express-async-handler");
 
-// @desc Get all assets
-// @route GET /api/assets
-const getAllAssets = async (req, res) => {
-  console.log("GET /api/assets called 🚀");
+// ✅ Fetch all asset IDs
+const getAllAssetIds = asyncHandler(async (req, res) => {
+  const assets = await Asset.find({}, { asset_id: 1, _id: 0 });
+  res.json({ assetIds: assets.map(asset => asset.asset_id) });
+});
 
-  try {
-    const assets = await Asset.find();
-    res.json(assets);
-  } catch (err) {
-    console.error("Error fetching assets:", err);
-    res.status(500).json({ message: "Server error", error: err.message });
+// ✅ Get the last asset ID and generate the next one
+const getLastAssetId = asyncHandler(async (req, res) => {
+  const lastAsset = await Asset.findOne().sort({ asset_id: -1 }).select("asset_id");
+
+  if (!lastAsset || !lastAsset.asset_id) {
+    return res.json({ lastAssetId: "A01" }); // If no assets exist, start from A01
   }
-};
 
-// @desc Get all available assets for assignment
-// @route GET /api/assets/available
-// GET available assets by category
-const getAvailableAssets = async (req, res) => {
-    try {
-      const { category } = req.query;
+  console.log("📢 Last Asset ID:", lastAsset.asset_id);
+  const prefix = lastAsset.asset_id.charAt(0); // Extract "A"
+  const numericPart = parseInt(lastAsset.asset_id.substring(1), 10);
+  const nextId = `${prefix}${(numericPart + 1).toString().padStart(2, "0")}`; // A03 → A04
+
+  res.json({ lastAssetId: nextId });
+});
+
+// ✅ Fetch all assets
+const getAllAssets = asyncHandler(async (req, res) => {
+  console.log("📢 GET /api/assets called 🚀");
+  const assets = await Asset.find();
+  res.json(assets);
+});
+
+// ✅ Get a single asset by ID
+const getAssetById = asyncHandler(async (req, res) => {
+  const asset = await Asset.findById(req.params.id);
+  if (!asset) return res.status(404).json({ message: "Asset not found" });
+  res.json(asset);
+});
+
+// ✅ Check if asset ID is unique
+const checkAssetId = asyncHandler(async (req, res) => {
+  const existingAsset = await Asset.findOne({ asset_id: req.params.id });
+  res.json({ isUnique: !existingAsset });
+});
+
+// ✅ Create a new asset with optional QR Code generation
+const createAsset = asyncHandler(async (req, res) => {
+  const assetData = req.body;
   
-      // Find available assets with matching category
-      const query = {
-        status: "Available",
-      };
+  // Generate QR Code (base64 image)
+  const qrCodeData = await QRCode.toDataURL(JSON.stringify(assetData));
+  const newAsset = new Asset({ ...assetData, qr_code: qrCodeData });
   
-      // Add category filter only if provided
-      if (category) {
-        query.category = category;
-      }
+  await newAsset.save();
+  res.status(201).json(newAsset);
+});
+
+// ✅ Get all available assets (optionally filter by category)
+const getAvailableAssets = asyncHandler(async (req, res) => {
+  const { category } = req.query;
+  const query = { status: "Available", ...(category && { category }) };
   
-      const assets = await Asset.find(query);
-      res.status(200).json(assets);
-    } catch (error) {
-      res.status(500).json({ message: "Error fetching available assets.", error });
-    }
-  };
-  
+  const assets = await Asset.find(query);
+  res.json(assets);
+});
 
-// @desc Get categories and their assets
-// @route GET /api/assets/categories
-const getCategoriesWithAssets = async (req, res) => {
-  console.log("GET /api/assets/categories called 📚");
+// ✅ Get categories and their assets
+const getCategoriesWithAssets = asyncHandler(async (req, res) => {
+  console.log("📢 GET /api/assets/categories called 📚");
 
-  try {
-    const assets = await Asset.find({}, "category name");
-    const categoryMap = {};
+  const assets = await Asset.find({}, "category name");
+  const categoryMap = assets.reduce((acc, asset) => {
+    acc[asset.category] = acc[asset.category] || [];
+    acc[asset.category].push(asset.name);
+    return acc;
+  }, {});
 
-    assets.forEach((asset) => {
-      if (!categoryMap[asset.category]) {
-        categoryMap[asset.category] = [];
-      }
-      categoryMap[asset.category].push(asset.name);
-    });
+  res.json(Object.entries(categoryMap).map(([category, assets]) => ({ category, assets })));
+});
 
-    const result = Object.keys(categoryMap).map((category) => ({
-      category,
-      assets: categoryMap[category],
-    }));
+// ✅ Update an asset
+const updateAsset = asyncHandler(async (req, res) => {
+  const updatedAsset = await Asset.findByIdAndUpdate(req.params.id, req.body, { new: true });
 
-    res.json(result);
-  } catch (error) {
-    console.error("Error fetching categories:", error);
-    res.status(500).json({ message: "Internal server error", error });
-  }
-};
+  if (!updatedAsset) return res.status(404).json({ message: "Asset not found" });
+  res.json({ message: "Asset updated successfully", asset: updatedAsset });
+});
 
-// @desc Get a single asset by ID
-// @route GET /api/assets/:id
-const getAssetById = async (req, res) => {
-  try {
-    const asset = await Asset.findById(req.params.id);
-    if (!asset) {
-      return res.status(404).json({ message: "Asset not found" });
-    }
-    res.json(asset);
-  } catch (err) {
-    console.error("Error fetching asset:", err);
-    res.status(500).json({ message: "Server error", error: err.message });
-  }
-};
-
-// @desc Create a new asset
-// @route POST /api/assets
-const createAsset = async (req, res) => {
-  try {
-    const newAsset = new Asset(req.body);
-    await newAsset.save();
-    res.status(201).json(newAsset);
-  } catch (error) {
-    res.status(500).json({ message: "Error adding asset", error });
-  }
-};
-
-// @desc Check if asset ID is unique
-// @route GET /api/assets/check-id/:id
-const checkAssetId = async (req, res) => {
-  const assetId = req.params.id;
-
-  try {
-    const existingAsset = await Asset.findOne({ asset_id: assetId });
-    if (existingAsset) {
-      return res.json({ isUnique: false });
-    } else {
-      return res.json({ isUnique: true });
-    }
-  } catch (err) {
-    console.error("Error checking asset ID:", err);
-    return res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-// @desc Update an asset
-// @route PUT /api/assets/:id
-const updateAsset = async (req, res) => {
-  try {
-    const updatedAsset = await Asset.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-
-    if (!updatedAsset) {
-      return res.status(404).json({ message: "Asset not found" });
-    }
-    res.json({ message: "Asset updated successfully", asset: updatedAsset });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error });
-  }
-};
-
-// @desc Delete an asset
-// @route DELETE /api/assets/:id
+// ✅ Delete an asset
 const deleteAsset = async (req, res) => {
   try {
-    const deletedAsset = await Asset.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
+    console.log("Deleting asset with ID:", id); // ✅ Debug log
+
+    const deletedAsset = await Asset.findByIdAndDelete(id);
+    
     if (!deletedAsset) {
       return res.status(404).json({ message: "Asset not found" });
     }
+
     res.json({ message: "Asset deleted successfully", asset: deletedAsset });
   } catch (error) {
+    console.error("Error deleting asset:", error);
     res.status(500).json({ message: "Server error", error });
   }
 };
 
+
 module.exports = {
+  getAllAssetIds,
+  getLastAssetId,
   getAllAssets,
+  getAssetById,
+  checkAssetId,
+  createAsset,
   getAvailableAssets,
   getCategoriesWithAssets,
-  getAssetById,
-  createAsset,
-  checkAssetId,
   updateAsset,
   deleteAsset
 };

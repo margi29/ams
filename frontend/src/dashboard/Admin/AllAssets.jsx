@@ -77,23 +77,25 @@ const AllAssets = () => {
       "Are you sure you want to delete this asset?"
     );
     if (!confirmDelete) return; // ❌ User canceled deletion
-
+  
     try {
-      console.log("Deleting Asset ID:", asset_id);
-
+      console.log("Sending DELETE request for Asset ID:", asset_id);
+  
       const response = await fetch(`http://localhost:3000/api/assets/${asset_id}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
       });
-
+  
+      const result = await response.json();
+      console.log("Delete response:", result); // ✅ Debug log
+  
       if (!response.ok) {
-        const errorMessage = await response.text();
-        throw new Error(errorMessage);
+        throw new Error(result.message || "Failed to delete asset");
       }
-
+  
       // ✅ Remove deleted asset from state
       setAssets((prevAssets) => prevAssets.filter((asset) => asset._id !== asset_id));
-
+  
       // ✅ Success message
       alert("Asset deleted successfully!");
     } catch (error) {
@@ -101,6 +103,8 @@ const AllAssets = () => {
       alert("Failed to delete asset!");
     }
   };
+
+  
 
   const filteredAssets = assets
   .filter(

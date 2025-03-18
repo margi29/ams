@@ -21,36 +21,55 @@ const AddAsset = () => {
   const fetchNextAssetId = async () => {
     try {
       const response = await fetch("http://localhost:3000/api/assets/all-ids");
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+      
       const data = await response.json();
+  
+      console.log("🔍 Received asset IDs:", data.assetIds); // Debugging
   
       if (!data.assetIds || data.assetIds.length === 0) {
         setAsset((prev) => ({ ...prev, asset_id: "A01" })); // If no assets exist
         return;
       }
   
-      const existingIds = data.assetIds; // Array of existing asset IDs (e.g., ["A01", "A02", "A04", "A06"])
-  
-      // Find the first missing ID
-      let nextId = findFirstAvailableAssetId(existingIds);
-  
+      // Find the first available ID
+      let nextId = findFirstAvailableAssetId(data.assetIds);
       console.log("✅ Final Assigned Asset ID:", nextId);
+  
       setAsset((prev) => ({ ...prev, asset_id: nextId }));
     } catch (error) {
       console.error("❌ Error fetching Asset IDs:", error);
     }
   };
   
-  // Function to find the first available asset ID
-  const findFirstAvailableAssetId = (existingIds) => {
-    existingIds = existingIds.map((id) => parseInt(id.replace(/\D/g, ""), 10)); // Extract numbers
-    existingIds.sort((a, b) => a - b); // Sort in ascending order
+
   
-    for (let i = 1; i <= existingIds.length + 1; i++) {
-      if (!existingIds.includes(i)) {
-        return `A${String(i).padStart(2, "0")}`; // Return the first missing ID
+  
+  const findFirstAvailableAssetId = (existingIds) => {
+    if (!existingIds || existingIds.length === 0) {
+      return "A01"; // If no assets exist
+    }
+  
+    // Extract numbers from asset IDs and convert them to integers
+    let numericIds = existingIds
+      .map((id) => parseInt(id.replace(/\D/g, ""), 10))
+      .filter((num) => !isNaN(num)); // Filter out any invalid values
+  
+    // Sort numeric IDs in ascending order
+    numericIds.sort((a, b) => a - b);
+  
+    // Find the first missing ID
+    for (let i = 1; i <= numericIds.length; i++) {
+      if (!numericIds.includes(i)) {
+        return `A${String(i).padStart(2, "0")}`; // Ensure it's always a 2-digit format
       }
     }
+  
+    // If no missing ID is found, return the next consecutive ID
+    return `A${String(numericIds[numericIds.length - 1] + 1).padStart(2, "0")}`;
   };
+  
+  
   
   // Run on page load
   useEffect(() => {
