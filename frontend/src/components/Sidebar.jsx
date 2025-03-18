@@ -64,16 +64,16 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       {
         icon: Package, label: "My Assets",
         subItems: [
-          { name: "View My Assets", path: "/employee/my-assets" },
+          { name: "View My Assets", path: "/employee/view-my-asset" },
           { name: "Return Request", path: "/employee/return-request" },
-          { name: "Maintenance Request", path: "/employee/maintenance-request" }
+          { name: "Maintenance Request", path: "/employee/maintenance-request"}
         ]
       },
       {
         icon: Package, label: "Request Asset",
         subItems: [
-          { name: "Request New Asset", path: "/employee/request-asset" },
-          { name: "View Request Status", path: "/employee/request-status" }
+          { name: "Request New Asset", path:"/employee/request-new-asset" },
+          { name: "View Request Status", path: "/employee/view-requests" }
         ]
       },
       {

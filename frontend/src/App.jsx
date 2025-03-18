@@ -11,7 +11,16 @@ import AssignAsset from "./dashboard/Admin/AssignAsset";
 import AssetRequests from "./dashboard/Admin/AssetRequests";
 import QRCodeList from "./dashboard/Admin/QRCodeList";
 import MaintenanceAndRepair from "./dashboard/Admin/MaintenanceAndRepair";
+// Employee paths
 import EmployeeDashboard from "./pages/EmployeeDashboard";
+import ViewMyAsset from "./dashboard/Employee/ViewMyAsset";
+import ReturnRequest from "./dashboard/Employee/ReturnRequest";
+import MaintenanceRequest from "./dashboard/Employee/MaintenanceRequest";
+import RequestNewAsset from "./dashboard/Employee/RequestNewAsset";
+import ViewRequestStatus from "./dashboard/Employee/ViewRequestStatus";
+import Guidelines from "./dashboard/Employee/Guidelines";
+import ContactAdmin from "./dashboard/Employee/ContactAdmin";
+
 import NotFound from "./pages/NotFound";
 import "./styles/global.css";
 import "./App.css";
@@ -59,6 +68,7 @@ const App = () => {
             </div>
           }
         />
+        {/* Admin Routes */}
         <Route path="/admin/*" element={<Layout><AdminDashboard /></Layout>} />
         <Route path="/admin/assets" element={<Layout><AllAssets /></Layout>} />
         <Route path="/admin/add-asset" element={<Layout><AddNewAsset /></Layout>} />
@@ -69,11 +79,23 @@ const App = () => {
         <Route path="/admin/qr-logs" element={<Layout><QRCodeList /></Layout>} />
         <Route path="/admin/scheduled-maintenance" element={<Layout><MaintenanceAndRepair /></Layout>} />
         <Route path="/admin/user-management" element={<Layout><UserManagement /></Layout>} />
+
+
+        {/* Employee Routes */}
         <Route path="/employee/*" element={<Layout><EmployeeDashboard /></Layout>} />
+        <Route path="/employee/view-my-asset" element={<Layout><ViewMyAsset /></Layout>} />
+        <Route path="/employee/return-request" element={<Layout><ReturnRequest /></Layout>} />
+        <Route path="/employee/maintenance-request" element={<Layout><MaintenanceRequest /></Layout>} />
+        <Route path="/employee/guidelines" element={<Layout><Guidelines/></Layout>} />
+        <Route path="/employee/view-requests" element={<Layout><ViewRequestStatus /></Layout>} />
+        <Route path="/employee/contact-support" element={<Layout><ContactAdmin /></Layout>}/>
+        <Route path="/employee/request-new-asset" element={<Layout><RequestNewAsset /></Layout>} />
+       
+        {/* 🔹 Not Found */}
         <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Router>
-  );
+        </Routes>
+        </Router>
+);
 };
 
 export default App;
