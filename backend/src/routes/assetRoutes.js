@@ -1,87 +1,42 @@
 const express = require("express");
 const router = express.Router();
-const Asset = require("../models/Asset");
+const {
+  getAllAssets,
+  getAssetById,
+  createAsset,
+  updateAsset,
+  deleteAsset,
+  getCategoriesWithAssets,
+  checkAssetId,
+  getAvailableAssets, // ✅ Import new function
+  assignAsset, // ✅ Import assignAsset function
+} = require("../controllers/assetController");
 
-// Route to get all assets
-router.get("/", async (req, res) => {
-    console.log("GET /api/assets called 🚀");
-    
-    try {
-        const assets = await Asset.find();
-        console.log("Fetched Assets:", assets); // Log what is fetched
+// ✅ Route to fetch all assets
+router.get("/", getAllAssets);
 
-        res.json(assets);
-    } catch (err) {
-        console.error("Error fetching assets:", err);
-        res.status(500).json({ message: "Server error", error: err.message });
-    }
-});
+// ✅ Route to fetch only available assets for assignment
+router.get("/available", getAvailableAssets);
 
-// Get a single asset by ID
-router.get("/:id", async (req, res) => {
-    const asset = await Asset.findById(req.params.id);
-    res.json(asset);
-});
+// ✅ Route to fetch unique categories and their assets
+router.get("/categories", getCategoriesWithAssets);
 
-// Create a new asset
-router.post("/", async (req, res) => {
-    try {
-      const newAsset = new Asset(req.body);
-      await newAsset.save();
-      res.status(201).json(newAsset);
-    } catch (error) {
-      res.status(500).json({ message: "Error adding asset", error });
-    }
-  });
+// ✅ Route to fetch a single asset by ID
+router.get("/:id", getAssetById);
 
-// Check if asset ID is unique
-router.get("/check-id/:id", async (req, res) => {
-  const assetId = req.params.id;
-  
-  try {
-    // Check if the asset ID already exists in the database
-    const existingAsset = await Asset.findOne({ asset_id: assetId });
+// ✅ Route to create a new asset
+router.post("/", createAsset);
 
-    if (existingAsset) {
-      return res.json({ isUnique: false }); // Asset ID already exists
-    } else {
-      return res.json({ isUnique: true }); // Asset ID is unique
-    }
-  } catch (err) {
-    console.error("Error checking asset ID:", err);
-    return res.status(500).json({ message: "Internal server error" });
-  }
-});
+// ✅ Route to check if asset ID is unique
+router.get("/check-id/:id", checkAssetId);
 
-// Update an asset
-router.put("/:id", async (req, res) => {
-    try {
-      const updatedAsset = await Asset.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  
-      if (!updatedAsset) {
-        return res.status(404).json({ message: "Asset not found" });
-      }
-  
-      res.json({ message: "Asset updated successfully", asset: updatedAsset });
-    } catch (error) {
-      res.status(500).json({ message: "Server error", error });
-    }
-  });
+// ✅ Route to update an asset
+router.put("/:id", updateAsset);
 
-// Delete an asset
-router.delete("/:id", async (req, res) => {
-    try {
-      const deletedAsset = await Asset.findByIdAndDelete(req.params.id);
-      if (!deletedAsset) {
-        return res.status(404).json({ message: "Asset not found" });
-      }
-      res.json({ message: "Asset deleted successfully", asset: deletedAsset });
-    } catch (error) {
-      res.status(500).json({ message: "Server error", error });
-    }
-  });
-  
+// ✅ Route to delete an asset
+router.delete("/:id", deleteAsset);
 
-console.log("Asset Model:", Asset);
+// ✅ Route to assign an asset to a user
+router.post("/assign", assignAsset);
 
 module.exports = router;
