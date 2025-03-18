@@ -93,18 +93,22 @@ const SearchFilterBar = ({
         <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
       </div>
 
-      {/* Filter Dropdown */}
+      {/* Filter Dropdown with Safe Fallback */}
       <select
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
         className="p-3 border rounded-lg"
       >
         <option value="All">All Status</option>
-        {statusOptions.map((status) => (
-          <option key={status} value={status}>
-            {status}
-          </option>
-        ))}
+        {statusOptions?.length > 0 ? (
+          statusOptions.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))
+        ) : (
+          <option disabled>No Status Options Available</option>
+        )}
       </select>
 
       {/* Export Dropdown & Button */}

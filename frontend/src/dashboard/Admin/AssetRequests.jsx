@@ -3,8 +3,6 @@ import { motion } from "framer-motion";
 import Table from "../../components/Table";
 import SearchFilterBar from "../../components/SearchFilterBar";
 
-const statusOptions = ["Pending", "Approved", "Rejected"];
-
 const AssetRequests = () => {
   const [requests, setRequests] = useState([
     { id: 1, asset: "Dell Laptop", requestedBy: "John Doe", date: "2024-02-20", status: "Pending" },
@@ -12,7 +10,6 @@ const AssetRequests = () => {
     { id: 3, asset: "Projector", requestedBy: "Emily Davis", date: "2024-02-22", status: "Pending" }
   ]);
 
-  const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
   const [exportFormat, setExportFormat] = useState("csv");
 
@@ -30,10 +27,8 @@ const AssetRequests = () => {
     );
   };
 
-  const filteredRequests = requests.filter(
-    (req) =>
-      (filter === "All" || req.status === filter) &&
-      req.asset.toLowerCase().includes(search.toLowerCase())
+  const filteredRequests = requests.filter((req) =>
+    req.asset.toLowerCase().includes(search.toLowerCase())
   );
 
   const columns = [
@@ -86,13 +81,10 @@ const AssetRequests = () => {
       <SearchFilterBar
         search={search}
         setSearch={setSearch}
-        filter={filter}
-        setFilter={setFilter}
         exportFormat={exportFormat}
         setExportFormat={setExportFormat}
         data={filteredRequests}
         filename="asset_requests"
-        statusOptions={statusOptions}
       />
 
       {filteredRequests.length > 0 ? (
