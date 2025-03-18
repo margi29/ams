@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { FaDownload } from "react-icons/fa";
-import { QRCodeCanvas } from "qrcode.react";
 import Table from "../../components/Table";
-import SearchFilterBar from "../../components/SearchFilterBar";  // Import the new component
+import SearchFilterBar from "../../components/SearchFilterBar"; // Import the new component
 
 const statusColors = {
   Available: "text-green-600 font-semibold",
@@ -26,7 +24,7 @@ const AllAssets = () => {
       try {
         const response = await fetch("http://localhost:3000/api/assets");
         const data = await response.json();
-        console.log("Fetched Data:", data);  // ✅ Log response data
+        console.log("Fetched Data:", data); // ✅ Log response data
         setAssets(data);
       } catch (error) {
         console.error("Error fetching assets:", error);
@@ -75,81 +73,56 @@ const AllAssets = () => {
 
   // ✅ Delete asset from backend
   const handleDelete = async (asset_id) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this asset?");
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this asset?"
+    );
     if (!confirmDelete) return; // ❌ User canceled deletion
-  
+
     try {
       console.log("Deleting Asset ID:", asset_id);
-  
+
       const response = await fetch(`http://localhost:3000/api/assets/${asset_id}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
       });
-  
+
       if (!response.ok) {
         const errorMessage = await response.text();
         throw new Error(errorMessage);
       }
-  
+
       // ✅ Remove deleted asset from state
       setAssets((prevAssets) => prevAssets.filter((asset) => asset._id !== asset_id));
-  
+
       // ✅ Success message
       alert("Asset deleted successfully!");
-  
     } catch (error) {
       console.error("Error deleting asset:", error.message);
       alert("Failed to delete asset!");
     }
   };
-  
-  // ✅ Download QR Code
-  const downloadQRCode = (id) => {
-    const canvas = document.getElementById(`qr-${id}`);
-    const pngUrl = canvas.toDataURL("image/png");
-    const downloadLink = document.createElement("a");
-    downloadLink.href = pngUrl;
-    downloadLink.download = `Asset_${id}_QR.png`;
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
-  };
 
-  const filteredAssets = assets.filter(
+  const filteredAssets = assets
+  .filter(
     (asset) =>
       (filter === "All" || asset.status === filter) &&
       asset.name.toLowerCase().includes(search.toLowerCase())
-  );
+  )
+  .sort((a, b) => {
+    const numA = parseInt(a.asset_id.substring(1)); // Extract numeric part
+    const numB = parseInt(b.asset_id.substring(1));
+    return numA - numB; // Sort numerically
+  });
+
 
   const columns = [
-    { header: "Asset ID", accessor: "asset_id" }, // ✅ Fetch asset_id from database
+    { header: "Asset ID", accessor: "asset_id" },
     { header: "Asset Name", accessor: "name" },
     { header: "Category", accessor: "category" },
     {
       header: "Status",
       accessor: "status",
       className: (value) => statusColors[value] || "",
-    },
-    {
-      header: "QR Code",
-      render: (row) => (
-        <div className="flex flex-col items-center">
-          <QRCodeCanvas
-            id={`qr-${row.asset_id}`} // ✅ Use asset_id for QR Code
-            value={`Asset ID: ${row.asset_id}
-  Name: ${row.name}
-  Category: ${row.category}
-  Status: ${row.status}`}
-            size={50}
-          />
-          <button
-            className="mt-2 bg-green-500 text-white px-2 py-1 rounded"
-            onClick={() => downloadQRCode(row.asset_id)}
-          >
-            Download QR
-          </button>
-        </div>
-      ),
     },
     {
       header: "Actions",
@@ -163,7 +136,7 @@ const AllAssets = () => {
           </button>
           <button
             className="bg-red-500 text-white px-3 py-1 rounded"
-            onClick={() => handleDelete(row._id)} // ❗ Keep _id for deletion
+            onClick={() => handleDelete(row._id)}
           >
             Delete
           </button>

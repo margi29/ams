@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 
 const AddAsset = () => {
@@ -16,6 +16,52 @@ const AddAsset = () => {
   });
 
   const [submittedAsset, setSubmittedAsset] = useState(null);
+
+
+  const fetchNextAssetId = async () => {
+    try {
+      const response = await fetch("http://localhost:3000/api/assets/all-ids");
+      const data = await response.json();
+  
+      if (!data.assetIds || data.assetIds.length === 0) {
+        setAsset((prev) => ({ ...prev, asset_id: "A01" })); // If no assets exist
+        return;
+      }
+  
+      const existingIds = data.assetIds; // Array of existing asset IDs (e.g., ["A01", "A02", "A04", "A06"])
+  
+      // Find the first missing ID
+      let nextId = findFirstAvailableAssetId(existingIds);
+  
+      console.log("✅ Final Assigned Asset ID:", nextId);
+      setAsset((prev) => ({ ...prev, asset_id: nextId }));
+    } catch (error) {
+      console.error("❌ Error fetching Asset IDs:", error);
+    }
+  };
+  
+  // Function to find the first available asset ID
+  const findFirstAvailableAssetId = (existingIds) => {
+    existingIds = existingIds.map((id) => parseInt(id.replace(/\D/g, ""), 10)); // Extract numbers
+    existingIds.sort((a, b) => a - b); // Sort in ascending order
+  
+    for (let i = 1; i <= existingIds.length + 1; i++) {
+      if (!existingIds.includes(i)) {
+        return `A${String(i).padStart(2, "0")}`; // Return the first missing ID
+      }
+    }
+  };
+  
+  // Run on page load
+  useEffect(() => {
+    fetchNextAssetId();
+  }, []);
+  
+
+
+
+
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -38,50 +84,76 @@ const AddAsset = () => {
   
 
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    const isUnique = await checkUniqueAssetId(asset.asset_id);
-    if (!isUnique) {
-      alert("Asset ID already exists! Please enter a unique ID.");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+  
+    try {
+      const isUnique = await checkUniqueAssetId(asset.asset_id);
+      if (!isUnique) {
+        alert("Asset ID already exists! Please enter a unique ID.");
+        return;
+      }
+  
+      // ✅ Manually create QR code value
+      const qrValue = `Asset ID: ${asset.asset_id}
+  Name: ${asset.name}
+  Manufacturer: ${asset.manufacturer}
+  Model No.: ${asset.model_no}
+  Category: ${asset.category}
+  Status: ${asset.status}
+  Purchase Date: ${asset.purchase_date}
+  Warranty Expiry: ${asset.warranty_expiry || "N/A"}
+  Location: ${asset.location}
+  Description: ${asset.description || "N/A"}`;
+  
+      // 🔹 Add QR Code value directly to asset object
+      const assetWithQR = { ...asset, qr_code: qrValue };
+  
+      console.log("🚀 Sending request to backend with QR Code...");
+      const response = await fetch("http://localhost:3000/api/assets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(assetWithQR),
+      });
+  
+      const responseData = await response.json();
+      console.log("✅ Server Response:", responseData);
+  
+      if (!response.ok) {
+        throw new Error(responseData.message || "Error adding asset");
+      }
+  
+      alert("Asset added successfully!");
+  
+      // ✅ Set `submittedAsset` so the QR code renders
+      setSubmittedAsset(responseData);
+  
+    } catch (error) {
+      console.error("❌ Error adding asset:", error);
+      alert("Failed to add asset. Check console for details.");
+    }
+  };
+  
+
+
+
+
+  const downloadQRCode = () => {
+    const qrCanvas = document.querySelector("canvas"); // Directly get the canvas element
+    if (!qrCanvas) {
+      console.error("❌ QR Code canvas not found!");
       return;
     }
-
-    console.log("Sending request to backend...");
-    const response = await fetch("http://localhost:3000/api/assets", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(asset),
-    });
-
-    const responseData = await response.json();
-    console.log("Server response:", responseData);
-
-    if (!response.ok) {
-      throw new Error(responseData.message || "Error adding asset");
-    }
-
-    alert("Asset added successfully!");
-
-    // Store submitted asset in state to show QR code
-    setSubmittedAsset(responseData.asset);
-
-  } catch (error) {
-    console.error("Error adding asset:", error);
-    alert("Failed to add asset. Check console for details.");
-  }
-};
-
-const downloadQRCode = () => {
-  const canvas = document.getElementById("qrCode");
-  const pngUrl = canvas.toDataURL("image/png");
-  const downloadLink = document.createElement("a");
-  downloadLink.href = pngUrl;
-  downloadLink.download = `${asset.asset_id}_QRCode.png`;
-  document.body.appendChild(downloadLink);
-  downloadLink.click();
-  document.body.removeChild(downloadLink);
-};
+  
+    const pngUrl = qrCanvas.toDataURL("image/png");
+    const downloadLink = document.createElement("a");
+    downloadLink.href = pngUrl;
+    downloadLink.download = `${asset.asset_id}_QRCode.png`;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+  };
+  
 
 return (
   <div className="p-6 mt-16 bg-white shadow-lg rounded-xl">
@@ -93,13 +165,12 @@ return (
       <div>
         <label className="block text-gray-700 font-medium">Asset ID *</label>
         <input
-          type="text"
-          name="asset_id"
-          value={asset.asset_id}
-          onChange={handleChange}
-          required
-          className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-        />
+            type="text"
+            name="asset_id"
+            value={asset.asset_id}
+            readOnly
+            className="w-full mt-1 p-2 border border-gray-300 rounded-md bg-gray-200 cursor-not-allowed"
+          />
       </div>
 
       <div>
@@ -217,12 +288,14 @@ return (
       </div>
     </form>
 
-    {submittedAsset && (
-      <div className="mt-6 flex flex-col items-center">
-        <h3 className="text-xl font-semibold text-gray-800 mb-4">Asset QR Code</h3>
-        <QRCodeCanvas
-  id="qrCode"
-  value={`Asset ID: ${submittedAsset.asset_id}
+
+    {submittedAsset ? (
+  <div className="mt-6 flex flex-col items-center">
+    {console.log("🖨️ Rendering QR Code for:", submittedAsset)}
+    <h3 className="text-xl font-semibold text-gray-800 mb-4">Asset QR Code</h3>
+    <QRCodeCanvas
+      id="qrCode"
+      value={`Asset ID: ${submittedAsset.asset_id}
 Name: ${submittedAsset.name}
 Manufacturer: ${submittedAsset.manufacturer}
 Model No.: ${submittedAsset.model_no}
@@ -232,19 +305,21 @@ Purchase Date: ${submittedAsset.purchase_date}
 Warranty Expiry: ${submittedAsset.warranty_expiry || "N/A"}
 Location: ${submittedAsset.location}
 Description: ${submittedAsset.description || "N/A"}`}
-  size={200}
-/>
+      size={200}
+    />
+    <button onClick={downloadQRCode} className="mt-4 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+      Download QR Code
+    </button>
+  </div>
+) : null}
 
 
 
-        <button onClick={downloadQRCode} className="mt-4 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
-          Download QR Code
-        </button>
-      </div>
-    )}
+
   </div>
  );
 };
 
 export default AddAsset;
+
 
