@@ -1,119 +1,112 @@
-import { useState } from "react";
+import React from "react";
 import {
-  PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
-  BarChart, Bar, XAxis, YAxis, Legend,
-  LineChart, Line, AreaChart, Area
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Legend,
 } from "recharts";
-
-const data = [
-  { name: "Assigned Assets", value: 5, color: "#3A6D8C" },
-  { name: "Pending Requests", value: 2, color: "#6A9AB0" },
-  { name: "Approved Requests", value: 3, color: "#5C7D8A" },
-  { name: "Rejected Requests", value: 1, color: "#001F3F" },
-];
+import { FiDatabase } from "react-icons/fi";
+import { FaThumbsUp, FaClipboardList, FaTimesCircle } from "react-icons/fa";
+import Table from "../components/Table";
+import Card from "../components/Card";
 
 const EmployeeDashboard = () => {
+  const assetData = [
+    { category: "Laptops", value: 10, color: "#673AB7" },
+    { category: "Desktops", value: 5, color: "#F88379" },
+    { category: "Printers", value: 3, color: "#00B4D8" },
+    { category: "Routers", value: 2, color: "#FFC107" },
+  ];
+
+  const recentActivity = [
+    { date: "2025-03-07", action: "Laptop request approved" },
+    { date: "2025-03-06", action: "Printer request pending" },
+    { date: "2025-03-05", action: "Desktop assigned" },
+    { date: "2025-03-04", action: "Router request rejected" },
+  ];
+
+  const tableColumns = [
+    { header: "Date", accessor: "date" },
+    { header: "Action", accessor: "action" },
+  ];
+
+  const summaryCards = [
+    { icon: FiDatabase, label: "Assigned Assets", value: 10, color: "#673AB7" },
+    { icon: FaClipboardList, label: "Pending Requests", value: 5, color: "#00B4D8" },
+    { icon: FaThumbsUp, label: "Approved Requests", value: 8, color: "#4CAF50" },
+    { icon: FaTimesCircle, label: "Rejected Requests", value: 2, color: "#F44336" },
+  ];
+
+  const employeeAssetData = [
+    { month: "Jan", assigned: 3 },
+    { month: "Feb", assigned: 5 },
+    { month: "Mar", assigned: 7 },
+    { month: "Apr", assigned: 8 },
+    { month: "May", assigned: 6 },
+    { month: "Jun", assigned: 9 },
+  ];
+
   return (
-    <div className="h-screen w-90vh overflow-y-auto bg-gray-100 pt-24 px-6">
-      {/* Dashboard Container */}
-      <div className="max-w-[1200px] mx-auto p-8 bg-white shadow-lg rounded-xl border border-gray-300">
-        
-        {/* Welcome Message */}
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-semibold text-gray-800">Welcome to Your Employee Dashboard</h1>
-          <p className="text-lg mt-2 text-gray-600">
-            View your assigned assets, request status, and activity logs.
-          </p>
-        </div>
+    <div className="flex flex-col p-6 mt-25 bg-white min-h-screen">
+      <h1 className="text-4xl font-semibold text-center [var(--primary-dark)]">Welcome to the Employee Dashboard</h1>
+      <h2 className="text-xl font-semibold text-center text-[var(--primary-dark)] mt-2"> Track your asset requests, assignments, and history</h2>
 
-        {/* Dashboard Header */}
-        <h2 className="text-2xl font-medium mb-6 text-gray-800 text-center">Employee Dashboard</h2>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-4 gap-6">
-          {data.map((item, index) => (
-            <div
-              key={index}
-              className="p-4 rounded-lg shadow text-white text-center"
-              style={{ backgroundColor: item.color }}
-            >
-              <h3 className="text-lg font-medium">{item.name}</h3>
-              <p className="text-2xl font-semibold">{item.value}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Charts Section */}
-        <div className="mt-8 grid grid-cols-2 gap-6">
-          {/* Asset Distribution */}
-          <div>
-            <h3 className="text-xl font-medium mb-3 text-gray-800">Your Asset Overview</h3>
-            <div className="w-full h-60">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={data} dataKey="value" outerRadius={80} label>
-                    {data.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+      {/* 🔹 Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
+        {summaryCards.map((card, index) => (
+          <div
+            key={index}
+            className="bg-white shadow-xl p-6 rounded-lg flex items-center space-x-4 relative transition-transform duration-300 hover:scale-105 hover:shadow-2xl"
+          >
+            <div className="absolute top-0 left-0 h-full w-1" style={{ backgroundColor: card.color }}></div>
+            <card.icon className="text-3xl" style={{ color: card.color }} />
+            <div>
+              <h3 className="text-lg font-semibold">{card.label}</h3>
+              <p className="text-xl font-bold">{card.value}</p>
             </div>
           </div>
-          {/* Request Breakdown */}
-          <div>
-            <h3 className="text-xl font-medium mb-3 text-gray-800">Request Status</h3>
-            <div className="w-full h-60">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data}>
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="value">
-                    {data.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Activity Table */}
-        <div className="mt-8">
-          <h3 className="text-xl font-medium mb-3 text-gray-800">Recent Activity</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-[#3A6D8C] text-white">
-                  <th className="p-3 border">Date</th>
-                  <th className="p-3 border">Time</th>
-                  <th className="p-3 border">Action</th>
-                  <th className="p-3 border">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="text-center">
-                  <td className="p-3 border">2025-02-24</td>
-                  <td className="p-3 border">10:15 AM</td>
-                  <td className="p-3 border">Requested New Laptop</td>
-                  <td className="p-3 border">Pending</td>
-                </tr>
-                <tr className="text-center">
-                  <td className="p-3 border">2025-02-25</td>
-                  <td className="p-3 border">02:30 PM</td>
-                  <td className="p-3 border">Returned Defective Monitor</td>
-                  <td className="p-3 border">Approved</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
+        ))}
       </div>
+
+      {/* 🔹 Data Visualization Chart */}
+      <Card title="Assigned Asset Category" className="mt-6">
+        <ResponsiveContainer width="100%" height={300}>
+          <PieChart>
+            <Pie data={assetData} dataKey="value" nameKey="category" outerRadius={120} label>
+              {assetData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+        </ResponsiveContainer>
+      </Card>
+
+      {/* 🔹 Employee Asset Assignment Chart */}
+      <Card title="Employee Asset Assignment Over Time" className="mt-6">
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={employeeAssetData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="month" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Line type="monotone" dataKey="assigned" stroke="#673AB7" name="Assigned Assets" />
+          </LineChart>
+        </ResponsiveContainer>
+      </Card>
+
+      {/* 🔹 Recent Activity Table */}
+      <Card title="Recent Activity" className="mt-6 text-[#000000]">
+        <Table columns={tableColumns} data={recentActivity} />
+      </Card>
     </div>
   );
 };
