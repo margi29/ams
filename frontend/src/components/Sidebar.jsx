@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, ChevronDown, Home, Settings, User, Package, QrCode, Wrench, LogOut } from "lucide-react";
+import { Menu, X, ChevronDown, Home, Settings, User, Package, QrCode, Wrench, LogOut, Book } from "lucide-react";
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const [openMenu, setOpenMenu] = useState(null);
@@ -42,6 +42,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         subItems: [
           { name: "All Assets", path: "/admin/assets" },
           { name: "Add New Asset", path: "/admin/add-asset" },
+          { name:"Asset Categories", path:"/admin/asset-Categories"},
           { name: "Asset History", path: "/admin/history" }
         ]
       },
@@ -62,7 +63,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     employee: [
       { icon: Home, label: "Dashboard", path: "/employee/dashboard" },
       {
-        icon: Package, label: "My Assets",
+        icon: Book, label: "My Assets",
         subItems: [
           { name: "View My Assets", path: "/employee/view-my-asset" },
           { name: "Return Request", path: "/employee/return-request" },

@@ -176,7 +176,7 @@ const AddAsset = () => {
 
 return (
   <div className="p-6 mt-16 bg-white shadow-lg rounded-xl">
-    <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
+    <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
       Add New Asset
     </h2>
 
