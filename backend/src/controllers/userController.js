@@ -1,6 +1,6 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs"); // Fixed import
-
+const Asset = require("../models/Asset"); // Ensure this import is present
 // @desc Get all users
 // @route GET /api/users
 // @access Private/Admin
@@ -68,23 +68,36 @@ const updateUser = async (req, res) => {
   }
 };
 
-// @desc Delete a user
-// @route DELETE /api/users/:id
-// @access Private/Admin
 const deleteUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
 
-    if (user) {
-      await user.deleteOne();
-      res.json({ message: "User deleted successfully" });
-    } else {
-      res.status(404).json({ message: "User not found" });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
+
+    // Unassign assets linked to this user and reset assigned details
+    await Asset.updateMany(
+      { assigned_to: user._id },
+      {
+        $set: {
+          assigned_to: null,
+          assigned_date: null,
+          note: "",
+          status: "Available", // ✅ Reset asset status to Available
+        },
+      }
+    );
+
+    // Delete the user
+    await user.deleteOne();
+
+    res.json({ message: "User deleted, assets unassigned, and status updated successfully" });
   } catch (error) {
     console.error("Error deleting user:", error);
     res.status(500).json({ message: "Failed to delete user" });
   }
 };
+
 
 module.exports = { getUsers, addUser, updateUser, deleteUser };

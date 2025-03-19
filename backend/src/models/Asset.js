@@ -1,33 +1,41 @@
 const mongoose = require("mongoose");
 
+// Function to format date as DD-MM-YYYY
+const formatDate = (date) => {
+  if (!date) return null;
+  const d = new Date(date);
+  return `${String(d.getDate()).padStart(2, "0")}-${String(d.getMonth() + 1).padStart(2, "0")}-${d.getFullYear()}`;
+};
+
 const AssetSchema = new mongoose.Schema({
-  asset_id: { type: String, unique: true, required: true }, // ✅ Unique asset identifier
-  name: { type: String, required: true }, // ✅ Asset name is required
+  asset_id: { type: String, unique: true, required: true },
+  name: { type: String, required: true },
   manufacturer: String,
   model_no: String,
-  category: { type: String, required: true }, // ✅ Category is required
+  category: { 
+    type: String, 
+    required: true, 
+    set: (value) => value.charAt(0).toUpperCase() + value.slice(1).toLowerCase(),
+  },
   status: {
     type: String,
     enum: ["Available", "Assigned", "Under Maintenance", "Discarded"],
     default: "Available",
-  }, // ✅ Better status management with enums
-  purchase_date: Date,
-  warranty_expiry: Date,
+  },
+  purchase_date: { type: Date, get: formatDate },
+  warranty_expiry: { type: Date, get: formatDate },
   location: String,
   description: String,
-  qr_code: String, // 🆕 Stores the base64-encoded QR code
+  qr_code: String, 
 
-  // ✅ Assigned details
-  assigned_to: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    default: null,
-  }, // Reference to the User ObjectId
-  assigned_date: { type: Date, default: null }, // ✅ Date when assigned
-  note: String, // ✅ Optional note for assignment details
-
-  // ✅ Timestamps to track changes
-}, { timestamps: true });
+  assigned_to: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+  assigned_date: { type: Date, default: null, get: formatDate },
+  note: String, 
+}, { 
+  timestamps: true,
+  toJSON: { getters: true }, // Enable formatting when returning JSON
+  toObject: { getters: true }
+});
 
 const Asset = mongoose.model("Asset", AssetSchema);
 

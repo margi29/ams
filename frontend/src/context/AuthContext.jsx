@@ -3,10 +3,13 @@ import { createContext, useContext, useState, useEffect } from "react";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+    return token && role ? { token, role } : null;
+  });
 
   useEffect(() => {
-    // Load user from localStorage when app starts
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
 
@@ -16,12 +19,14 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (token, role) => {
+    console.log("Storing Token:", token);
     localStorage.setItem("token", token);
     localStorage.setItem("role", role);
     setUser({ token, role });
   };
 
   const logout = () => {
+    console.log("Logging out...");
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     setUser(null);
@@ -34,5 +39,4 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Custom hook for easy access
 export const useAuth = () => useContext(AuthContext);
