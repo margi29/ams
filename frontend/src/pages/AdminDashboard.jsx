@@ -22,10 +22,10 @@ import Table from "../components/Table";
 const AdminDashboard = () => {
 	// Data matching summary cards
 	const assetData = [
-		{ category: "Total Assets", value: 120, color: "#673AB7" },
-		{ category: "Assigned Assets", value: 80, color: "#F88379" },
-		{ category: "Pending Requests", value: 25, color: "#00B4D8" },
-		{ category: "Under Maintenance", value: 15, color: "#FFC107" },
+		{ category: "Total Assets", value: 20, color: "#673AB7" },
+		{ category: "Assigned Assets", value: 10, color: "#F88379" },
+		{ category: "Pending Requests", value: 2, color: "#00B4D8" },
+		{ category: "Under Maintenance", value: 1, color: "#FFC107" },
 	];
 
 	// Monthly Asset Summary for Bar Chart
@@ -66,10 +66,10 @@ const AdminDashboard = () => {
 			{/* Summary Cards */}
 			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
 				{[
-					{ icon: FiDatabase, label: "Total Assets", value: 120, color: "#673AB7" },
-					{ icon: FaBoxes, label: "Assigned Assets", value: 80, color: "#F88379" },
-					{ icon: FaClipboardList, label: "Pending Requests", value: 25, color: "#00B4D8" },
-					{ icon: FaTools, label: "Under Maintenance", value: 15, color: "#FFC107" },
+					{ icon: FiDatabase, label: "Total Assets", value: 20, color: "#673AB7" },
+					{ icon: FaBoxes, label: "Assigned Assets", value: 10, color: "#F88379" },
+					{ icon: FaClipboardList, label: "Pending Requests", value: 2, color: "#00B4D8" },
+					{ icon: FaTools, label: "Under Maintenance", value: 1, color: "#FFC107" },
 				].map((card, index) => (
 					<div
 						key={index}
