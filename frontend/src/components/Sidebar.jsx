@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext"; // ✅ Import Auth Context
 import { Menu, X, ChevronDown, Home, Settings, User, Package, QrCode, Wrench, LogOut, Book } from "lucide-react";
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
@@ -7,6 +8,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const sidebarRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
+  const { logout } = useAuth(); // ✅ Use logout from context
   const role = location.pathname.split("/")[1];
 
   const toggleSubMenu = (label) => {
@@ -32,7 +34,10 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const onLogout = () => navigate("/");
+  const handleLogout = () => {
+    logout(); // ✅ Use AuthContext logout function
+    navigate("/"); // ✅ Redirect to login
+  };
 
   const menuItems = {
     admin: [
@@ -89,12 +94,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   return (
     <div className="flex h-screen relative">
       <div
-  ref={sidebarRef}
-  className={`h-screen bg-[#302757] text-white flex flex-col transition-all duration-500 fixed top-16 left-0 
-    ${isOpen ? "w-65" : "w-15"} 
-    max-h-[calc(100vh-64px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 shadow-lg`}
->
-
+        ref={sidebarRef}
+        className={`h-screen bg-[#302757] text-white flex flex-col transition-all duration-500 fixed top-16 left-0 
+          ${isOpen ? "w-65" : "w-15"} 
+          max-h-[calc(100vh-64px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 shadow-lg`}
+      >
         <button className="mt-4 ml-2 p-2 text-white" onClick={handleSidebarToggle}>
           {isOpen ? <X size={26} /> : <Menu size={26} />}
         </button>
@@ -141,7 +145,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           </ul>
         </nav>
         <div className="mt-auto pb-4">
-          <button onClick={onLogout} className="w-full flex items-center gap-3 p-3 text-red-500 hover:bg-red-100">
+          <button onClick={handleLogout} className="w-full flex items-center gap-3 p-3 text-red-500 hover:bg-red-100">
             <LogOut size={24} /> {isOpen && "Logout"}
           </button>
         </div>

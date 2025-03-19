@@ -1,13 +1,15 @@
 const User = require("../models/User");
+const bcrypt = require("bcryptjs"); // Fixed import
 
 // @desc Get all users
 // @route GET /api/users
 // @access Private/Admin
 const getUsers = async (req, res) => {
   try {
-    const users = await User.find({});
+    const users = await User.find().select("-password"); // Exclude passwords
     res.json(users);
   } catch (error) {
+    console.error("Error fetching users:", error);
     res.status(500).json({ message: "Failed to fetch users" });
   }
 };
@@ -19,15 +21,19 @@ const addUser = async (req, res) => {
   const { name, email, password, role } = req.body;
 
   try {
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, "i") } });
     if (userExists) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    const user = new User({ name, email, password, role });
+    // Hash the password before saving
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = new User({ name, email, password: hashedPassword, role });
     await user.save();
     res.status(201).json({ message: "User added successfully" });
   } catch (error) {
+    console.error("Error adding user:", error);
     res.status(500).json({ message: "Failed to add user" });
   }
 };
@@ -44,9 +50,11 @@ const updateUser = async (req, res) => {
     if (user) {
       user.name = name || user.name;
       user.email = email || user.email;
+
       if (password) {
-        user.password = password; // Only update password if provided
+        user.password = await bcrypt.hash(password, 10); // Hash new password
       }
+
       user.role = role || user.role;
 
       const updatedUser = await user.save();
@@ -55,6 +63,7 @@ const updateUser = async (req, res) => {
       res.status(404).json({ message: "User not found" });
     }
   } catch (error) {
+    console.error("Error updating user:", error);
     res.status(500).json({ message: "Failed to update user" });
   }
 };
@@ -73,6 +82,7 @@ const deleteUser = async (req, res) => {
       res.status(404).json({ message: "User not found" });
     }
   } catch (error) {
+    console.error("Error deleting user:", error);
     res.status(500).json({ message: "Failed to delete user" });
   }
 };
