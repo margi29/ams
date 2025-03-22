@@ -24,9 +24,9 @@ const AssetSchema = new mongoose.Schema({
   },
   purchase_date: { type: Date, get: formatDate },
   warranty_expiry: { type: Date, get: formatDate },
-  location: String,
   description: String,
-  qr_code: String, 
+  qr_code: String,
+  image: { type: String }, // ✅ Store image path 
 
   assigned_to: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   assigned_date: { type: Date, default: null, get: formatDate },

@@ -11,8 +11,9 @@ const AddAsset = () => {
     status: "Available",
     purchase_date: "",
     warranty_expiry: "",
-    location: "",
     description: "",
+    quantity: 1, // Default quantity
+    image: "",
   });
 
   const [submittedAsset, setSubmittedAsset] = useState(null);
@@ -79,6 +80,15 @@ const AddAsset = () => {
 
 
 
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAsset((prev) => ({ ...prev, image: file })); // Store file object
+    }
+  };
+  
+  
+
 
 
 
@@ -93,85 +103,77 @@ const AddAsset = () => {
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-      const data = await response.json();  // 💥 Error happens here if response is not JSON
+  
+      // Ensure the response is JSON before parsing
+      const text = await response.text();
+      const data = text ? JSON.parse(text) : {};
+  
       return data.isUnique;
     } catch (error) {
-      console.error("Error checking asset ID:", error);
-      return false;
+      console.error("❌ Error fetching Asset IDs:", error);
+      alert("Error fetching asset ID. Please refresh and try again.");
+      return false; // Assume it's not unique if the check fails
     }
   };
+  
   
 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
+    const formData = new FormData();
+    Object.keys(asset).forEach((key) => {
+        if (key === "image" && asset.image) {
+            formData.append("image", asset.image);
+        } else {
+            formData.append(key, asset[key]);
+        }
+    });
+
     try {
-      const isUnique = await checkUniqueAssetId(asset.asset_id);
-      if (!isUnique) {
-        alert("Asset ID already exists! Please enter a unique ID.");
-        return;
-      }
-  
-      // ✅ Manually create QR code value
-      const qrValue = `Asset ID: ${asset.asset_id}
-  Name: ${asset.name}
-  Manufacturer: ${asset.manufacturer}
-  Model No.: ${asset.model_no}
-  Category: ${asset.category}
-  Status: ${asset.status}
-  Purchase Date: ${asset.purchase_date}
-  Warranty Expiry: ${asset.warranty_expiry || "N/A"}
-  Location: ${asset.location}
-  Description: ${asset.description || "N/A"}`;
-  
-      // 🔹 Add QR Code value directly to asset object
-      const assetWithQR = { ...asset, qr_code: qrValue };
-  
-      console.log("🚀 Sending request to backend with QR Code...");
-      const response = await fetch("http://localhost:3000/api/assets", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(assetWithQR),
-      });
-  
-      const responseData = await response.json();
-      console.log("✅ Server Response:", responseData);
-  
-      if (!response.ok) {
-        throw new Error(responseData.message || "Error adding asset");
-      }
-  
-      alert("Asset added successfully!");
-  
-      // ✅ Set `submittedAsset` so the QR code renders
-      setSubmittedAsset(responseData);
-  
+        const response = await fetch("http://localhost:3000/api/assets", {
+            method: "POST",
+            body: formData,
+        });
+
+        const responseData = await response.json();
+        console.log("✅ Server Response:", responseData);
+
+        if (!response.ok) {
+            throw new Error(responseData.message || "Error adding assets");
+        }
+
+        alert("Assets added successfully!");
+        setSubmittedAsset(responseData.assets); // Store array of submitted assets
+
     } catch (error) {
-      console.error("❌ Error adding asset:", error);
-      alert("Failed to add asset. Check console for details.");
+        console.error("❌ Error adding assets:", error);
+        alert("Failed to add assets. Check console for details.");
     }
-  };
+};
+  
   
 
 
 
 
-  const downloadQRCode = () => {
-    const qrCanvas = document.querySelector("canvas"); // Directly get the canvas element
-    if (!qrCanvas) {
-      console.error("❌ QR Code canvas not found!");
+const downloadQRCode = (assetId) => {
+  const qrCanvas = document.querySelector("canvas");
+  if (!qrCanvas) {
+      console.error("QR Code canvas not found!");
       return;
-    }
-  
-    const pngUrl = qrCanvas.toDataURL("image/png");
-    const downloadLink = document.createElement("a");
-    downloadLink.href = pngUrl;
-    downloadLink.download = `${asset.asset_id}_QRCode.png`;
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
-  };
+  }
+
+  const pngUrl = qrCanvas.toDataURL("image/png");
+  const downloadLink = document.createElement("a");
+  downloadLink.href = pngUrl;
+  downloadLink.download = `${assetId}_QRCode.png`;
+  document.body.appendChild(downloadLink);
+  downloadLink.style.display = 'none'; // Prevent display on the page
+  downloadLink.click();
+  document.body.removeChild(downloadLink);
+};
   
 
 return (
@@ -191,6 +193,21 @@ return (
             className="w-full mt-1 p-2 border border-gray-300 rounded-md bg-gray-200 cursor-not-allowed"
           />
       </div>
+
+
+      <div>
+  <label className="block text-gray-700 font-medium">Quantity *</label>
+  <input
+    type="number"
+    name="quantity"
+    value={asset.quantity}
+    onChange={handleChange}
+    min="1"
+    required
+    className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+  />
+</div>
+      
 
       <div>
         <label className="block text-gray-700 font-medium">Asset Name *</label>
@@ -276,16 +293,15 @@ return (
         />
       </div>
 
-      <div className="col-span-2">
-        <label className="block text-gray-700 font-medium">Location</label>
-        <input
-          type="text"
-          name="location"
-          value={asset.location}
-          onChange={handleChange}
-          className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-        />
-      </div>
+      <div>
+  <label className="block text-gray-700 font-medium">Upload Image</label>
+  <input
+    type="file"
+    accept="image/*"
+    onChange={(e) => handleImageUpload(e)}
+    className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+  />
+</div>
 
       <div className="col-span-2">
         <label className="block text-gray-700 font-medium">Description (Optional)</label>
@@ -308,30 +324,40 @@ return (
     </form>
 
 
-    {submittedAsset ? (
-  <div className="mt-6 flex flex-col items-center">
-    {console.log("🖨️ Rendering QR Code for:", submittedAsset)}
-    <h3 className="text-xl font-semibold text-gray-800 mb-4">Asset QR Code</h3>
-    <QRCodeCanvas
-      id="qrCode"
-      value={`Asset ID: ${submittedAsset.asset_id}
-Name: ${submittedAsset.name}
-Manufacturer: ${submittedAsset.manufacturer}
-Model No.: ${submittedAsset.model_no}
-Category: ${submittedAsset.category}
-Status: ${submittedAsset.status}
-Purchase Date: ${submittedAsset.purchase_date}
-Warranty Expiry: ${submittedAsset.warranty_expiry || "N/A"}
-Location: ${submittedAsset.location}
-Description: ${submittedAsset.description || "N/A"}`}
-      size={200}
-    />
-    <button onClick={downloadQRCode} className="mt-4 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
-      Download QR Code
-    </button>
-  </div>
-) : null}
+     {submittedAsset && Array.isArray(submittedAsset) && (
+                <div className="mt-6">
+                    <h3 className="text-xl font-semibold text-gray-800 mb-4 text-center">Asset QR Codes</h3>
+                    <div className="flex flex-wrap justify-center"> {/* Horizontal layout */}
+                        {submittedAsset.map((item, index) => (
+                            <div key={index} className="m-2 text-center"> {/* Added margin */}
+                                <h4 className="font-semibold">Asset {index + 1}</h4>
+                                <QRCodeCanvas
+                                    value={`Asset ID: ${item.asset_id}
+Name: ${item.name}
+Manufacturer: ${item.manufacturer}
+Model No.: ${item.model_no}
+Category: ${item.category}
+Status: ${item.status}
+Purchase Date: ${item.purchase_date}
+Warranty Expiry: ${item.warranty_expiry || "N/A"}
+Description: ${item.description || "N/A"}`}
+                                    size={200}
+                                />
 
+                                <button onClick={() => downloadQRCode(item.asset_id)} className="mt-2 px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700">
+                                    Download
+                                </button>
+                                {/* Display Image */}
+                                {/* {item.image && (
+                                    <div className="mt-2">
+                                        <img src={`http://localhost:3000/${item.image}`} alt="Asset" className="w-20 h-20 object-cover rounded-md shadow-md" />
+                                    </div>
+                                )} */}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
 
 

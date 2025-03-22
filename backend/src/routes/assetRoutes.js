@@ -1,4 +1,5 @@
 const express = require("express");
+const multer = require("multer");
 const {
   getAllAssetIds,
   getLastAssetId,
@@ -13,6 +14,26 @@ const {
 } = require("../controllers/assetController");
 
 const router = express.Router();
+
+
+
+// ✅ Configure multer for file storage
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/"); // Store images in the 'uploads' folder
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + "-" + file.originalname); // Unique filename
+  },
+});
+
+const upload = multer({ storage });
+
+// ✅ Route to create a new asset with an image
+router.post("/", upload.single("image"), createAsset);
+
+
+
 
 // ✅ Route to fetch all asset IDs
 router.get("/all-ids", getAllAssetIds);
@@ -35,11 +56,9 @@ router.get("/:id", getAssetById);
 // ✅ Route to check if asset ID is unique
 router.get("/check-id/:id", checkAssetId);
 
-// ✅ Route to create a new asset
-router.post("/", createAsset);
 
 // ✅ Route to update an asset
-router.put("/:id", updateAsset);
+router.put("/:id", upload.single("image"), updateAsset);
 
 // ✅ Route to delete an asset
 router.delete("/:id", deleteAsset);

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { FaDownload } from "react-icons/fa";
 import Table from "../../components/Table";
-import SearchFilterBar from "../../components/SearchFilterBar"; // Import the new component
 
 const statusColors = {
   Available: "text-green-600 font-semibold",
@@ -17,14 +17,13 @@ const AllAssets = () => {
   const [exportFormat, setExportFormat] = useState("csv");
   const [editingAsset, setEditingAsset] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
 
-  // ✅ Fetch assets from backend
   useEffect(() => {
     const fetchAssets = async () => {
       try {
         const response = await fetch("http://localhost:3000/api/assets");
         const data = await response.json();
-        console.log("Fetched Data:", data); // ✅ Log response data
         setAssets(data);
       } catch (error) {
         console.error("Error fetching assets:", error);
@@ -33,91 +32,80 @@ const AllAssets = () => {
     fetchAssets();
   }, []);
 
-  // ✅ Edit asset in backend
   const handleEdit = (asset) => {
     setEditingAsset({ ...asset });
+    setSelectedImage(null);
     setModalOpen(true);
   };
 
   const handleSave = async () => {
     try {
-      // Check if the status is changed to "Available"
-      if (editingAsset.status === "Available") {
-        editingAsset.assigned_to = null;
-        editingAsset.assigned_date = null;
-        editingAsset.note = "";
+      const formData = new FormData();
+      for (const key in editingAsset) {
+        formData.append(key, editingAsset[key]);
       }
-  
-      const response = await fetch(`http://localhost:3000/api/assets/${editingAsset._id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editingAsset),
-      });
-  
+      if (selectedImage) {
+        formData.append("image", selectedImage);
+      }
+
+      const response = await fetch(
+        `http://localhost:3000/api/assets/${editingAsset._id}`,
+        {
+          method: "PUT",
+          body: formData,
+        }
+      );
+
       if (!response.ok) {
         throw new Error("Failed to update asset");
       }
-  
+
       const updatedAsset = await response.json();
-  
+
       setAssets((prevAssets) =>
         prevAssets.map((a) => (a._id === editingAsset._id ? updatedAsset.asset : a))
       );
-  
       setModalOpen(false);
     } catch (error) {
       console.error("Error updating asset:", error);
       alert("Failed to update asset!");
     }
-  };  
+  };
 
-  // ✅ Delete asset from backend
   const handleDelete = async (asset_id) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this asset?"
-    );
-    if (!confirmDelete) return; // ❌ User canceled deletion
-  
     try {
-      console.log("Sending DELETE request for Asset ID:", asset_id);
-  
-      const response = await fetch(`http://localhost:3000/api/assets/${asset_id}`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-      });
-  
-      const result = await response.json();
-      console.log("Delete response:", result); // ✅ Debug log
-  
+      const response = await fetch(
+        `http://localhost:3000/api/assets/${asset_id}`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
       if (!response.ok) {
-        throw new Error(result.message || "Failed to delete asset");
+        const errorMessage = await response.text();
+        throw new Error(errorMessage);
       }
-  
-      // ✅ Remove deleted asset from state
-      setAssets((prevAssets) => prevAssets.filter((asset) => asset._id !== asset_id));
-  
-      // ✅ Success message
-      alert("Asset deleted successfully!");
+
+      setAssets((prevAssets) =>
+        prevAssets.filter((asset) => asset._id !== asset_id)
+      );
     } catch (error) {
       console.error("Error deleting asset:", error.message);
       alert("Failed to delete asset!");
     }
   };
 
-  
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    setSelectedImage(file);
+  };
 
-  const filteredAssets = assets
-  .filter(
+  const filteredAssets = assets.filter(
     (asset) =>
       (filter === "All" || asset.status === filter) &&
       asset.name.toLowerCase().includes(search.toLowerCase())
-  )
-  .sort((a, b) => {
-    const numA = parseInt(a.asset_id.substring(1)); // Extract numeric part
-    const numB = parseInt(b.asset_id.substring(1));
-    return numA - numB; // Sort numerically
-  });
-
+  );
 
   const columns = [
     { header: "Asset ID", accessor: "asset_id" },
@@ -127,6 +115,16 @@ const AllAssets = () => {
       header: "Status",
       accessor: "status",
       className: (value) => statusColors[value] || "",
+    },
+    {
+      header: "Image",
+      render: (row) => (
+        <img
+          src={`http://localhost:3000/${row.image}`}
+          alt={row.name}
+          className="w-16 h-16 object-cover"
+        />
+      ),
     },
     {
       header: "Actions",
@@ -158,23 +156,29 @@ const AllAssets = () => {
       <h2 className="text-3xl font-bold mb-4 text-gray-800 text-center">
         All Assets
       </h2>
-
-      {/* Integrating SearchFilterBar Component */}
-      <SearchFilterBar
-        search={search}
-        setSearch={setSearch}
-        filter={filter}
-        setFilter={setFilter}
-        exportFormat={exportFormat}
-        setExportFormat={setExportFormat}
-        data={filteredAssets}
-        filename="all_assets"
-        statusOptions={["Available", "Assigned", "Under Maintenance", "Retired"]}
-      />
+      <div className="flex gap-2 mb-4">
+        <input
+          type="text"
+          placeholder="Search assets..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="p-3 flex-grow border rounded-lg focus:outline-none"
+        />
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="p-3 border rounded-lg"
+        >
+          <option value="All">All Status</option>
+          <option value="Available">Available</option>
+          <option value="Assigned">Assigned</option>
+          <option value="Under Maintenance">Under Maintenance</option>
+          <option value="Retired">Retired</option>
+        </select>
+      </div>
 
       <Table columns={columns} data={filteredAssets} />
 
-      {/* Modal */}
       {modalOpen && (
         <div className="fixed inset-0 bg-white flex justify-center items-center">
           <motion.div
@@ -205,6 +209,27 @@ const AllAssets = () => {
               <option value="Under Maintenance">Under Maintenance</option>
               <option value="Retired">Retired</option>
             </select>
+            <label className="block mb-2">Image</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="w-full p-2 border rounded-lg mb-4"
+            />
+            {editingAsset.image && !selectedImage && (
+              <img
+                src={`http://localhost:3000/${editingAsset.image}`}
+                alt="Asset"
+                className="w-20 h-20 object-cover mb-4"
+              />
+            )}
+            {selectedImage && (
+              <img
+                src={URL.createObjectURL(selectedImage)}
+                alt="Selected Asset"
+                className="w-20 h-20 object-cover mb-4"
+              />
+            )}
             <div className="flex justify-end gap-3">
               <button
                 className="px-4 py-2 bg-gray-300 rounded-lg"

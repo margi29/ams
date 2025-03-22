@@ -11,6 +11,7 @@ const assetRoutes = require("./src/routes/assetRoutes");
 const userRoutes = require("./src/routes/userRoutes"); // Future user routes
 const allocationRoutes = require("./src/routes/allocationRoutes");
 const returnedAssetsRoutes = require("./src/routes/returnedAssetsRoutes");
+const path = require('path');
 
 const app = express();
 
@@ -18,6 +19,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use(morgan("dev")); // Logs HTTP requests
+app.use(express.static(path.join(__dirname, 'uploads'))); // Replace 'uploads' with your image directory
 
 // ✅ MongoDB Connection
 const mongoURI = process.env.MONGO_URI || "mongodb://localhost:27017/asset-management";

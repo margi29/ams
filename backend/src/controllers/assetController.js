@@ -2,6 +2,7 @@ const Asset = require("../models/Asset");
 const QRCode = require("qrcode");
 const asyncHandler = require("express-async-handler");
 
+
 // ✅ Fetch all asset IDs
 const getAllAssetIds = asyncHandler(async (req, res) => {
   const assets = await Asset.find({}, { asset_id: 1, _id: 0 });
@@ -67,25 +68,79 @@ const checkAssetId = asyncHandler(async (req, res) => {
   res.json({ isUnique: !existingAsset });
 });
 
-// ✅ Create a new asset with optional QR Code generation
-const createAsset = asyncHandler(async (req, res) => {
-  const assetData = req.body;
 
-  // Generate QR Code (base64 image)
-  const qrCodeData = await QRCode.toDataURL(JSON.stringify(assetData));
-  const newAsset = new Asset({ ...assetData, qr_code: qrCodeData });
 
-  await newAsset.save();
-  res.status(201).json(newAsset);
-});
+// ✅ Create a new asset with optional QR Code and image upload
+const createAsset = async (req, res) => {
+  try {
+      const { name, manufacturer, model_no, category, status, purchase_date, warranty_expiry, description, quantity } = req.body;
+      let { asset_id } = req.body; // Initial asset ID
+      const imagePath = req.file ? req.file.path : null;
+
+      if (!name || !quantity) {
+          return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      const createdAssets = [];
+      let numericPart = parseInt(asset_id.substring(1), 10); // Extract numeric part
+
+      for (let i = 0; i < quantity; i++) {
+          const currentAssetId = `A${String(numericPart + i).padStart(2, "0")}`; // Generate unique ID
+          const newAsset = new Asset({
+              asset_id: currentAssetId,
+              name,
+              manufacturer,
+              model_no,
+              category,
+              status,
+              purchase_date,
+              warranty_expiry,
+              description,
+              image: imagePath,
+          });
+
+          await newAsset.save();
+          createdAssets.push(newAsset);
+      }
+
+      res.status(201).json({ message: "Assets added successfully", assets: createdAssets });
+  } catch (error) {
+      console.error("❌ Error adding assets:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+
+
 
 // ✅ Update an asset
-const updateAsset = asyncHandler(async (req, res) => {
-  const updatedAsset = await Asset.findByIdAndUpdate(req.params.id, req.body, { new: true });
+const updateAsset = async (req, res) => {
+  try {
+    console.log("Updating asset with ID:", req.params.id);
+    console.log("Request Body:", req.body);
+    console.log("Request File:", req.file);
+    console.log("Form data:", req.body);
 
-  if (!updatedAsset) return res.status(404).json({ message: "Asset not found" });
-  res.json({ message: "Asset updated successfully", asset: updatedAsset });
-});
+    // ... your database and file handling logic
+
+    const updatedAsset = await Asset.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+
+    console.log("Updated Asset:", updatedAsset);
+
+    res.json({ message: "Asset updated successfully", asset: updatedAsset });
+  } catch (error) {
+    console.error("Error updating asset:", error);
+    console.error("Error Stack:", error.stack); // Crucial for debugging
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
+
 
 // ✅ Delete an asset
 const deleteAsset = async (req, res) => {
@@ -105,6 +160,11 @@ const deleteAsset = async (req, res) => {
     res.status(500).json({ message: "Server error", error });
   }
 };
+
+
+
+
+
 
 module.exports = {
   getAllAssetIds,
