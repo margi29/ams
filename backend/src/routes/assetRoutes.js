@@ -1,4 +1,5 @@
 const express = require("express");
+const { protect } = require("../middleware/authMiddleware");
 const {
   getAllAssetIds,
   getLastAssetId,
@@ -9,7 +10,8 @@ const {
   getAvailableAssets,
   getCategoriesWithAssets,
   updateAsset,
-  deleteAsset
+  deleteAsset,
+  getEmployeeAssets
 } = require("../controllers/assetController");
 
 const router = express.Router();
@@ -29,7 +31,10 @@ router.get("/available", getAvailableAssets);
 // ✅ Route to fetch unique categories and their assets
 router.get("/categories", getCategoriesWithAssets);
 
-// ✅ Route to fetch a single asset by ID
+// Route to get assets assigned to an employee (Place this ABOVE `/:id`)
+router.get("/my-assets", protect, getEmployeeAssets);
+
+// ✅ Route to fetch a single asset by ID (Now placed AFTER `/my-assets`)
 router.get("/:id", getAssetById);
 
 // ✅ Route to check if asset ID is unique

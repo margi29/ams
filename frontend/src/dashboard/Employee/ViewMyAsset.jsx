@@ -13,24 +13,47 @@ const ViewMyAsset = () => {
   const [filteredAssets, setFilteredAssets] = useState([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const statusOptions = ["All", "Assigned", "Returned", "Under Maintenance"];
 
-  // Mock Data (Replace with API call later)
   useEffect(() => {
-    const mockAssets = [
-      { id: 1, name: "Dell Laptop", type: "Laptop", status: "Assigned", assignedDate: "2025-02-10" },
-      { id: 2, name: "HP Printer", type: "Printer", status: "Returned", assignedDate: "2025-01-20" },
-      { id: 3, name: "Cisco Router", type: "Router", status: "Under Maintenance", assignedDate: "2025-03-05" },
-      { id: 4, name: "MacBook Pro", type: "Laptop", status: "Assigned", assignedDate: "2025-03-12" },
-      { id: 1, name: "Dell Laptop", type: "Laptop", status: "Assigned", assignedDate: "2025-02-10" },
-      { id: 2, name: "HP Printer", type: "Printer", status: "Returned", assignedDate: "2025-01-20" },
-      { id: 3, name: "Cisco Router", type: "Router", status: "Under Maintenance", assignedDate: "2025-03-05" },
-      { id: 4, name: "MacBook Pro", type: "Laptop", status: "Assigned", assignedDate: "2025-03-12" }
-    ];
-    setAssets(mockAssets);
-    setFilteredAssets(mockAssets);
+    const fetchAssets = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const token = localStorage.getItem("token"); // Get token from localStorage
+        if (!token) {
+          throw new Error("No token found. Please log in.");
+        }
+  
+        const response = await fetch("http://localhost:3000/api/assets/my-assets", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Send token in the request header
+          },
+        });
+  
+        const data = await response.json();
+  
+        if (!response.ok) {
+          throw new Error("Failed to fetch assets. Please try again.");
+        }
+  
+        setAssets(data);
+        setFilteredAssets(data);
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchAssets();
   }, []);
+  
 
   // Handle Search & Filter
   useEffect(() => {
@@ -53,6 +76,10 @@ const ViewMyAsset = () => {
         View and manage your assigned assets
       </h2>
 
+      {/* Error & Loading Messages */}
+      {loading && <p className="text-center text-blue-600">Loading assets...</p>}
+      {error && <p className="text-center text-red-600">{error}</p>}
+
       {/* Search & Filter Bar */}
       <SearchFilterBar
         search={search}
@@ -67,19 +94,38 @@ const ViewMyAsset = () => {
 
       {/* Asset List - Two per row on medium+ screens */}
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-        {filteredAssets.length > 0 ? (
-          filteredAssets.map((asset) => (
-            <div key={asset.id} className="border border-gray-300 p-4 rounded-lg shadow-sm bg-gray-50">
-              <h3 className="text-lg font-bold text-gray-800">{asset.name}</h3>
-              <p className="text-gray-600">{asset.type}</p>
-              <p className={`mt-2 ${statusColors[asset.status]}`}>{asset.status}</p>
-              <p className="text-gray-500 text-sm mt-2">Assigned: {asset.assignedDate}</p>
-            </div>
-          ))
-        ) : (
-          <p className="text-center text-gray-500 mt-4">No assets found.</p>
-        )}
+  {filteredAssets.length > 0 ? (
+    filteredAssets.map((asset) => (
+      <div key={asset._id} className="border border-gray-300 p-4 rounded-lg shadow-sm bg-gray-50">
+        <h3 className="text-lg font-bold text-gray-800">{asset.name || "Unnamed Asset"}</h3>
+        <p className="text-gray-600">{asset.category || "No Category"}</p>
+
+        <p className="text-gray-500 text-sm mt-1">
+          <strong>Asset ID:</strong> {asset.asset_id || "N/A"}
+        </p>
+        <p className="text-gray-500 text-sm mt-1">
+          <strong>Model Number:</strong> {asset.model_no || "Unknown"}
+        </p>
+        <p className="text-gray-500 text-sm mt-1">
+          <strong>Assigned Date:</strong> {asset.assigned_date || "N/A"}
+        </p>
+        <p className="text-gray-500 text-sm mt-1">
+          <strong>Warranty Expiry:</strong> {asset.warranty_expiry || "N/A"}
+        </p>
+        <p className="text-gray-500 text-sm mt-1">
+          <strong>Additional Notes:</strong> {asset.note || "N/A"}
+        </p>
+        <p className={`mt-2 ${statusColors[asset.status] || "text-gray-500"}`}>
+          <strong>Status:</strong> {asset.status || "Unknown"}
+        </p>
       </div>
+
+    ))
+  ) : (
+    <p className="text-center text-gray-500 mt-4">No assets found.</p>
+  )}
+</div>
+
     </motion.div>
   );
 };

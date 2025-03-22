@@ -7,7 +7,6 @@ import LoginPage from "./pages/LoginPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AllAssets from "./dashboard/Admin/AllAssets";
 import AddNewAsset from "./dashboard/Admin/AddNewAsset";
-import AssetCategories from "./dashboard/Admin/AssetCategories";
 import AssetHistory from "./dashboard/Admin/AssetHistory";
 import AssignAsset from "./dashboard/Admin/AssignAsset";
 import AssetRequests from "./dashboard/Admin/AssetRequests";
@@ -68,7 +67,6 @@ const App = () => {
         <Route element={<ProtectedRoute allowedRoles={["Admin"]} />}>
           <Route path="/admin/dashboard" element={<Layout><AdminDashboard /></Layout>} />
           <Route path="/admin/assets" element={<Layout><AllAssets /></Layout>} />
-          <Route path="/admin/asset-categories" element={<Layout><AssetCategories /></Layout>} />
           <Route path="/admin/add-asset" element={<Layout><AddNewAsset /></Layout>} />
           <Route path="/admin/history" element={<Layout><AssetHistory /></Layout>} />
           <Route path="/admin/assign-asset" element={<Layout><AssignAsset /></Layout>} />

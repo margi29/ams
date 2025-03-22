@@ -1,22 +1,47 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
+import Select from "react-select";
 
 const AssignAsset = () => {
   const [category, setCategory] = useState("");
   const [asset, setAsset] = useState("");
   const [user, setUser] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [department, setDepartment] = useState(""); 
+  const today = new Date();
+  const formattedDate = today.toISOString().split("T")[0];
+  const [date, setDate] = useState(formattedDate);
+  
   const [note, setNote] = useState("");
 
   const [categories, setCategories] = useState([]);
   const [assets, setAssets] = useState([]);
   const [users, setUsers] = useState([]);
-
+  const [departments, setDepartments] = useState([]);
   const [errors, setErrors] = useState({});
   const [loadingAssets, setLoadingAssets] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [location, setLocation] = useState("");
+  
+  const fetchEmployees = async (selectedDepartment) => {
+  if (!selectedDepartment) {
+    setUsers([]);
+    return;
+  }
 
+  setLoadingUsers(true);
+  try {
+    const res = await axios.get(`http://localhost:3000/api/users/employees?department=${selectedDepartment}`);
+    setUsers(res.data);
+  } catch (error) {
+    console.error("Error fetching employees:", error);
+    setUsers([]);
+  } finally {
+    setLoadingUsers(false);
+  }
+};
+
+  
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -26,94 +51,136 @@ const AssignAsset = () => {
         console.error("Error fetching categories:", error);
       }
     };
-
-    const fetchEmployees = async () => {
-      setLoadingUsers(true);
+  
+    const fetchDepartments = async () => {
       try {
-        const res = await axios.get("http://localhost:3000/api/users");
-        const employeeUsers = res.data.filter((user) => user.role === "Employee");
-        setUsers(employeeUsers);
+        const res = await axios.get("http://localhost:3000/api/users/departments");
+        setDepartments(res.data);
       } catch (error) {
-        console.error("Error fetching employees:", error);
-      } finally {
-        setLoadingUsers(false);
+        console.error("Error fetching departments:", error);
       }
     };
-
+  
     fetchCategories();
-    fetchEmployees();
-  }, []);
-
-  const handleCategoryChange = async (e) => {
-    const selectedCategory = e.target.value;
-    setCategory(selectedCategory);
-    setAsset("");
-    setUser("");
-    setErrors({ ...errors, category: "" });
-
-    if (!selectedCategory) {
-      setAssets([]);
-      return;
-    }
-
+    fetchDepartments();
+  }, []); // Removed `fetchEmployees()` here
+  
+  const fetchAssets = async (selectedCategory) => {
     setLoadingAssets(true);
     try {
       const res = await axios.get(`http://localhost:3000/api/assets/available?category=${selectedCategory}`);
-      setAssets(res.data);
+      setAssets(res.data); // Make sure each asset includes its _id
     } catch (error) {
       console.error("Error fetching available assets:", error);
       setAssets([]);
     } finally {
       setLoadingAssets(false);
     }
-  };
-
-  const validateForm = () => {
-    const newErrors = {};
-    if (!category) newErrors.category = "Category is required!";
-    if (!asset) newErrors.asset = "Asset is required!";
-    if (!user) newErrors.user = "Employee selection is required!";
-    if (!date) newErrors.date = "Assignment date is required!";
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
+  };  
+  
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
+  e.preventDefault();
 
-    if (!asset || !user) {
-      alert("Invalid asset or user selection.");
-      return;
-    }
+  if (!validateForm()) {
+    alert("Please fill the fields correctly.");
+    return;
+  }
 
-    try {
-      const payload = {
-        assetId: asset, // Now asset is an ObjectId
-        assignedTo: user, // Now user is an ObjectId
-        assignmentDate: date,
-        note,
-      };
-
-      await axios.post("http://localhost:3000/api/allocation/assign", payload);
-      alert("Asset assigned successfully!");
-      resetForm();
-    } catch (error) {
-      console.error("Error assigning asset:", error);
-      alert("Failed to assign asset.");
-    }
+  const assignmentData = {
+    assetId: asset, // replace `asset` with `assetId`
+    assignedTo: user, // replace `user` with `assignedTo`
+    assignmentDate: date, // replace `date` with `assignmentDate`
+    category,
+    department,
+    location,
+    note,
   };
+  
 
-  const resetForm = () => {
+  try {
+    const res = await axios.post("http://localhost:3000/api/allocation/assign", assignmentData);
+    alert("Asset assigned successfully!");
+    
+    // Reset form fields after successful submission
     setCategory("");
     setAsset("");
     setUser("");
-    setDate(new Date().toISOString().split("T")[0]);
+    setDepartment("");
+    setDate(formattedDate);
+    setLocation("");
     setNote("");
     setErrors({});
-  };
+  } catch (error) {
+    console.error("Error assigning asset:", error);
+    alert("Failed to assign asset. Please try again.");
+  }
+};
 
+  // Function to validate user inputs
+  const validateForm = () => {
+    let isValid = true;
+    let newErrors = {};
+  
+    if (!category) {
+      newErrors.category = "Category is required!";
+      isValid = false;
+    }
+  
+   // In validateForm function:
+   if (!asset) {
+    newErrors.asset = "Please select a valid asset!";
+    isValid = false;
+  }
+  
+  if (!user) {
+    newErrors.user = "Please select a valid employee!";
+    isValid = false;
+  }  
+
+  
+    if (!department) {
+      newErrors.department = "Department is required!";
+      isValid = false;
+    }
+
+    if (!date) {
+      newErrors.date = "Assignment date is required!";
+      isValid = false;
+    }
+  
+    setErrors(newErrors);
+    return isValid;
+  };
+  
+ const customStyles = {
+    control: (provided, state) => ({
+      ...provided,
+      padding: "0.4rem",
+      borderRadius: "0.5rem",
+      border: state.isFocused ? "2px solid black" : "1px solid black", // Black border when active
+      backgroundColor: "white", // Always white background
+      boxShadow: "none",
+      "&:hover": {
+        border: state.isFocused ? "2px solid black" : "1px solid black", // Keeps border unchanged on hover
+      },
+    }),
+    menu: (provided) => ({
+      ...provided,
+      borderRadius: "0.5rem",
+      overflow: "hidden",
+      backgroundColor: "white", // Dropdown background stays white
+      border: "1px solid black",
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: "white",
+      "&:hover":{backgroundColor:"#f0f0f0"}, // Always white background
+      color: "black", // Black text
+      padding: "0.75rem",
+      cursor: "pointer",
+    }),
+  };
+  
   return (
     <motion.div
       className="p-6 mt-16 bg-white rounded-lg shadow-md"
@@ -122,112 +189,161 @@ const AssignAsset = () => {
     >
       <h2 className="text-3xl font-bold mb-4 text-gray-800 text-center">Assign Asset</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
-        
-        {/* Select Category */}
-        <div>
-          <label className="block font-medium">
-            Select Category <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={category}
-            onChange={handleCategoryChange}
-            className={`w-full p-3 border rounded-lg ${errors.category ? "border-red-500" : ""}`}
-          >
-            <option value="">-- Choose a Category --</option>
-            {categories.map((cat) => (
-              <option key={cat._id} value={cat.category}>
-                {cat.category}
-              </option>
-            ))}
-          </select>
-          {errors.category && <p className="text-red-500 mt-1">{errors.category}</p>}
-        </div>
+  {/* Grid Layout for Two Fields Per Row */}
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  {/* Category */}
+  <div>
+    <label className="block font-medium">
+      Select or Enter Category <span className="text-red-500">*</span>
+    </label>
+    <Select
+      options={categories.map((cat) => ({
+        value: cat.category,
+        label: cat.category,
+      }))}
+      value={category ? { value: category, label: category } : null}
+      onChange={(selectedOption) => {
+        setCategory(selectedOption.value);
+        setAsset(""); // Reset asset selection
+        fetchAssets(selectedOption.value);
+        setErrors((prev) => ({ ...prev, category: "" })); // Clear error
+      }}
+      styles={customStyles}
+      placeholder="Type or select a category"
+      isSearchable
+    />
+    {errors.category && <p className="text-red-500 mt-1">{errors.category}</p>}
+  </div>
 
-        {/* Select Asset */}
-        <div>
-          <label className="block font-medium">
-            Select Asset <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={asset}
-            onChange={(e) => {
-              setAsset(e.target.value);
-              setErrors({ ...errors, asset: "" });
-            }}
-            className={`w-full p-3 border rounded-lg ${errors.asset ? "border-red-500" : ""}`}
-            disabled={!category || loadingAssets || assets.length === 0}
-          >
-            <option value="">-- Choose an Asset --</option>
-            {loadingAssets ? <option disabled>Loading assets...</option> : null}
-            {assets.map((item) => (
-              <option key={item._id} value={item._id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
-          {errors.asset && <p className="text-red-500 mt-1">{errors.asset}</p>}
-        </div>
+  {/* Asset */}
+  <div>
+    <label className="block font-medium">
+      Select or Enter Asset <span className="text-red-500">*</span>
+    </label>
+   <Select
+  options={assets.map((item) => ({
+    value: item._id, // Use _id here
+    label: item.name,
+  }))}
+  value={asset ? { value: asset, label: asset } : null}
+  onChange={(selectedOption) => {
+    setAsset(selectedOption.value); // Set _id as value
+    setErrors((prev) => ({ ...prev, asset: "" })); // Clear error
+  }}
+  styles={customStyles}
+  placeholder={assets.length === 0 ? "No assets available select category first" : "Type or select an asset"}
+  isSearchable
+  isDisabled={!category || assets.length === 0}
+/>
 
-        {/* Assign To */}
-        <div>
-          <label className="block font-medium">
-            Assign To (Employee) <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={user}
-            onChange={(e) => {
-              setUser(e.target.value);
-              setErrors({ ...errors, user: "" });
-            }}
-            className={`w-full p-3 border rounded-lg ${errors.user ? "border-red-500" : ""}`}
-            disabled={loadingUsers || users.length === 0}
-          >
-            <option value="">-- Choose an Employee --</option>
-            {loadingUsers ? <option disabled>Loading employees...</option> : null}
-            {users.map((item) => (
-              <option key={item._id} value={item._id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
-          {errors.user && <p className="text-red-500 mt-1">{errors.user}</p>}
-        </div>
+    {errors.asset && <p className="text-red-500 mt-1">{errors.asset}</p>}
+  </div>
 
-        {/* Assignment Date */}
-        <div>
-          <label className="block font-medium">
-            Assignment Date <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => {
-              setDate(e.target.value);
-              setErrors({ ...errors, date: "" });
-            }}
-            className={`w-full p-3 border rounded-lg ${errors.date ? "border-red-500" : ""}`}
-          />
-          {errors.date && <p className="text-red-500 mt-1">{errors.date}</p>}
-        </div>
+  {/* Department */}
+  <div>
+    <label className="block font-medium">
+      Select or Enter Department <span className="text-red-500">*</span>
+    </label>
+    <Select
+      options={departments.map((dept) => ({
+        value: dept,
+        label: dept,
+      }))}
+      value={department ? { value: department, label: department } : null}
+      onChange={(selectedOption) => {
+        setDepartment(selectedOption.value);
+        setUser(""); // Reset user selection
+        fetchEmployees(selectedOption.value);
+        setErrors((prev) => ({ ...prev, department: "" })); // Clear error
+      }}
+      styles={customStyles}
+      placeholder="Type or select a department"
+      isSearchable
+    />
+    {errors.department && <p className="text-red-500 mt-1">{errors.department}</p>}
+  </div>
 
-        {/* Additional Notes */}
-        <div>
-          <label className="block font-medium">Additional Notes</label>
-          <textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Optional notes..."
-            className="w-full p-3 border rounded-lg"
-          ></textarea>
-        </div>
+  {/* Employee */}
+  <div>
+    <label className="block font-medium">
+      Assign To (Employee) <span className="text-red-500">*</span>
+    </label>
+    <Select
+      options={users.map((user) => ({
+        value: user.email,
+        label: user.email,
+      }))}
+      value={user ? { value: user, label: user } : null}
+      onChange={(selectedOption) => {
+        setUser(selectedOption.value);
+        setErrors((prev) => ({ ...prev, user: "" })); // Clear error
+      }}
+      styles={customStyles}
+      placeholder={users.length === 0 ? "No employees available select department first" : "Type or select an employee"}
+      isSearchable
+      isDisabled={!department || users.length === 0}
+    />
+    {errors.user && <p className="text-red-500 mt-1">{errors.user}</p>}
+  </div>
 
-        {/* Submit Button */}
-        <div className="flex justify-center">
-          <button type="submit" className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg">
-            Assign Asset
-          </button>
-        </div>
-      </form>
+  {/* Date */}
+  <div>
+    <label className="block font-medium">
+      Assignment Date <span className="text-red-500">*</span>
+    </label>
+    <input
+      type="date"
+      value={date}
+      onChange={(e) => {
+        setDate(e.target.value);
+        setErrors((prev) => ({ ...prev, date: "" })); // Clear error
+      }}
+      className={`w-full p-3 border rounded-lg ${errors.date ? "border-red-500" : ""}`}
+    />
+    {errors.date && <p className="text-red-500 mt-1">{errors.date}</p>}
+  </div>
+
+  {/* Location */}
+  <div>
+    <label className="block font-medium">
+      Enter Location <span className="text-red-500">*</span>
+    </label>
+    <input
+      type="text"
+      value={location}
+      onChange={(e) => {
+        setLocation(e.target.value);
+        setErrors((prev) => ({ ...prev, location: "" })); // Clear error
+      }}
+      className="w-full p-3 border rounded-lg"
+      placeholder="Enter asset location"
+    />
+    {errors.location && <p className="text-red-500 mt-1">{errors.location}</p>}
+  </div>
+</div>
+
+{/* Full-Width Notes Field */}
+<div>
+  <label className="block font-medium">Additional Notes</label>
+  <textarea
+    value={note}
+    onChange={(e) => setNote(e.target.value)}
+    placeholder="Optional notes..."
+    className="w-full p-3 border rounded-lg"
+  ></textarea>
+</div>
+
+{/* Submit Button */}
+<div className="flex justify-center">
+  <button
+    type="submit"
+    className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg"
+    disabled={!category || !asset || !department || !user}
+  >
+    Assign Asset
+  </button>
+</div>
+</form>
     </motion.div>
   );
 };

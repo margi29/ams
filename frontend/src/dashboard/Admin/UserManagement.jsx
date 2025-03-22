@@ -18,49 +18,74 @@ const UserManagement = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [departments, setDepartments] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
     password: "",
-    role: "Employee",
+    role: "",
+    department: "",
   });
+  
 
   // 🔥 Fetch Users from Backend
   const fetchUsers = async () => {
     try {
       const res = await axios.get("http://localhost:3000/api/users");
-      setUsers(res.data);
+      setUsers(res.data); // ✅ No need to extract 'users' key
     } catch (error) {
       console.error("Error fetching users:", error);
     }
   };
 
+  const fetchDepartments = async () => {
+    try {
+      const res = await axios.get("http://localhost:3000/api/users/departments"); // Adjust endpoint if needed
+      setDepartments(res.data);
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+    }
+  };
+  
   useEffect(() => {
     fetchUsers();
+    fetchDepartments();
   }, []);
-
+  
   // 🔄 Handle Edit
   const handleEdit = (user) => {
     setEditingUser({ ...user, password: "" });
     setModalOpen(true);
-  };
+  };  
 
   // 💾 Handle Save (Edit User)
   const handleSave = async () => {
     try {
-      const { _id, name, email, password, role } = editingUser;
-      const updatedUser = { name, email, role };
+      const { _id, name, email, password, role, department } = editingUser;
+      const updatedUser = { name, email, role, department };
+  
       if (password) {
         updatedUser.password = password;
       }
-
+  
       await axios.put(`http://localhost:3000/api/users/${_id}`, updatedUser);
-      fetchUsers();
+      
+      // 🔹 Re-fetch users and departments to ensure the UI updates
+      fetchUsers(); 
+      fetchDepartments(); 
+  
+      // 🔹 Add new department to state dynamically (if not present)
+      if (department && !departments.includes(department)) {
+        setDepartments((prev) => [...prev, department]);
+      }
+  
       setModalOpen(false);
     } catch (error) {
       console.error("Error updating user:", error);
     }
   };
+  
 
   // ❌ Handle Delete
   const handleDelete = async (id) => {
@@ -82,11 +107,11 @@ const UserManagement = () => {
 
   // ✅ Handle Save New User
   const handleSaveNewUser = async () => {
-    if (!newUser.name || !newUser.email || !newUser.password) {
+    if (!newUser.name || !newUser.email || !newUser.password || !newUser.department) {
       alert("Please fill all fields");
       return;
     }
-
+  
     try {
       await axios.post("http://localhost:3000/api/users", newUser);
       fetchUsers();
@@ -95,6 +120,7 @@ const UserManagement = () => {
       console.error("Error adding new user:", error);
     }
   };
+  
 
   // 🔍 Filtered Users
   const filteredUsers = users.filter(
@@ -106,6 +132,7 @@ const UserManagement = () => {
   const columns = [
     { header: "Name", accessor: "name" },
     { header: "Email", accessor: "email" },
+    { header: "Department", accessor: "department" },
     {
       header: "Role",
       accessor: "role",
@@ -130,7 +157,7 @@ const UserManagement = () => {
         </div>
       ),
     },
-  ];
+  ];  
 
   return (
     <motion.div
@@ -191,6 +218,56 @@ const UserManagement = () => {
         }
         className="w-full p-2 border rounded-lg mb-3"
       />
+      <label className="block mb-2">Department</label>
+<div className="relative">
+  <input
+    type="text"
+    placeholder="Enter department"
+    className="w-full p-2 border rounded-lg mb-4"
+    value={editingUser.department}
+    onChange={(e) => {
+      setEditingUser({ ...editingUser, department: e.target.value });
+      setShowSuggestions(true);
+    }}
+    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)} // Delay to allow clicks
+    onFocus={() => setShowSuggestions(true)}
+  />
+
+  {/* 🔽 Suggestions Dropdown */}
+  {showSuggestions && editingUser.department && (
+    <ul className="absolute bg-white border rounded-lg shadow-md w-full max-h-40 overflow-auto z-50">
+      {departments
+        .filter((dept) =>
+          dept.toLowerCase().includes(editingUser.department.toLowerCase())
+        )
+        .map((dept) => (
+          <li
+            key={dept}
+            className="p-2 cursor-pointer hover:bg-gray-200"
+            onClick={() => {
+              setEditingUser({ ...editingUser, department: dept });
+              setShowSuggestions(false);
+            }}
+          >
+            {dept}
+          </li>
+        ))}
+      {/* If no department matches, show "Add new" option */}
+      {!departments.some((dept) =>
+        dept.toLowerCase().includes(editingUser.department.toLowerCase())
+      ) &&
+        editingUser.department.trim() !== "" && (
+          <li
+            className="p-2 cursor-pointer text-blue-600 font-semibold hover:bg-gray-200"
+            onClick={() => setShowSuggestions(false)}
+          >
+            Add "{editingUser.department}"
+          </li>
+        )}
+    </ul>
+  )}
+</div>
+
       <label className="block mb-2">Role</label>
       <select
         value={editingUser.role}
@@ -258,6 +335,16 @@ const UserManagement = () => {
                 setNewUser({ ...newUser, password: e.target.value })
               }
             />
+            <label className="block mb-1">Department</label>
+<input
+  className="w-full p-2 border rounded mb-4"
+  placeholder="Enter department"
+  value={newUser.department}
+  onChange={(e) =>
+    setNewUser({ ...newUser, department: e.target.value })
+  }
+/>
+
             <label className="block mb-1">Role</label>
             <select
               className="w-full p-2 border rounded mb-4"
