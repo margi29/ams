@@ -64,17 +64,90 @@ const checkAssetId = asyncHandler(async (req, res) => {
   res.json({ isUnique: !existingAsset });
 });
 
-// ✅ Create a new asset with optional QR Code generation
-const createAsset = asyncHandler(async (req, res) => {
-  const assetData = req.body;
+// Now, let's fix the asset creation function with better logging and truly sequential IDs
+const createAsset = async (req, res) => {
+  try {
+    const { name, manufacturer, model_no, category, status, purchase_date, warranty_expiry, description, image, qr_code } = req.body; // ✅ Include qr_code
+    let { asset_id } = req.body;
+    let { quantity = 1 } = req.body;
 
-  // Generate QR Code (base64 image)
-  const qrCodeData = await QRCode.toDataURL(JSON.stringify(assetData));
-  const newAsset = new Asset({ ...assetData, qr_code: qrCodeData });
+    // Process image
+    let imagePath = image || null;
+    if (req.file && !imagePath) {
+      try {
+        console.log("Uploading image to Cloudinary...");
+        const uploadedImage = await cloudinary.uploader.upload(req.file.path, {
+          folder: "asset_images",
+          use_filename: true,
+          unique_filename: false
+        });
+        imagePath = uploadedImage.secure_url;
+        console.log("Image uploaded:", imagePath);
+      } catch (uploadError) {
+        console.error("❌ Cloudinary Upload Error:", uploadError);
+        return res.status(500).json({ error: "Image upload failed" });
+      }
+    }
 
-  await newAsset.save();
-  res.status(201).json(newAsset);
-});
+    if (!name) {
+      return res.status(400).json({ error: "Name is required" });
+    }
+
+    // Determine prefix and fetch existing asset IDs
+    const prefix = asset_id && asset_id.length > 0 ? asset_id.charAt(0) : "A";
+    const allAssets = await Asset.find({}).lean();
+    const existingIds = allAssets
+      .filter(a => a.asset_id && a.asset_id.startsWith(prefix))
+      .map(a => parseInt(a.asset_id.substring(1), 10))
+      .filter(num => !isNaN(num))
+      .sort((a, b) => a - b);
+
+    // Identify gaps in sequence
+    let gaps = [];
+    for (let i = 1; i < Math.max(...existingIds, 0) + 1; i++) {
+      if (!existingIds.includes(i)) {
+        gaps.push(i);
+      }
+    }
+
+    let createdAssets = [];
+    let currentNumber = gaps.length > 0 ? gaps.shift() : Math.max(...existingIds, 0) + 1;
+
+    for (let i = 0; i < quantity; i++) {
+      const newAssetId = `${prefix}${String(currentNumber).padStart(2, '0')}`;
+
+      const newAsset = new Asset({
+        asset_id: newAssetId,
+        name,
+        manufacturer,
+        model_no,
+        category,
+        status,
+        purchase_date,
+        warranty_expiry,
+        description,
+        image: imagePath,
+        qr_code: qr_code || null,  // ✅ Ensure QR code is stored
+      });
+
+      try {
+        const savedAsset = await newAsset.save();
+        createdAssets.push(savedAsset);
+      } catch (error) {
+        console.error(`Error creating asset ${newAssetId}:`, error);
+        return res.status(500).json({ error: "Asset creation failed" });
+      }
+
+      // Assign next number, filling gaps first
+      currentNumber = gaps.length > 0 ? gaps.shift() : currentNumber + 1;
+    }
+
+    res.status(201).json({ message: "Assets added successfully", assets: createdAssets });
+  } catch (error) {
+    console.error("❌ Error adding assets:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 
 // ✅ Update an asset
 const updateAsset = async (req, res) => {
@@ -89,6 +162,9 @@ const updateAsset = async (req, res) => {
     if (!asset) {
       return res.status(404).json({ error: "Asset not found" });
     }
+
+    console.log("Incoming update request:", req.body);
+    console.log("Received file:", req.file); // Debugging log
 
     // ✅ Update all fields
     asset.name = req.body.name || asset.name;
@@ -105,10 +181,23 @@ const updateAsset = async (req, res) => {
     // ✅ Convert assigned_date if present
     if (req.body.assigned_date) {
       const [day, month, year] = req.body.assigned_date.split("-");
-      asset.assigned_date = new Date(`${year}-${month}-${day}`); // Convert to valid Date
+      asset.assigned_date = new Date(`${year}-${month}-${day}`);
     }
 
     asset.note = req.body.note || asset.note || "";
+
+    // ✅ Handle Image Upload (if file is present)
+    if (req.file) {
+      const cloudinary = require("cloudinary").v2;
+
+      // Upload image to Cloudinary
+      const uploadedImage = await cloudinary.uploader.upload(req.file.path, {
+        folder: "assets",
+      });
+
+      console.log("Uploaded Image URL:", uploadedImage.secure_url); // Debugging log
+      asset.image = uploadedImage.secure_url;
+    }
 
     console.log("Updated asset before saving:", asset); // Log updated asset
 
@@ -119,6 +208,7 @@ const updateAsset = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
 
 // ✅ Delete an asset
 const deleteAsset = async (req, res) => {

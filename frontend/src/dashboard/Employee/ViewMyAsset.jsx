@@ -23,25 +23,25 @@ const ViewMyAsset = () => {
       setLoading(true);
       setError("");
       try {
-        const token = localStorage.getItem("token"); // Get token from localStorage
+        const token = localStorage.getItem("token");
         if (!token) {
           throw new Error("No token found. Please log in.");
         }
-  
+
         const response = await fetch("http://localhost:3000/api/assets/my-assets", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // Send token in the request header
+            Authorization: `Bearer ${token}`,
           },
         });
-  
+
         const data = await response.json();
-  
+
         if (!response.ok) {
           throw new Error("Failed to fetch assets. Please try again.");
         }
-  
+
         setAssets(data);
         setFilteredAssets(data);
       } catch (error) {
@@ -50,10 +50,9 @@ const ViewMyAsset = () => {
         setLoading(false);
       }
     };
-  
+
     fetchAssets();
   }, []);
-  
 
   // Handle Search & Filter
   useEffect(() => {
@@ -76,11 +75,9 @@ const ViewMyAsset = () => {
         View and manage your assigned assets
       </h2>
 
-      {/* Error & Loading Messages */}
       {loading && <p className="text-center text-blue-600">Loading assets...</p>}
       {error && <p className="text-center text-red-600">{error}</p>}
 
-      {/* Search & Filter Bar */}
       <SearchFilterBar
         search={search}
         setSearch={setSearch}
@@ -92,40 +89,61 @@ const ViewMyAsset = () => {
         statusOptions={statusOptions}
       />
 
-      {/* Asset List - Two per row on medium+ screens */}
+      {/* Asset List */}
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-  {filteredAssets.length > 0 ? (
-    filteredAssets.map((asset) => (
-      <div key={asset._id} className="border border-gray-300 p-4 rounded-lg shadow-sm bg-gray-50">
-        <h3 className="text-lg font-bold text-gray-800">{asset.name || "Unnamed Asset"}</h3>
-        <p className="text-gray-600">{asset.category || "No Category"}</p>
+        {filteredAssets.length > 0 ? (
+          filteredAssets.map((asset) => (
+            <div 
+              key={asset._id} 
+              className="border border-gray-300 p-6 rounded-lg shadow-sm bg-gray-50 flex flex-col md:flex-row items-center md:items-start"
+            >
+              
+              {/* Asset Image */}
+              <div className="w-35 h-35 md:w-45 md:h-45 mt-2 flex-shrink-0">
+                {asset.image ? (
+                  <img
+                    src={asset.image}
+                    alt={asset.name || "Asset Image"}
+                    className="w-full h-full object-cover rounded-lg"
+                    onError={(e) => (e.target.style.display = "none")}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-lg">
+                    <span className="text-gray-500 text-sm">No Image</span>
+                  </div>
+                )}
+              </div>
 
-        <p className="text-gray-500 text-sm mt-1">
-          <strong>Asset ID:</strong> {asset.asset_id || "N/A"}
-        </p>
-        <p className="text-gray-500 text-sm mt-1">
-          <strong>Model Number:</strong> {asset.model_no || "Unknown"}
-        </p>
-        <p className="text-gray-500 text-sm mt-1">
-          <strong>Assigned Date:</strong> {asset.assigned_date || "N/A"}
-        </p>
-        <p className="text-gray-500 text-sm mt-1">
-          <strong>Warranty Expiry:</strong> {asset.warranty_expiry || "N/A"}
-        </p>
-        <p className="text-gray-500 text-sm mt-1">
-          <strong>Additional Notes:</strong> {asset.note || "N/A"}
-        </p>
-        <p className={`mt-2 ${statusColors[asset.status] || "text-gray-500"}`}>
-          <strong>Status:</strong> {asset.status || "Unknown"}
-        </p>
+              {/* Asset Details */}
+              <div className="flex-1 ml-6">
+                <h3 className="text-lg font-bold text-gray-800">{asset.name || "Unnamed Asset"}</h3>
+                <p className="text-gray-600">{asset.category || "No Category"}</p>
+                <p className="text-gray-500 text-sm mt-1">
+                  <strong>Asset ID:</strong> {asset.asset_id || "N/A"}
+                </p>
+                <p className="text-gray-500 text-sm mt-1">
+                  <strong>Model Number:</strong> {asset.model_no || "Unknown"}
+                </p>
+                <p className="text-gray-500 text-sm mt-1">
+                  <strong>Assigned Date:</strong> {asset.assigned_date || "N/A"}
+                </p>
+                <p className="text-gray-500 text-sm mt-1">
+                  <strong>Warranty Expiry:</strong> {asset.warranty_expiry || "N/A"}
+                </p>
+                <p className="text-gray-500 text-sm mt-1">
+                  <strong>Additional Notes:</strong> {asset.note || "N/A"}
+                </p>
+                <p className={`mt-2 ${statusColors[asset.status] || "text-gray-500"}`}>
+                  <strong>Status:</strong> {asset.status || "Unknown"}
+                </p>
+              </div>
+
+            </div>
+          ))
+        ) : (
+          <p className="text-center text-gray-500 mt-4">No assets found.</p>
+        )}
       </div>
-
-    ))
-  ) : (
-    <p className="text-center text-gray-500 mt-4">No assets found.</p>
-  )}
-</div>
-
     </motion.div>
   );
 };

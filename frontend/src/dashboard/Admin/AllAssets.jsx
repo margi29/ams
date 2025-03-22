@@ -71,29 +71,42 @@ const AllAssets = () => {
       return numA - numB;
     });
 
-  const columns = [
-    { header: "Asset ID", accessor: "asset_id" },
-    { header: "Asset Name", accessor: "name" },
-    { header: "Category", accessor: "category" },
-    {
-      header: "Status",
-      accessor: "status",
-      className: (value) => statusColors[value] || "",
-    },
-    {
-      header: "Actions",
-      render: (row) => (
-        <div className="flex gap-2 justify-center">
-          <button className="bg-blue-500 text-white px-3 py-1 rounded" onClick={() => handleEdit(row)}>
-            Edit
-          </button>
-          <button className="bg-red-500 text-white px-3 py-1 rounded" onClick={() => handleDelete(row._id)}>
-            Delete
-          </button>
-        </div>
-      ),
-    },
-  ];
+    const columns = [
+      {
+        header: "Image",
+        render: (row) => (
+          <div className="flex justify-center">
+            <img
+              src={row.image || "/placeholder.png"} // Use placeholder if no image
+              alt={row.name}
+              className="w-16 h-16 object-cover rounded-lg shadow"
+            />
+          </div>
+        ),
+      },      
+      { header: "Asset ID", accessor: "asset_id" },
+      { header: "Asset Name", accessor: "name" },
+      { header: "Category", accessor: "category" },
+      {
+        header: "Status",
+        accessor: "status",
+        className: (value) => statusColors[value] || "",
+      },
+      {
+        header: "Actions",
+        render: (row) => (
+          <div className="flex gap-2 justify-center">
+            <button className="bg-blue-500 text-white px-3 py-1 rounded" onClick={() => handleEdit(row)}>
+              Edit
+            </button>
+            <button className="bg-red-500 text-white px-3 py-1 rounded" onClick={() => handleDelete(row._id)}>
+              Delete
+            </button>
+          </div>
+        ),
+      },
+    ];
+    
 
   return (
     <motion.div className="p-6 mt-16 bg-white shadow-lg rounded-xl" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
