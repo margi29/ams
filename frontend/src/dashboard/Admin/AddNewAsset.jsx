@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { QRCodeCanvas } from "qrcode.react";
 import CreatableSelect from "react-select/creatable";
 
-const AddAsset = () => {
+const AddNewAsset = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const editing = Boolean(location.state?.asset);
@@ -27,7 +27,10 @@ const AddAsset = () => {
 
   const [submittedAsset, setSubmittedAsset] = useState(null);
   const [showQRCode, setShowQRCode] = useState(false);
-  const [imageFile, setImageFile] = useState(null); // Separate state for image file
+  const [imageFile, setImageFile] = useState(null);
+  
+  // New state for image preview
+  const [imagePreview, setImagePreview] = useState(null);
 
   // Generate QR code content
   const generateQRCode = (assetData) => {
@@ -83,7 +86,11 @@ Description: ${assetData.description || "N/A"}`;
       };
 
       setAsset(updatedAsset);
-      // Don't show QR code yet - only after submission
+      
+      // Set initial image preview if asset has an image
+      if (updatedAsset.image) {
+        setImagePreview(updatedAsset.image);
+      }
     } else {
       fetchNextAssetId();
     }
@@ -102,7 +109,7 @@ Description: ${assetData.description || "N/A"}`;
       if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
       
       const data = await response.json();
-      console.log("🔍 Received asset IDs:", data.assetIds); // Debugging
+      console.log("🔍 Received asset IDs:", data.assetIds);
       
       let nextId = findFirstAvailableAssetId(data.assetIds || []);
       console.log("✅ Final Assigned Asset ID:", nextId);
@@ -117,6 +124,7 @@ Description: ${assetData.description || "N/A"}`;
   };
 
   const findFirstAvailableAssetId = (existingIds) => {
+    // Your existing logic
     if (!existingIds || existingIds.length === 0) {
       return "A01"; // If no assets exist
     }
@@ -124,27 +132,55 @@ Description: ${assetData.description || "N/A"}`;
     // Extract numbers from asset IDs and convert them to integers
     let numericIds = existingIds
       .map((id) => parseInt(id.replace(/\D/g, ""), 10))
-      .filter((num) => !isNaN(num)); // Filter out any invalid values
+      .filter((num) => !isNaN(num));
   
-    // Sort numeric IDs in ascending order
     numericIds.sort((a, b) => a - b);
   
-    // Find the first missing ID
     for (let i = 1; i <= numericIds.length; i++) {
       if (!numericIds.includes(i)) {
-        return `A${String(i).padStart(2, "0")}`; // Ensure it's always a 2-digit format
+        return `A${String(i).padStart(2, "0")}`;
       }
     }
   
-    // If no missing ID is found, return the next consecutive ID
     return `A${String(numericIds.length > 0 ? numericIds[numericIds.length - 1] + 1 : 1).padStart(2, "0")}`;
   };
 
-  // Improved image handling - Store the file itself, not in the asset object
+  // Improved image handling with preview
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setImageFile(file);
+      
+      // Create image preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
+      
+      console.log("Image selected:", file.name);
+      console.log("Preview created:", previewUrl);
+    } else {
+      // Clear preview if file selection is canceled
+      setImageFile(null);
+      setImagePreview(null);
+    }
+  };
+  
+  // Clear image and preview
+  const handleClearImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    
+    // If we're editing, we also need to clear the existing image URL
+    if (editing) {
+      setAsset(prev => ({
+        ...prev,
+        image: "" // Clear the image URL in the asset state
+      }));
+    }
+    
+    // Reset the file input
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) {
+      fileInput.value = "";
     }
   };
 
@@ -187,7 +223,6 @@ Description: ${assetData.description || "N/A"}`;
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
     
-      // Ensure the response is JSON before parsing
       const text = await response.text();
       const data = text ? JSON.parse(text) : {};
     
@@ -195,164 +230,159 @@ Description: ${assetData.description || "N/A"}`;
     } catch (error) {
       console.error("❌ Error checking Asset ID:", error);
       alert("Error checking asset ID. Please refresh and try again.");
-      return false; // Assume it's not unique if the check fails
+      return false;
     }
   };
 
   // Handle image upload
-// Modify your handleImageUpload function to check for the image property
-const handleImageUpload = async (file) => {
-  if (!file) return null;
-  
-  // Create form data for the image upload
-  const formData = new FormData();
-  formData.append("file", file);
+  const handleImageUpload = async (file) => {
+    if (!file) return null;
+    
+    const formData = new FormData();
+    formData.append("file", file);
 
-  try {
-    console.log("Uploading image...");
-    const response = await fetch("http://localhost:3000/api/upload", {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Server error during upload:", errorText);
-      throw new Error(`Upload failed with status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log("Upload response:", data);
-    
-    // Check all possible response formats including 'image' property
-    if (data.image) {
-      return data.image; // This is the format your server is returning
-    } else if (data.url || data.secure_url || data.filePath || data.path) {
-      return data.url || data.secure_url || data.filePath || data.path;
-    } else {
-      console.error("Unexpected response format:", data);
-      throw new Error("Image upload succeeded but response format is unexpected");
-    }
-  } catch (error) {
-    console.error("❌ Error uploading image:", error);
-    return null;
-  }
-};
-
-// Improved form submission
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  let imageUrl = null;
-  
-  try {
-    // Only attempt to upload image if a file was selected
-    if (imageFile) {
-      console.log("Processing image upload...");
-      imageUrl = await handleImageUpload(imageFile);
-      
-      if (!imageUrl) {
-        console.error("Image upload returned null");
-        // Make this a warning instead of blocking submission
-        if (confirm("Image upload failed. Continue without image?")) {
-          // Continue without image
-        } else {
-          return; // Stop submission if user doesn't want to continue
-        }
-      }
-    }
-    
-    // Use existing image URL if editing and no new image was uploaded
-    const finalImageUrl = imageUrl || asset.image || "";
-    console.log("Final image URL:", finalImageUrl);
-    
-    // Prepare asset data with image URL
-    const assetData = { 
-      ...asset,
-      image: finalImageUrl
-    };
-    
-    // If quantity > 1 and not editing, create multiple assets
-    // If quantity > 1 and not editing, create multiple assets
-if (!editing && asset.quantity > 1) {
-  // Create array of assets
-  const assets = [];
-  let currentAssetId = asset.asset_id;
-  
-  for (let i = 0; i < asset.quantity; i++) {
-    // For first asset, use the current ID
-    // For subsequent assets, increment the ID
-    if (i > 0) {
-      const numPart = parseInt(currentAssetId.replace(/\D/g, ""), 10);
-      const prefix = currentAssetId.replace(/\d+/g, "");
-      currentAssetId = `${prefix}${String(numPart + i).padStart(2, "0")}`;
-    }
-    
-    assets.push({
-      ...assetData,
-      asset_id: i === 0 ? assetData.asset_id : currentAssetId,
-      quantity: 1, // Each individual asset has quantity of 1
-      image: finalImageUrl // Ensure each asset has the image URL
-    });
-  }
-  
-  console.log("Creating multiple assets:", assets);
-  
-  // Create assets individually without trying the batch endpoint
-  const createdAssets = [];
-  
-  for (const assetItem of assets) {
-    const response = await fetch("http://localhost:3000/api/assets", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(assetItem),
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to create asset: ${assetItem.asset_id}`);
-    }
-    
-    const createdAsset = await response.json();
-    createdAssets.push({
-      ...createdAsset,
-      qr_code: generateQRCode(createdAsset)
-    });
-  }
-  
-  setSubmittedAsset(createdAssets);
-  setShowQRCode(true);
-  alert(`${createdAssets.length} assets added successfully!`);
-} else {
-      // Single asset update/create
-      console.log("Creating/updating single asset:", assetData);
-      
-      const response = await fetch(editing 
-        ? `http://localhost:3000/api/assets/${asset._id}` 
-        : "http://localhost:3000/api/assets", 
-      {
-        method: editing ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(assetData),
+    try {
+      console.log("Uploading image...");
+      const response = await fetch("http://localhost:3000/api/upload", {
+        method: "POST",
+        body: formData,
       });
-      
+
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Server error:", errorText);
-        throw new Error(`Request failed with status: ${response.status}`);
+        console.error("Server error during upload:", errorText);
+        throw new Error(`Upload failed with status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Upload response:", data);
+      
+      if (data.image) {
+        return data.image;
+      } else if (data.url || data.secure_url || data.filePath || data.path) {
+        return data.url || data.secure_url || data.filePath || data.path;
+      } else {
+        console.error("Unexpected response format:", data);
+        throw new Error("Image upload succeeded but response format is unexpected");
+      }
+    } catch (error) {
+      console.error("❌ Error uploading image:", error);
+      return null;
+    }
+  };
+
+  // Improved form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    let imageUrl = null;
+    
+    try {
+      // Only attempt to upload image if a file was selected
+      if (imageFile) {
+        console.log("Processing image upload...");
+        imageUrl = await handleImageUpload(imageFile);
+        
+        if (!imageUrl) {
+          console.error("Image upload returned null");
+          if (confirm("Image upload failed. Continue without image?")) {
+            // Continue without image
+          } else {
+            return; // Stop submission if user doesn't want to continue
+          }
+        }
       }
       
-      const responseData = await response.json();
+      // Use existing image URL if editing and no new image was uploaded
+      let finalImageUrl = imageUrl || asset.image || "";
+      console.log("Final image URL:", finalImageUrl);
       
-      alert(editing ? "Asset updated successfully!" : "Asset added successfully!");
-      // Use the returned data from the server if available, otherwise use our local data
-      const finalAssetData = responseData.asset || responseData || assetData;
-      setSubmittedAsset({ ...finalAssetData, qr_code: generateQRCode(finalAssetData) });
-      setShowQRCode(true);
+      // Prepare asset data with image URL
+      const assetData = { 
+        ...asset,
+        image: finalImageUrl
+      };
+      
+      // If quantity > 1 and not editing, create multiple assets
+      if (!editing && asset.quantity > 1) {
+        // Create array of assets
+        const assets = [];
+        let currentAssetId = asset.asset_id;
+        
+        for (let i = 0; i < asset.quantity; i++) {
+          // For first asset, use the current ID
+          // For subsequent assets, increment the ID
+          if (i > 0) {
+            const numPart = parseInt(currentAssetId.replace(/\D/g, ""), 10);
+            const prefix = currentAssetId.replace(/\d+/g, "");
+            currentAssetId = `${prefix}${String(numPart + i).padStart(2, "0")}`;
+          }
+          
+          assets.push({
+            ...assetData,
+            asset_id: i === 0 ? assetData.asset_id : currentAssetId,
+            quantity: 1, // Each individual asset has quantity of 1
+            image: finalImageUrl // Ensure each asset has the image URL
+          });
+        }
+        
+        console.log("Creating multiple assets:", assets);
+        
+        // Create assets individually without trying the batch endpoint
+        const createdAssets = [];
+        
+        for (const assetItem of assets) {
+          const response = await fetch("http://localhost:3000/api/assets", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(assetItem),
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Failed to create asset: ${assetItem.asset_id}`);
+          }
+          
+          const createdAsset = await response.json();
+          createdAssets.push({
+            ...createdAsset,
+            qr_code: generateQRCode(createdAsset)
+          });
+        }
+        
+        setSubmittedAsset(createdAssets);
+        setShowQRCode(true);
+        alert(`${createdAssets.length} assets added successfully!`);
+      } else {
+        // Single asset update/create
+        console.log("Creating/updating single asset:", assetData);
+        
+        const response = await fetch(editing 
+          ? `http://localhost:3000/api/assets/${asset._id}` 
+          : "http://localhost:3000/api/assets", 
+        {
+          method: editing ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(assetData),
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Server error:", errorText);
+          throw new Error(`Request failed with status: ${response.status}`);
+        }
+        
+        const responseData = await response.json();
+        
+        alert(editing ? "Asset updated successfully!" : "Asset added successfully!");
+        // Use the returned data from the server if available, otherwise use our local data
+        const finalAssetData = responseData.asset || responseData || assetData;
+        setSubmittedAsset({ ...finalAssetData, qr_code: generateQRCode(finalAssetData) });
+        setShowQRCode(true);
+      }
+    } catch (error) {
+      console.error("❌ Error saving asset:", error);
+      alert(`Failed to save asset: ${error.message}`);
     }
-  } catch (error) {
-    console.error("❌ Error saving asset:", error);
-    alert(`Failed to save asset: ${error.message}`);
-  }
-};
+  };
   
   // Download QR Code for a specific asset
   const downloadQRCode = (assetId, index) => {
@@ -376,7 +406,7 @@ if (!editing && asset.quantity > 1) {
     downloadLink.href = pngUrl;
     downloadLink.download = `${assetId}_QRCode.png`;
     document.body.appendChild(downloadLink);
-    downloadLink.style.display = 'none'; // Prevent display on the page
+    downloadLink.style.display = 'none';
     downloadLink.click();
     document.body.removeChild(downloadLink);
   };
@@ -483,16 +513,41 @@ if (!editing && asset.quantity > 1) {
             </select>
           </div>
 
+          {/* Image upload with preview */}
           <div>
             <label className="block text-gray-700 font-medium">Upload Image {editing && !asset.image ? '*' : ''}</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-              required={editing && !asset.image} // Only required when editing and no existing image
-            />
-            {asset.image && (
+            <div className="flex">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+                required={editing && !asset.image}
+              />
+              {imagePreview && (
+                <button 
+                  type="button"
+                  onClick={handleClearImage}
+                  className="ml-2 mt-1 px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            
+            {/* Image preview */}
+            {imagePreview && (
+              <div className="mt-3 relative">
+                <img 
+                  src={imagePreview} 
+                  alt="Image Preview" 
+                  className="w-40 h-40 object-cover rounded-md shadow-md"
+                />
+                <p className="text-sm text-green-600 mt-1">Image Preview</p>
+              </div>
+            )}
+            
+            {!imagePreview && asset.image && (
               <div className="mt-2">
                 <span className="text-sm text-green-600">Current image available</span>
               </div>
@@ -616,4 +671,4 @@ if (!editing && asset.quantity > 1) {
   );
 };
 
-export default AddAsset;
+export default AddNewAsset;

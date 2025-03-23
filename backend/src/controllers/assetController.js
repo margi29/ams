@@ -152,20 +152,19 @@ const createAsset = async (req, res) => {
 // ✅ Update an asset
 const updateAsset = async (req, res) => {
   const { id } = req.params;
-
+  
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ error: "Invalid asset ID" });
   }
-
+  
   try {
     const asset = await Asset.findById(id);
     if (!asset) {
       return res.status(404).json({ error: "Asset not found" });
     }
-
+    
     console.log("Incoming update request:", req.body);
-    console.log("Received file:", req.file); // Debugging log
-
+    
     // ✅ Update all fields
     asset.name = req.body.name || asset.name;
     asset.manufacturer = req.body.manufacturer || asset.manufacturer;
@@ -177,30 +176,36 @@ const updateAsset = async (req, res) => {
     asset.location = req.body.location || asset.location;
     asset.description = req.body.description || asset.description;
     asset.assigned_to = req.body.assigned_to || asset.assigned_to || null;
-
+    
     // ✅ Convert assigned_date if present
     if (req.body.assigned_date) {
       const [day, month, year] = req.body.assigned_date.split("-");
       asset.assigned_date = new Date(`${year}-${month}-${day}`);
     }
-
+    
     asset.note = req.body.note || asset.note || "";
-
-    // ✅ Handle Image Upload (if file is present)
+    
+    // ✅ Handle Image Update - support both methods
     if (req.file) {
+      // Method 1: Direct file upload via multer
       const cloudinary = require("cloudinary").v2;
-
+      
       // Upload image to Cloudinary
       const uploadedImage = await cloudinary.uploader.upload(req.file.path, {
         folder: "assets",
       });
-
-      console.log("Uploaded Image URL:", uploadedImage.secure_url); // Debugging log
+      
+      console.log("Uploaded Image URL:", uploadedImage.secure_url);
       asset.image = uploadedImage.secure_url;
+    } else if (req.body.image && req.body.image !== asset.image) {
+      // Method 2: Image URL is provided directly from frontend
+      // Only update if the image URL has changed
+      console.log("Updating image URL from request body:", req.body.image);
+      asset.image = req.body.image;
     }
-
-    console.log("Updated asset before saving:", asset); // Log updated asset
-
+    
+    console.log("Updated asset before saving:", asset);
+    
     const updatedAsset = await asset.save();
     res.status(200).json({ message: "Asset updated successfully", asset: updatedAsset });
   } catch (error) {
