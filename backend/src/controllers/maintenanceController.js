@@ -30,7 +30,7 @@ const getAllMaintenanceRequests = async (req, res) => {
   try {
     const requests = await MaintenanceRequest.find()
       .populate("employeeId", "name email") // ✅ Fetch employee name & email
-      .populate("assetId", "name status") // ✅ Fetch asset name & status
+      .populate("assetId", "name status asset_id") // ✅ Fetch asset name & status
       .lean(); // ✅ Convert to plain JS objects
 
     res.status(200).json(requests);

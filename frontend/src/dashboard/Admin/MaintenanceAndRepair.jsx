@@ -92,12 +92,16 @@ const MaintenanceAndRepair = () => {
   // Table columns
   const columns = [
     {
-      header: "Requested By",
-      accessor: (row) => row.employeeId?.name || "N/A",
+      header: "Asset Id",
+      accessor: (row) => row.assetId?.asset_id || "N/A",
     },
     {
       header: "Asset",
       accessor: (row) => row.assetId?.name || "N/A",
+    },
+    {
+      header: "Requested By",
+      accessor: (row) => row.employeeId?.name || "N/A",
     },
     { header: "Task", accessor: "task" },
     {

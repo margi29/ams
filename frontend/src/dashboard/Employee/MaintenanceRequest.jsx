@@ -18,7 +18,7 @@ const MaintenanceRequest = () => {
         // ✅ Format assets with status for react-select
         const formattedAssets = data.map((asset) => ({
           value: asset._id,
-          label: `${asset.name} (${asset.status})`, // Show status dynamically
+          label: `${asset.name}`, 
           status: asset.status, // Store status separately for logic
         }));
 
