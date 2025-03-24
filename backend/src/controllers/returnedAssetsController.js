@@ -2,7 +2,7 @@ const ReturnedAssets = require("../models/ReturnedAssets");
 const Asset = require("../models/Asset");
 
 // 🔹 Fetch all returned asset logs
-exports.getAllReturnedAssets = async (req, res) => {
+const getAllReturnedAssets = async (req, res) => {
   try {
     const returns = await ReturnedAssets.find().populate("asset employee", "name asset_id");
     res.status(200).json(returns);
@@ -13,33 +13,48 @@ exports.getAllReturnedAssets = async (req, res) => {
 };
 
 // 🔹 Record a returned asset
-exports.returnAsset = async (req, res) => {
+const returnAsset = async (req, res) => {
   try {
-    const { assetId, employeeId } = req.body;
+    const { assetId, reason, additionalNotes } = req.body;
+    const userId = req.user.id; // Extract user ID from token
 
-    if (!assetId || !employeeId) {
-      return res.status(400).json({ message: "Missing required fields" });
+    // Validate request
+    if (!assetId || !reason) {
+      return res.status(400).json({ message: "Asset ID and reason are required." });
     }
 
-    // ✅ Create a return log
-    const returnLog = new ReturnedAssets({
+    // Find the asset
+    const asset = await Asset.findById(assetId);
+    if (!asset) {
+      return res.status(404).json({ message: "Asset not found." });
+    }
+
+    // Ensure the asset is assigned to the current employee
+    if (!asset.assigned_to || asset.assigned_to.toString() !== userId) {
+      return res.status(403).json({ message: "You are not assigned to this asset." });
+    }
+
+    // Create return record
+    const returnedAsset = new ReturnedAssets({
       asset: assetId,
-      employee: employeeId,
+      employee: userId,
+      reason,
+      additionalNotes,
     });
+    await returnedAsset.save();
 
-    await returnLog.save();
+    // Update asset status to "Available" and remove assigned_to
+    asset.status = "Available";
+    asset.assigned_to = null;
+    asset.assigned_date = null;
+    await asset.save();
 
-    // ✅ Update asset status to "Available" and reset assignment fields
-    await Asset.findByIdAndUpdate(assetId, {
-      status: "Available",
-      assigned_to: null,
-      assigned_date: null,
-      note: null,
-    });
-
-    res.status(201).json({ message: "Asset returned successfully", returnLog });
+    res.status(200).json({ message: "Asset return request processed successfully." });
   } catch (error) {
-    console.error("Error returning asset:", error);
-    res.status(500).json({ message: "Server error" });
+    console.error("Return asset error:", error);
+    res.status(500).json({ message: "Internal server error." });
   }
 };
+
+// 🔹 Export the functions
+module.exports = { getAllReturnedAssets, returnAsset };

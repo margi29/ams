@@ -189,6 +189,7 @@ const AssignAsset = () => {
     >
       <h2 className="text-3xl font-bold mb-4 text-gray-800 text-center">Assign Asset</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
+        
   {/* Grid Layout for Two Fields Per Row */}
   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
   {/* Category */}
@@ -331,13 +332,13 @@ const AssignAsset = () => {
     placeholder="Optional notes..."
     className="w-full p-3 border rounded-lg"
   ></textarea>
-</div>
+</div>       
 
 {/* Submit Button */}
 <div className="flex justify-center">
   <button
     type="submit"
-    className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg"
+    className="w-full bg-[#673AB7] hover:bg-[#5E35B1] text-white font-bold py-3 rounded-lg transition"
     disabled={!category || !asset || !department || !user}
   >
     Assign Asset
