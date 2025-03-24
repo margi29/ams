@@ -1,51 +1,77 @@
 import { useState, useEffect } from "react";
+import Select from "react-select";
 import { motion } from "framer-motion";
-
-// Mock data for assigned assets
-const mockAssignedAssets = [
-  { id: "A123", name: "Laptop - Dell XPS 15" },
-  { id: "A124", name: "Monitor - HP 24-inch" },
-  { id: "A125", name: "Keyboard - Logitech MX" },
-];
-
-// Mock data for maintenance status
-const initialMaintenanceData = [
-  { id: "A123", name: "Laptop - Dell XPS 15", status: "Pending" },
-];
 
 const MaintenanceRequest = () => {
   const [assignedAssets, setAssignedAssets] = useState([]);
-  const [maintenanceData, setMaintenanceData] = useState(initialMaintenanceData);
-  const [selectedAsset, setSelectedAsset] = useState("");
+  const [selectedAsset, setSelectedAsset] = useState(null);
+  const [task, setTask] = useState("");
 
   useEffect(() => {
-    setAssignedAssets(mockAssignedAssets);
+    const fetchAssets = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/api/assets/my-assets", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        const data = await response.json();
+
+        // ✅ Format assets with status for react-select
+        const formattedAssets = data.map((asset) => ({
+          value: asset._id,
+          label: `${asset.name} (${asset.status})`, // Show status dynamically
+          status: asset.status, // Store status separately for logic
+        }));
+
+        setAssignedAssets(formattedAssets);
+      } catch (error) {
+        console.error("Error fetching assigned assets:", error);
+      }
+    };
+    fetchAssets();
   }, []);
 
-  // Handle asset selection
-  const handleChange = (e) => {
-    setSelectedAsset(e.target.value);
-  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedAsset || !task) {
+      alert("Please select an asset and enter a task.");
+      return;
+    }
 
-  // Confirm and send maintenance request
-  const handleSendForMaintenance = () => {
-    if (!selectedAsset) {
-      alert("Please select an asset before submitting.");
+    if (selectedAsset.status === "Under Maintenance") {
+      alert("This asset is already under maintenance.");
       return;
     }
 
     const confirmSend = window.confirm("Are you sure you want to send this asset for maintenance?");
     if (confirmSend) {
-      const assetToSend = assignedAssets.find((asset) => asset.id === selectedAsset);
-      
-      // Update Maintenance Data
-      setMaintenanceData((prevData) => [
-        ...prevData,
-        { id: assetToSend.id, name: assetToSend.name, status: "Pending" },
-      ]);
+      try {
+        const response = await fetch("http://localhost:3000/api/maintenance", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({ assetId: selectedAsset.value, task }),
+        });
 
-      alert(`Maintenance request submitted for ${assetToSend.name}`);
-      setSelectedAsset(""); // Reset selection
+        if (response.ok) {
+          alert("Maintenance request submitted successfully.");
+
+          // ✅ Update status in dropdown instead of removing it
+          setAssignedAssets((prevAssets) =>
+            prevAssets.map((asset) =>
+              asset.value === selectedAsset.value ? { ...asset, label: `${asset.label.split(" (")[0]} (Under Maintenance)`, status: "Under Maintenance" } : asset
+            )
+          );
+
+          setSelectedAsset(null);
+          setTask("");
+        } else {
+          alert("Failed to submit maintenance request.");
+        }
+      } catch (error) {
+        console.error("Error submitting maintenance request:", error);
+      }
     }
   };
 
@@ -55,43 +81,47 @@ const MaintenanceRequest = () => {
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
     >
-      {/* Header Section */}
-      <h1 className="text-3xl font-bold text-center text-gray-800">
-        Maintenance Request
-      </h1>
+      <h1 className="text-3xl font-bold text-center text-gray-800">Maintenance Request</h1>
       <p className="text-center text-gray-600 mt-2">
         Submit a request to send an asset for maintenance.
       </p>
 
-      {/* Maintenance Form */}
-      <div className="mt-6 space-y-4">
-        {/* Select Asset Dropdown */}
+      <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        {/* React-Select Dropdown */}
         <div>
           <label className="block font-medium">
             Select Asset <span className="text-red-500">*</span>
           </label>
-          <select
+          <Select
             value={selectedAsset}
-            onChange={handleChange}
-            className="w-full p-3 border rounded-lg border-gray-300"
-          >
-            <option value="">-- Choose an Asset --</option>
-            {assignedAssets.map((asset) => (
-              <option key={asset.id} value={asset.id}>
-                {asset.name}
-              </option>
-            ))}
-          </select>
+            onChange={setSelectedAsset}
+            options={assignedAssets}
+            placeholder="Choose an Asset..."
+            className="w-full"
+          />
         </div>
 
-        {/* Send for Maintenance Button */}
+        {/* Task Input */}
+        <div>
+          <label className="block font-medium">
+            Task <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={task}
+            onChange={(e) => setTask(e.target.value)}
+            className="w-full p-3 border rounded-lg border-gray-300"
+            placeholder="Describe the maintenance task"
+          />
+        </div>
+
         <button
-          onClick={handleSendForMaintenance}
+          type="submit"
           className="w-full bg-[#673AB7] hover:bg-[#5E35B1] text-white font-bold py-3 rounded-lg transition"
         >
           Send for Maintenance
         </button>
-      </div>
+      </form>
     </motion.div>
   );
 };

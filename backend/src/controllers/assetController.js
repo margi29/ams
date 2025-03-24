@@ -236,23 +236,16 @@ const deleteAsset = async (req, res) => {
 
 const getEmployeeAssets = async (req, res) => {
   try {
-
     if (!req.user || !req.user._id) {
-      console.log("⚠️ No user ID found in request.");
       return res.status(401).json({ message: "Unauthorized access" });
     }
 
-
-    const employeeAssets = await Asset.find({ assigned_to: req.user._id });
-
-
-    if (!employeeAssets.length) {
-      console.log("⚠️ No assets assigned to this user.");
-      return res.status(200).json([]);
-    }
+    // Fetch only assets assigned to the employee with status "Assigned"
+    const employeeAssets = await Asset.find({ assigned_to: req.user._id, status: "Assigned" });
 
     res.status(200).json(employeeAssets);
   } catch (error) {
+    console.error("Error fetching employee assets:", error);
     res.status(500).json({ message: "Something went wrong", error: error.message });
   }
 };
