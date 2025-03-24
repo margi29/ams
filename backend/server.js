@@ -46,6 +46,7 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/returned-assets", returnedAssetsRoutes);
 app.use("/api/maintenance", maintenanceRoutes);
 
+
 // ✅ 404 Error Handling
 app.use((req, res) => {
   res.status(404).json({ error: "Route not found" });
