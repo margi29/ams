@@ -591,7 +591,7 @@ Description: ${assetData.description || "N/A"}`;
           <div className="col-span-2 flex justify-center">
             <button
               type="submit"
-              className="px-6 py-3 bg-blue-600 text-white text-lg rounded-lg shadow-md hover:bg-blue-700"
+              className="w-full bg-[#673AB7] hover:bg-[#5E35B1] text-white font-bold py-3 rounded-lg transition"
             >
               {editing ? "Update Asset" : "Add Asset"}
             </button>

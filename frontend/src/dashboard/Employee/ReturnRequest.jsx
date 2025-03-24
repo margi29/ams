@@ -125,7 +125,7 @@ const ReturnRequest = () => {
         <div className="flex justify-center">
           <button
             type="submit"
-            className="bg-[#673AB7] hover:bg-[#5E35B1] text-white px-6 py-2 rounded-lg"
+            className="w-full bg-[#673AB7] hover:bg-[#5E35B1] text-white font-bold py-3 rounded-lg transition"
           >
             Submit Request
           </button>
