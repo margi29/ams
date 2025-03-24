@@ -85,6 +85,7 @@ const AssetRequests = () => {
         setExportFormat={setExportFormat}
         data={filteredRequests}
         filename="asset_requests"
+        columns={columns}
       />
 
       {filteredRequests.length > 0 ? (

@@ -1,154 +1,69 @@
 import { useState, useEffect } from "react";
+import axios from "axios";
 import { motion } from "framer-motion";
 import Table from "../../components/Table";
 import SearchFilterBar from "../../components/SearchFilterBar";
 
-const statusOptions = ["Pending", "Scheduled", "Completed"];
-
-const MaintenanceAndRepair = () => {
+const MaintenanceRequests = () => {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
   const [exportFormat, setExportFormat] = useState("csv");
-  const [schedule, setSchedule] = useState([]);
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // Date formatting function
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A"; // Handle missing dates
-    const date = new Date(dateString);
-    return date.toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  // Fetch maintenance requests
+  // ✅ Fetch maintenance requests from backend with authentication
   useEffect(() => {
     const fetchMaintenanceRequests = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/maintenance", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("Authentication token not found. Please log in again.");
+        }
+
+        const response = await axios.get("http://localhost:3000/api/maintenance", {
+          headers: { Authorization: `Bearer ${token}` },
         });
 
-        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-
-        const data = await response.json();
-        setSchedule(data);
+        setRequests(response.data);
+        setError("");
       } catch (error) {
-        console.error("Error fetching maintenance requests:", error);
+        console.error("❌ Error fetching maintenance requests:", error);
+        setError(error.response?.data?.message || error.message || "Failed to fetch maintenance requests");
+        setRequests([]);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchMaintenanceRequests();
   }, []);
 
-  // Handle status change (Schedule → Scheduled, Complete → Completed)
-  const handleStatusChange = async (id, newStatus) => {
-    const confirmMessage =
-      newStatus === "Completed"
-        ? "Are you sure you want to mark this task as completed?"
-        : "Are you sure you want to schedule this task?";
+  // ✅ Filtering logic to include task and asset details
+  const filteredRequests = requests
+    .filter((req) =>
+      (req.assetId?.name?.toLowerCase() || "").includes(search.toLowerCase()) ||
+      (req.employeeId?.name?.toLowerCase() || "").includes(search.toLowerCase()) ||
+      (req.task?.toLowerCase() || "").includes(search.toLowerCase()) ||
+      (req.status?.toLowerCase() || "").includes(search.toLowerCase())
+    )
+    .map((req) => ({
+      assetId: req.assetId?.asset_id || "N/A",
+      assetName: req.assetId?.name || "Unknown Asset",
+      employeeName: req.employeeId?.name || "Unknown Employee",
+      task: req.task || "N/A",
+      date: new Date(req.createdAt || Date.now()).toLocaleDateString(),
+      status: req.status || "Pending",
+    }));
 
-    if (!window.confirm(confirmMessage)) return;
-
-    try {
-      const response = await fetch(`http://localhost:3000/api/maintenance/${id}/status`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
-
-      if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-
-      // ✅ Update frontend state after successful status change
-      setSchedule((prev) =>
-        prev.map((entry) =>
-          entry._id === id
-            ? {
-                ...entry,
-                status: newStatus,
-                assetStatus: newStatus === "Completed" ? "Available" : entry.assetStatus,
-              }
-            : entry
-        )
-      );
-    } catch (error) {
-      console.error("Error updating maintenance status:", error);
-    }
-  };
-
-  // Filtered data
-  const filteredSchedule = schedule.filter(
-    (entry) =>
-      (filter === "All" || entry.status === filter) &&
-      entry.assetId?.name?.toLowerCase().includes(search.toLowerCase()) // ✅ Fix applied
-  );
-
-  // Table columns
+  // ✅ Column definitions
   const columns = [
-    {
-      header: "Asset Id",
-      accessor: (row) => row.assetId?.asset_id || "N/A",
-    },
-    {
-      header: "Asset",
-      accessor: (row) => row.assetId?.name || "N/A",
-    },
-    {
-      header: "Requested By",
-      accessor: (row) => row.employeeId?.name || "N/A",
-    },
+    { header: "Asset ID", accessor: "assetId" },
+    { header: "Asset Name", accessor: "assetName" },
+    { header: "Employee Name", accessor: "employeeName" },
     { header: "Task", accessor: "task" },
-    {
-      header: "Date",
-      accessor: (row) => formatDate(row.createdAt),
-    },
-    {
-      header: "Status",
-      accessor: "status",
-      className: (status) =>
-        status === "Pending"
-          ? "text-yellow-600 font-semibold"
-          : status === "Scheduled"
-          ? "text-[#00B4D8] font-semibold"
-          : "text-green-600 font-semibold",
-    },
-    {
-      header: "Actions",
-      render: (row) => (
-        <div className="flex justify-center gap-2">
-          {row.status === "Pending" && (
-            <>
-              <button
-                onClick={() => handleStatusChange(row._id, "Scheduled")}
-                className="bg-[#00B4D8] text-white px-3 py-1 rounded-lg hover:bg-[#0096C7] transition"
-              >
-                Schedule
-              </button>
-              <button
-                onClick={() => handleStatusChange(row._id, "Completed")}
-                className="bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600 transition"
-              >
-                Complete
-              </button>
-            </>
-          )}
-          {row.status === "Scheduled" && (
-            <button
-              onClick={() => handleStatusChange(row._id, "Completed")}
-              className="bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600 transition"
-            >
-              Complete
-            </button>
-          )}
-        </div>
-      ),
-    },
+    { header: "Date", accessor: "date" },
+    { header: "Status", accessor: "status" },
   ];
 
   return (
@@ -157,9 +72,9 @@ const MaintenanceAndRepair = () => {
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
     >
-      <h2 className="text-3xl font-bold mb-4 text-gray-800 text-center">Maintenance and Repair</h2>
+      <h2 className="text-3xl font-bold mb-4 text-gray-800 text-center">Maintenance Requests</h2>
 
-      {/* Search & Filter Bar */}
+      {/* Integrated SearchFilterBar Component */}
       <SearchFilterBar
         search={search}
         setSearch={setSearch}
@@ -167,19 +82,26 @@ const MaintenanceAndRepair = () => {
         setFilter={setFilter}
         exportFormat={exportFormat}
         setExportFormat={setExportFormat}
-        data={filteredSchedule}
-        filename="maintenance_and_repair"
-        statusOptions={statusOptions}
+        data={filteredRequests}
+        filename="maintenance_requests"
+        statusOptions={["Pending", "Scheduled", "Completed"]}
+        columns={columns}
       />
 
-      {/* Display Table or No Data Message */}
-      {filteredSchedule.length > 0 ? (
-        <Table columns={columns} data={filteredSchedule} />
+      {loading ? (
+        <p className="text-center text-gray-500 mt-4">Loading maintenance requests...</p>
+      ) : error ? (
+        <div className="text-center text-red-500 mt-4 p-4 bg-red-50 rounded-lg">
+          <p>Error: {error}</p>
+          <p className="text-sm mt-2">Please make sure you are logged in with appropriate permissions.</p>
+        </div>
+      ) : requests.length === 0 ? (
+        <p className="text-center text-gray-500 mt-4">No maintenance requests found.</p>
       ) : (
-        <p className="text-center text-gray-500 mt-4">No maintenance tasks found.</p>
+        <Table columns={columns} data={filteredRequests} />
       )}
     </motion.div>
   );
 };
 
-export default MaintenanceAndRepair;
+export default MaintenanceRequests;

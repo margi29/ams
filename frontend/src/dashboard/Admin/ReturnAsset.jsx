@@ -90,6 +90,7 @@ const ReturnAsset = () => {
         data={filteredLogs}
         filename="return_asset_log"
         statusOptions={[]} // Removed condition-related options
+        columns={columns}
       />
 
       {loading ? (

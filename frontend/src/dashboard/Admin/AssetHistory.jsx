@@ -108,6 +108,7 @@ const AssetHistory = () => {
         data={filteredHistory}
         filename="asset_history"
         statusOptions={statusOptions}
+        columns={columns}
       />
 
       {filteredHistory.length > 0 ? (

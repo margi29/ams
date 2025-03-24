@@ -83,13 +83,8 @@ const ViewMyAsset = () => {
         setSearch={setSearch}
         filter={filter}
         setFilter={setFilter}
-        exportFormat="csv"
-        data={filteredAssets}
-        filename="my_assets"
         statusOptions={statusOptions}
       />
-
-      {/* Asset List */}
       
        {/* Asset List */}
 {filteredAssets.length > 0 ? (

@@ -122,6 +122,7 @@ const AllAssets = () => {
         data={filteredAssets}
         filename="all_assets"
         statusOptions={["Available", "Assigned", "Under Maintenance", "Retired"]}
+        columns={columns}
       />
 
       <Table columns={columns} data={filteredAssets} />
