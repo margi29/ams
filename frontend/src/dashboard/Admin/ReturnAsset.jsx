@@ -10,38 +10,65 @@ const ReturnAsset = () => {
   const [exportFormat, setExportFormat] = useState("csv");
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // ✅ Fetch returned assets from backend
+  // ✅ Fetch returned assets from backend with authentication
   useEffect(() => {
     const fetchReturnedAssets = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/api/returnedassets");
+        // Get the auth token from localStorage
+        const token = localStorage.getItem("token");
+        
+        if (!token) {
+          throw new Error("Authentication token not found. Please log in again.");
+        }
+
+        // Make the request with the Authorization header
+        const response = await axios.get("http://localhost:3000/api/returned-assets", {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        
         setLogs(response.data);
+        setError("");
       } catch (error) {
         console.error("❌ Error fetching returned assets:", error);
+        setError(error.response?.data?.message || error.message || "Failed to fetch returned assets");
+        setLogs([]);
       } finally {
         setLoading(false);
       }
     };
+    
     fetchReturnedAssets();
   }, []);
 
-  // ✅ Ensure asset and employee names exist before filtering
+  // ✅ Enhanced filtering to include reason and additional notes
   const filteredLogs = logs
     .filter((log) =>
-      log.asset?.name?.toLowerCase().includes(search.toLowerCase()) ||
-      log.employee?.name?.toLowerCase().includes(search.toLowerCase())
+      (log.asset?.name?.toLowerCase() || "").includes(search.toLowerCase()) ||
+      (log.employee?.name?.toLowerCase() || "").includes(search.toLowerCase()) ||
+      (log.reason?.toLowerCase() || "").includes(search.toLowerCase()) ||
+      (log.additionalNotes?.toLowerCase() || "").includes(search.toLowerCase())
     )
     .map((log) => ({
       assetName: log.asset?.name || "Unknown Asset",
+      assetId: log.asset?.asset_id || "N/A",
       employeeName: log.employee?.name || "Unknown Employee",
-      returnDate: log.return_date || "N/A",
+      returnDate: new Date(log.return_date || Date.now()).toLocaleDateString(),
+      reason: log.reason || "N/A",
+      additionalNotes: log.additionalNotes || "None",
     }));
 
+  // ✅ Enhanced columns to display all relevant information
   const columns = [
+    { header: "Asset ID", accessor: "assetId" },
     { header: "Asset Name", accessor: "assetName" },
     { header: "Employee Name", accessor: "employeeName" },
     { header: "Return Date", accessor: "returnDate" },
+    { header: "Reason", accessor: "reason" },
+    { header: "Additional Notes", accessor: "additionalNotes" },
   ];
 
   return (
@@ -67,6 +94,13 @@ const ReturnAsset = () => {
 
       {loading ? (
         <p className="text-center text-gray-500 mt-4">Loading returned assets...</p>
+      ) : error ? (
+        <div className="text-center text-red-500 mt-4 p-4 bg-red-50 rounded-lg">
+          <p>Error: {error}</p>
+          <p className="text-sm mt-2">Please make sure you are logged in with appropriate permissions.</p>
+        </div>
+      ) : logs.length === 0 ? (
+        <p className="text-center text-gray-500 mt-4">No returned assets found.</p>
       ) : (
         <Table columns={columns} data={filteredLogs} />
       )}

@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import Table from "../../components/Table";
 import SearchFilterBar from "../../components/SearchFilterBar";
+import CreatableSelect from 'react-select/creatable';
 
 const roleColors = {
   Admin: "text-red-600 font-semibold",
@@ -16,119 +17,131 @@ const UserManagement = () => {
   const [search, setSearch] = useState("");
   const [filterRole, setFilterRole] = useState("All");
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
-  const [isAdding, setIsAdding] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [departments, setDepartments] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [newUser, setNewUser] = useState({
-    name: "",
-    email: "",
-    password: "",
-    role: "",
-    department: "",
+  const [currentUser, setCurrentUser] = useState({
+    name: "", 
+    email: "", 
+    password: "", 
+    role: "Employee", 
+    departmentOption: null
   });
   
+  // Convert departments array to options format for react-select
+  const departmentOptions = departments.map(dept => ({ value: dept, label: dept }));
 
-  // 🔥 Fetch Users from Backend
-  const fetchUsers = async () => {
+  // Fetch data from API
+  const fetchData = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/api/users");
-      setUsers(res.data); // ✅ No need to extract 'users' key
+      const [usersRes, deptsRes] = await Promise.all([
+        axios.get("http://localhost:3000/api/users"),
+        axios.get("http://localhost:3000/api/users/departments")
+      ]);
+      setUsers(usersRes.data);
+      setDepartments(deptsRes.data);
     } catch (error) {
-      console.error("Error fetching users:", error);
-    }
-  };
-
-  const fetchDepartments = async () => {
-    try {
-      const res = await axios.get("http://localhost:3000/api/users/departments"); // Adjust endpoint if needed
-      setDepartments(res.data);
-    } catch (error) {
-      console.error("Error fetching departments:", error);
+      console.error("Error fetching data:", error);
     }
   };
   
   useEffect(() => {
-    fetchUsers();
-    fetchDepartments();
+    fetchData();
   }, []);
   
-  // 🔄 Handle Edit
+  // Handle opening modal for editing
   const handleEdit = (user) => {
-    setEditingUser({ ...user, password: "" });
+    setIsEditMode(true);
+    setCurrentUser({ 
+      _id: user._id,
+      name: user.name, 
+      email: user.email, 
+      password: "", // Don't show password when editing
+      role: user.role, 
+      departmentOption: { value: user.department, label: user.department }
+    });
     setModalOpen(true);
   };  
 
-  // 💾 Handle Save (Edit User)
-  const handleSave = async () => {
+  // Handle opening modal for adding new user
+  const handleAddUser = () => {
+    setIsEditMode(false);
+    setCurrentUser({ 
+      name: "", 
+      email: "", 
+      password: "", 
+      role: "Employee", 
+      departmentOption: null 
+    });
+    setModalOpen(true);
+  };
+
+  // Save user (add or update)
+  const handleSaveUser = async () => {
+    const department = currentUser.departmentOption?.value || "";
+    
+    // Basic validation
+    if (!currentUser.name || !currentUser.email || (!isEditMode && !currentUser.password) || !department) {
+      alert("Please fill all required fields");
+      return;
+    }
+  
     try {
-      const { _id, name, email, password, role, department } = editingUser;
-      const updatedUser = { name, email, role, department };
+      if (isEditMode) {
+        // Update existing user
+        const { _id, name, email, password, role } = currentUser;
+        const updatedUser = { name, email, role, department };
+        if (password) updatedUser.password = password; // Only include password if provided
   
-      if (password) {
-        updatedUser.password = password;
+        await axios.put(`http://localhost:3000/api/users/${_id}`, updatedUser);
+      } else {
+        // Add new user
+        await axios.post("http://localhost:3000/api/users", {
+          name: currentUser.name,
+          email: currentUser.email,
+          password: currentUser.password,
+          role: currentUser.role,
+          department
+        });
       }
-  
-      await axios.put(`http://localhost:3000/api/users/${_id}`, updatedUser);
       
-      // 🔹 Re-fetch users and departments to ensure the UI updates
-      fetchUsers(); 
-      fetchDepartments(); 
-  
-      // 🔹 Add new department to state dynamically (if not present)
+      // Add new department if not exists
       if (department && !departments.includes(department)) {
-        setDepartments((prev) => [...prev, department]);
+        setDepartments(prev => [...prev, department]);
       }
-  
+      
+      fetchData();
       setModalOpen(false);
     } catch (error) {
-      console.error("Error updating user:", error);
+      console.error(`Error ${isEditMode ? 'updating' : 'adding'} user:`, error);
     }
   };
   
-
-  // ❌ Handle Delete
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       try {
         await axios.delete(`http://localhost:3000/api/users/${id}`);
-        fetchUsers();
+        fetchData();
       } catch (error) {
         console.error("Error deleting user:", error);
       }
     }
   };
-
-  // ➕ Handle Add New User
-  const handleAddUser = () => {
-    setIsAdding(true);
-    setNewUser({ name: "", email: "", password: "", role: "Employee" });
+  
+  // Handle creating a new department option
+  const handleCreateDepartment = (inputValue) => {
+    const newOption = { value: inputValue, label: inputValue };
+    setDepartments(prev => [...prev, inputValue]);
+    return newOption;
   };
 
-  // ✅ Handle Save New User
-  const handleSaveNewUser = async () => {
-    if (!newUser.name || !newUser.email || !newUser.password || !newUser.department) {
-      alert("Please fill all fields");
-      return;
-    }
-  
-    try {
-      await axios.post("http://localhost:3000/api/users", newUser);
-      fetchUsers();
-      setIsAdding(false);
-    } catch (error) {
-      console.error("Error adding new user:", error);
-    }
-  };
-  
-
-  // 🔍 Filtered Users
+  // Filtered Users
   const filteredUsers = users.filter(
     (user) =>
       (filterRole === "All" || user.role === filterRole) &&
       user.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Table columns configuration
   const columns = [
     { header: "Name", accessor: "name" },
     { header: "Email", accessor: "email" },
@@ -165,11 +178,9 @@ const UserManagement = () => {
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
     >
-      <h2 className="text-3xl font-bold mb-4 text-gray-800 text-center">
-        User Management
-      </h2>
+      <h2 className="text-3xl font-bold mb-4 text-gray-800 text-center">User Management</h2>
 
-      {/* 🔹 Search, Filter & Add User Button */}
+      {/* Search, Filter & Add User Button */}
       <div className="flex flex-wrap">
         <div className="flex-1">
           <SearchFilterBar
@@ -191,187 +202,96 @@ const UserManagement = () => {
 
       <Table columns={columns} data={filteredUsers} />
 
-      {/* Edit User Modal */}
-{modalOpen && (
-  <div className="fixed inset-0 flex justify-center items-center bg-gray-800 bg-opacity-50">
-    <motion.div
-      initial={{ scale: 0.8, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      className="bg-white p-6 rounded-lg shadow-lg w-96"
-    >
-      <h2 className="text-xl font-semibold mb-4">Edit User</h2>
-      <label className="block mb-2">Name</label>
-      <input
-        type="text"
-        value={editingUser.name}
-        onChange={(e) =>
-          setEditingUser({ ...editingUser, name: e.target.value })
-        }
-        className="w-full p-2 border rounded-lg mb-3"
-      />
-      <label className="block mb-2">Email</label>
-      <input
-        type="email"
-        value={editingUser.email}
-        onChange={(e) =>
-          setEditingUser({ ...editingUser, email: e.target.value })
-        }
-        className="w-full p-2 border rounded-lg mb-3"
-      />
-      <label className="block mb-2">Department</label>
-<div className="relative">
-  <input
-    type="text"
-    placeholder="Enter department"
-    className="w-full p-2 border rounded-lg mb-4"
-    value={editingUser.department}
-    onChange={(e) => {
-      setEditingUser({ ...editingUser, department: e.target.value });
-      setShowSuggestions(true);
-    }}
-    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)} // Delay to allow clicks
-    onFocus={() => setShowSuggestions(true)}
-  />
-
-  {/* 🔽 Suggestions Dropdown */}
-  {showSuggestions && editingUser.department && (
-    <ul className="absolute bg-white border rounded-lg shadow-md w-full max-h-40 overflow-auto z-50">
-      {departments
-        .filter((dept) =>
-          dept.toLowerCase().includes(editingUser.department.toLowerCase())
-        )
-        .map((dept) => (
-          <li
-            key={dept}
-            className="p-2 cursor-pointer hover:bg-gray-200"
-            onClick={() => {
-              setEditingUser({ ...editingUser, department: dept });
-              setShowSuggestions(false);
-            }}
-          >
-            {dept}
-          </li>
-        ))}
-      {/* If no department matches, show "Add new" option */}
-      {!departments.some((dept) =>
-        dept.toLowerCase().includes(editingUser.department.toLowerCase())
-      ) &&
-        editingUser.department.trim() !== "" && (
-          <li
-            className="p-2 cursor-pointer text-blue-600 font-semibold hover:bg-gray-200"
-            onClick={() => setShowSuggestions(false)}
-          >
-            Add "{editingUser.department}"
-          </li>
-        )}
-    </ul>
-  )}
-</div>
-
-      <label className="block mb-2">Role</label>
-      <select
-        value={editingUser.role}
-        onChange={(e) =>
-          setEditingUser({ ...editingUser, role: e.target.value })
-        }
-        className="w-full p-2 border rounded-lg mb-4"
-      >
-        {roleOptions.map((role) => (
-          <option key={role} value={role}>
-            {role}
-          </option>
-        ))}
-      </select>
-      <div className="flex justify-end gap-3">
-        <button
-          className="px-4 py-2 bg-gray-300 rounded-lg"
-          onClick={() => setModalOpen(false)}
-        >
-          Cancel
-        </button>
-        <button
-          className="px-4 py-2 bg-green-500 text-white rounded-lg"
-          onClick={handleSave}
-        >
-          Save Changes
-        </button>
-      </div>
-    </motion.div>
-  </div>
-)}
-
-      {/* Add User Modal */}
-      {isAdding && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
+      {/* Single Modal for Add/Edit User */}
+      {modalOpen && (
+        <div className="fixed inset-0 flex justify-center items-center bg-gray-100 bg-opacity-50">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white p-6 rounded-lg shadow-lg w-96"
+            className="bg-white p-6 rounded-lg shadow-lg mt-20 w-96"
           >
-            <h3 className="text-xl font-semibold mb-4">Add New User</h3>
-            <label className="block mb-1">Name</label>
-            <input
-              className="w-full p-2 border rounded mb-1"
-              placeholder="Enter name"
-              value={newUser.name}
-              onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-            />
-            <label className="block mb-1">Email</label>
-            <input
-              className="w-full p-2 border rounded mb-1"
-              placeholder="Enter email"
-              value={newUser.email}
-              onChange={(e) =>
-                setNewUser({ ...newUser, email: e.target.value })
-              }
-            />
-            <label className="block mb-1">Password</label>
-            <input
-              type="password"
-              className="w-full p-2 border rounded mb-1"
-              placeholder="Enter password"
-              value={newUser.password}
-              onChange={(e) =>
-                setNewUser({ ...newUser, password: e.target.value })
-              }
-            />
-            <label className="block mb-1">Department</label>
-<input
-  className="w-full p-2 border rounded mb-4"
-  placeholder="Enter department"
-  value={newUser.department}
-  onChange={(e) =>
-    setNewUser({ ...newUser, department: e.target.value })
-  }
-/>
-
-            <label className="block mb-1">Role</label>
-            <select
-              className="w-full p-2 border rounded mb-4"
-              value={newUser.role}
-              onChange={(e) =>
-                setNewUser({ ...newUser, role: e.target.value })
-              }
-            >
-              {roleOptions.map((role) => (
-                <option key={role} value={role}>
-                  {role}
-                </option>
-              ))}
-            </select>
-            <div className="flex justify-end gap-3">
-              <button
-                className="px-4 py-2 bg-gray-300 rounded-lg"
-                onClick={() => setIsAdding(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 bg-green-500 text-white rounded-lg"
-                onClick={handleSaveNewUser}
-              >
-                Add User
-              </button>
+            <h2 className="text-xl font-semibold mb-4">
+              {isEditMode ? "Edit User" : "Add New User"}
+            </h2>
+            <div className="space-y-3">
+              <div>
+                <label className="block mb-2">Name</label>
+                <input
+                  type="text"
+                  value={currentUser.name}
+                  onChange={(e) => setCurrentUser({ ...currentUser, name: e.target.value })}
+                  className="w-full p-2 border rounded-lg"
+                  placeholder="Enter name"
+                />
+              </div>
+              
+              <div>
+                <label className="block mb-2">Email</label>
+                <input
+                  type="email"
+                  value={currentUser.email}
+                  onChange={(e) => setCurrentUser({ ...currentUser, email: e.target.value })}
+                  className="w-full p-2 border rounded-lg"
+                  placeholder="Enter email"
+                />
+              </div>
+              
+              {/* Only show password field when adding a new user */}
+              {!isEditMode && (
+                <div>
+                  <label className="block mb-2">Password</label>
+                  <input
+                    type="password"
+                    value={currentUser.password}
+                    onChange={(e) => setCurrentUser({ ...currentUser, password: e.target.value })}
+                    className="w-full p-2 border rounded-lg"
+                    placeholder="Enter password"
+                  />
+                </div>
+              )}
+              
+              <div>
+                <label className="block mb-2">Department</label>
+                <CreatableSelect
+                  isClearable
+                  placeholder="Select or create a department..."
+                  value={currentUser.departmentOption}
+                  options={departmentOptions}
+                  onChange={(newValue) => setCurrentUser({ ...currentUser, departmentOption: newValue })}
+                  onCreateOption={(inputValue) => {
+                    const newOption = handleCreateDepartment(inputValue);
+                    setCurrentUser({ ...currentUser, departmentOption: newOption });
+                  }}
+                />
+              </div>
+  
+              <div>
+                <label className="block mb-2">Role</label>
+                <select
+                  value={currentUser.role}
+                  onChange={(e) => setCurrentUser({ ...currentUser, role: e.target.value })}
+                  className="w-full p-2 border rounded-lg appearance-none"
+                >
+                  {roleOptions.map((role) => (
+                    <option key={role} value={role}>{role}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  className="px-4 py-2 bg-gray-300 rounded-lg"
+                  onClick={() => setModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-4 py-2 bg-green-500 text-white rounded-lg"
+                  onClick={handleSaveUser}
+                >
+                  {isEditMode ? "Save Changes" : "Add User"}
+                </button>
+              </div>
             </div>
           </motion.div>
         </div>

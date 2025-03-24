@@ -42,7 +42,7 @@ app.use("/api/assets", assetRoutes);
 app.use("/api/users", userRoutes); // Add user routes
 app.use("/api/allocation", allocationRoutes);
 app.use("/api/upload", uploadRoutes);
-app.use("/api/returnedassets", returnedAssetsRoutes);
+app.use("/api/returned-assets", returnedAssetsRoutes);
 
 // ✅ 404 Error Handling
 app.use((req, res) => {
