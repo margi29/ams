@@ -1,6 +1,6 @@
 const ReturnedAssets = require("../models/ReturnedAssets");
 const Asset = require("../models/Asset");
-
+const { logHistory } = require('../controllers/assetHistoryController');
 // 🔹 Fetch all returned asset logs
 const getAllReturnedAssets = async (req, res) => {
   try {
@@ -48,7 +48,7 @@ const returnAsset = async (req, res) => {
     asset.assigned_to = null;
     asset.assigned_date = null;
     await asset.save();
-
+    await logHistory(assetId, req.user._id, "Returned");
     res.status(200).json({ message: "Asset return request processed successfully." });
   } catch (error) {
     console.error("Return asset error:", error);

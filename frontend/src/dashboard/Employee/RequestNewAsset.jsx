@@ -13,7 +13,14 @@ const RequestNewAsset = () => {
   useEffect(() => {
     const fetchAssets = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/assets");
+        const token = localStorage.getItem("token");
+        const response = await fetch("http://localhost:3000/api/assets", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization:` Bearer ${token}`, // Send token
+          },
+        });
         const data = await response.json();
         const availableAssets = data
           .filter((asset) => asset.status === "Available")

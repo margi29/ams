@@ -23,7 +23,12 @@ const QRCodeList = () => {
   useEffect(() => {
     const fetchAssets = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/assets");
+        const token = localStorage.getItem("token");
+        const response = await fetch("http://localhost:3000/api/assets", 
+         { headers: {
+            "Authorization": `Bearer ${token}`, // Send token in headers
+            "Content-Type": "application/json",}
+          });
         const data = await response.json();
         setAssets(data);
       } catch (error) {

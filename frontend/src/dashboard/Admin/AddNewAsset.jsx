@@ -331,9 +331,13 @@ Description: ${assetData.description || "N/A"}`;
         const createdAssets = [];
         
         for (const assetItem of assets) {
+          const token = localStorage.getItem("token");
           const response = await fetch("http://localhost:3000/api/assets", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Authorization": `Bearer ${token}`, // Send token in headers
+              "Content-Type": "application/json",
+            },
             body: JSON.stringify(assetItem),
           });
           
@@ -354,13 +358,16 @@ Description: ${assetData.description || "N/A"}`;
       } else {
         // Single asset update/create
         console.log("Creating/updating single asset:", assetData);
-        
+        const token = localStorage.getItem("token");
         const response = await fetch(editing 
           ? `http://localhost:3000/api/assets/${asset._id}` 
           : "http://localhost:3000/api/assets", 
         {
           method: editing ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Authorization": `Bearer ${token}`, // Send token in headers
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify(assetData),
         });
         

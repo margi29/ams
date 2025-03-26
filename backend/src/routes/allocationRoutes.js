@@ -1,8 +1,10 @@
 const express = require("express");
-const router = express.Router();
-const {assignAsset} = require("../controllers/allocationController");
+const { assignAsset } = require("../controllers/allocationController");
+const { protect } = require("../middleware/authMiddleware"); // Import authentication middleware
 
-// Make sure the route is properly defined
-router.post("/assign", assignAsset);
+const router = express.Router();
+
+// ✅ Protect this route to ensure req.user exists
+router.post("/assign", protect, assignAsset);
 
 module.exports = router;

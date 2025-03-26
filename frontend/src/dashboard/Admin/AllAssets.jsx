@@ -22,13 +22,27 @@ const AllAssets = () => {
   useEffect(() => {
     const fetchAssets = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/assets");
+        const token = localStorage.getItem("token"); // Get token from localStorage
+    
+        const response = await fetch("http://localhost:3000/api/assets", {
+          headers: {
+            "Authorization": `Bearer ${token}`, // Send token in headers
+            "Content-Type": "application/json",
+          },
+        });
+    
+        if (response.status === 401) {
+          console.error("Unauthorized: Check authentication.");
+          return;
+        }
+    
         const data = await response.json();
         setAssets(data);
       } catch (error) {
         console.error("Error fetching assets:", error);
       }
     };
+    
 
     fetchAssets();
   }, []);
@@ -42,9 +56,13 @@ const AllAssets = () => {
     if (!confirmDelete) return;
 
     try {
+      const token = localStorage.getItem("token");
       const response = await fetch(`http://localhost:3000/api/assets/${asset_id}`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Authorization": `Bearer ${token}`, // Send token in headers
+          "Content-Type": "application/json",
+        },
       });
 
       if (!response.ok) {

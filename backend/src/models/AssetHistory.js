@@ -1,10 +1,10 @@
 const mongoose = require("mongoose");
 
-const AssetHistorySchema = new mongoose.Schema({
-  asset: { type: String, required: true },
-  action: { type: String, enum: ["Assigned", "Returned", "Under Maintenance"], required: true },
-  date: { type: Date, default: Date.now },
-  user: { type: String, required: true },
+const historySchema = new mongoose.Schema({
+  assetId: { type: mongoose.Schema.Types.ObjectId, ref: "Asset", required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  actionType: { type: String, required: true }, // e.g., "added", "updated"
+  timestamp: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model("AssetHistory", AssetHistorySchema);
+module.exports = mongoose.model("History", historySchema);

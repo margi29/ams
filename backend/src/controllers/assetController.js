@@ -2,6 +2,7 @@ const Asset = require("../models/Asset");
 const QRCode = require("qrcode");
 const asyncHandler = require("express-async-handler");
 const mongoose = require('mongoose'); // Import mongoose
+const { logHistory } = require('../controllers/assetHistoryController');
 
 
 // ✅ Fetch all asset IDs
@@ -67,7 +68,7 @@ const checkAssetId = asyncHandler(async (req, res) => {
 // Now, let's fix the asset creation function with better logging and truly sequential IDs
 const createAsset = async (req, res) => {
   try {
-    const { name, manufacturer, model_no, category, status, purchase_date, warranty_expiry, description, image, qr_code } = req.body; // ✅ Include qr_code
+    const { name, manufacturer, model_no, category, status, purchase_date, warranty_expiry, description, image, qr_code } = req.body;
     let { asset_id } = req.body;
     let { quantity = 1 } = req.body;
 
@@ -127,12 +128,16 @@ const createAsset = async (req, res) => {
         warranty_expiry,
         description,
         image: imagePath,
-        qr_code: qr_code || null,  // ✅ Ensure QR code is stored
+        qr_code: qr_code || null,
       });
 
       try {
         const savedAsset = await newAsset.save();
         createdAssets.push(savedAsset);
+
+        // Log the history after asset creation
+        await logHistory(savedAsset._id,  req.user._id , "Created");
+
       } catch (error) {
         console.error(`Error creating asset ${newAssetId}:`, error);
         return res.status(500).json({ error: "Asset creation failed" });
@@ -148,6 +153,7 @@ const createAsset = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
 
 // ✅ Update an asset
 const updateAsset = async (req, res) => {
@@ -207,6 +213,7 @@ const updateAsset = async (req, res) => {
     console.log("Updated asset before saving:", asset);
     
     const updatedAsset = await asset.save();
+    await logHistory(updatedAsset._id, req.user._id, "Updated");
     res.status(200).json({ message: "Asset updated successfully", asset: updatedAsset });
   } catch (error) {
     console.error("Error updating asset:", error);
@@ -226,7 +233,7 @@ const deleteAsset = async (req, res) => {
     if (!deletedAsset) {
       return res.status(404).json({ message: "Asset not found" });
     }
-
+    await logHistory(deletedAsset._id, req.user._id, "Deleted");
     res.json({ message: "Asset deleted successfully", asset: deletedAsset });
   } catch (error) {
     console.error("Error deleting asset:", error);
@@ -236,23 +243,19 @@ const deleteAsset = async (req, res) => {
 
 const getEmployeeAssets = async (req, res) => {
   try {
-      console.log("Fetching assigned assets for employee:", req.user._id);
-      const employeeId = req.user._id;
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: "Unauthorized access" });
+    }
 
-      const assets = await Asset.find({ assigned_to: employeeId, status: "Assigned" })
-          .populate("assigned_to", "name")
-          .lean();
+    // Fetch only assets assigned to the employee with status "Assigned"
+    const employeeAssets = await Asset.find({ assigned_to: req.user._id, status: "Assigned" });
 
-      console.log("✅ Found assigned assets:", assets);
-
-      res.json(assets);
+    res.status(200).json(employeeAssets);
   } catch (error) {
-      console.error("❌ Error fetching assigned assets:", error);
-      res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Error fetching employee assets:", error);
+    res.status(500).json({ message: "Something went wrong", error: error.message });
   }
 };
-
-
 
 module.exports = {
   getAllAssetIds,
@@ -265,5 +268,5 @@ module.exports = {
   getCategoriesWithAssets,
   updateAsset,
   deleteAsset,
-  getEmployeeAssets,
+  getEmployeeAssets
 };
