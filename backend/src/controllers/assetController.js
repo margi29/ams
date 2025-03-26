@@ -236,19 +236,23 @@ const deleteAsset = async (req, res) => {
 
 const getEmployeeAssets = async (req, res) => {
   try {
-    if (!req.user || !req.user._id) {
-      return res.status(401).json({ message: "Unauthorized access" });
-    }
+      console.log("Fetching assigned assets for employee:", req.user._id);
+      const employeeId = req.user._id;
 
-    // Fetch only assets assigned to the employee with status "Assigned"
-    const employeeAssets = await Asset.find({ assigned_to: req.user._id, status: "Assigned" });
+      const assets = await Asset.find({ assigned_to: employeeId, status: "Assigned" })
+          .populate("assigned_to", "name")
+          .lean();
 
-    res.status(200).json(employeeAssets);
+      console.log("✅ Found assigned assets:", assets);
+
+      res.json(assets);
   } catch (error) {
-    console.error("Error fetching employee assets:", error);
-    res.status(500).json({ message: "Something went wrong", error: error.message });
+      console.error("❌ Error fetching assigned assets:", error);
+      res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+
 
 module.exports = {
   getAllAssetIds,
@@ -261,5 +265,5 @@ module.exports = {
   getCategoriesWithAssets,
   updateAsset,
   deleteAsset,
-  getEmployeeAssets
+  getEmployeeAssets,
 };

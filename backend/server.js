@@ -13,11 +13,17 @@ const allocationRoutes = require("./src/routes/allocationRoutes");
 const returnedAssetsRoutes = require("./src/routes/returnedAssetsRoutes");
 const uploadRoutes = require("./src/routes/uploadRoutes"); // ✅ Use require()
 const maintenanceRoutes = require("./src/routes/maintenanceRoutes");
+const assetRequestRoutes = require("./src/routes/assetRequestRoutes");
 
 const app = express();
 
 // ✅ Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173", // ✅ Set this to your frontend's origin
+    credentials: true, // ✅ Allow cookies/auth headers
+  })
+);
 app.use(bodyParser.json());
 app.use(morgan("dev")); // Logs HTTP requests
 
@@ -45,7 +51,7 @@ app.use("/api/allocation", allocationRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/returned-assets", returnedAssetsRoutes);
 app.use("/api/maintenance", maintenanceRoutes);
-
+app.use("/api/asset-requests", assetRequestRoutes);
 
 // ✅ 404 Error Handling
 app.use((req, res) => {

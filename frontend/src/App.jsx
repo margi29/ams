@@ -12,6 +12,7 @@ import AssignAsset from "./dashboard/Admin/AssignAsset";
 import AssetRequests from "./dashboard/Admin/AssetRequests";
 import QRCodeList from "./dashboard/Admin/QRCodeList";
 import MaintenanceAndRepair from "./dashboard/Admin/MaintenanceAndRepair";
+import Settings from "./dashboard/Admin/Settings";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
 import ViewMyAsset from "./dashboard/Employee/ViewMyAsset";
 import ReturnRequest from "./dashboard/Employee/ReturnRequest";
@@ -25,6 +26,7 @@ import "./styles/global.css";
 import "./App.css";
 import UserManagement from "./dashboard/Admin/UserManagement";
 import ReturnAsset from "./dashboard/Admin/ReturnAsset";
+// import { Settings } from "lucide-react";
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -75,6 +77,8 @@ const App = () => {
           <Route path="/admin/qr-logs" element={<Layout><QRCodeList /></Layout>} />
           <Route path="/admin/scheduled-maintenance" element={<Layout><MaintenanceAndRepair /></Layout>} />
           <Route path="/admin/user-management" element={<Layout><UserManagement /></Layout>} />
+          <Route path="/admin/settings" element={<Layout><Settings /></Layout>} />
+
         </Route>
 
         {/* ✅ Employee Routes - Now Fully Protected */}

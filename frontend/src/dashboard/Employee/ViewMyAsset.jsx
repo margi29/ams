@@ -20,39 +20,44 @@ const ViewMyAsset = () => {
 
   useEffect(() => {
     const fetchAssets = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("No token found. Please log in.");
+        setLoading(true);
+        setError("");
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                throw new Error("No token found. Please log in.");
+            }
+
+            // ✅ Fetch assigned assets
+            const assignedResponse = await fetch("http://localhost:3000/api/assets/my-assets", {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            const assignedData = await assignedResponse.json();
+
+            if (!assignedResponse.ok) {
+                throw new Error("Failed to fetch assigned assets.");
+            }
+
+            console.log("✅ Assigned Assets:", assignedData);
+
+            setAssets(assignedData);
+            setFilteredAssets(assignedData); // ✅ Update UI
+        } catch (error) {
+            console.error("❌ Error fetching assets:", error);
+            setError(error.message);
+        } finally {
+            setLoading(false);
         }
-
-        const response = await fetch("http://localhost:3000/api/assets/my-assets", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch assets. Please try again.");
-        }
-
-        setAssets(data);
-        setFilteredAssets(data);
-      } catch (error) {
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
     };
 
     fetchAssets();
-  }, []);
+}, []);
+
 
   // Handle Search & Filter
   useEffect(() => {
