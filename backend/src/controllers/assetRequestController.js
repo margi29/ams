@@ -60,14 +60,19 @@ const requestAsset = async (req, res) => {
   }
 };
 
-
-// ✅ Fetch all asset requests (Admin)
+// ✅ Fetch asset requests (Admin sees all, Employee sees only their own)
 const getAssetRequests = async (req, res) => {
   try {
-    const requests = await AssetRequest.find()
-      .populate("assetId", "asset_id name") // ✅ Fetch only asset_id & name
-      .populate("requestedBy", "name email") // ✅ Fetch only name & email of requester
-      .sort({ requestedAt: -1 }); // Sort by newest requests first
+    let query = {}; // Default: Fetch all (for Admins)
+
+    if (req.user.role === "Employee") {
+      query = { requestedBy: req.user.id }; // Filter for Employees
+    }
+
+    const requests = await AssetRequest.find(query)
+      .populate("assetId", "asset_id name")
+      .populate("requestedBy", "name email")
+      .sort({ requestedAt: -1 });
 
     res.json(requests);
   } catch (error) {
@@ -75,6 +80,7 @@ const getAssetRequests = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
+
 
 // ✅ Admin updates request status (Logs "Assigned" when Approved)
 const updateRequestStatus = async (req, res) => {
