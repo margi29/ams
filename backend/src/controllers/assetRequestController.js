@@ -115,20 +115,20 @@ const updateRequestStatus = async (req, res) => {
         note: null,
       });
 
-      // Fetch user details for logging
-      const user = await User.findById(assetRequest.requestedBy);
-      if (!user) {
-        return res.status(404).json({ error: "User not found." });
+      // Fetch Admin details (who accepted the request)
+      const admin = await User.findById(adminId);
+      if (!admin) {
+        return res.status(404).json({ error: "Admin not found." });
       }
 
-      // Log history: "Admin assigned asset to employee."
+      // Log history: "Admin assigned asset."
       await logHistory(
         asset._id,
         asset.name || "Unknown",
         asset.asset_id || "N/A",
         adminId,
-        user.name || "Unknown",
-        user.role || "Employee",
+        admin.name || "Unknown", // ✅ Store the Admin who accepted the request
+        admin.role || "Admin", // ✅ Store the Admin's role
         "Assigned"
       );
     }
@@ -139,5 +139,6 @@ const updateRequestStatus = async (req, res) => {
     res.status(500).json({ error: "Server error while updating status." });
   }
 };
+
 
 module.exports = { requestAsset, getAssetRequests, updateRequestStatus };
