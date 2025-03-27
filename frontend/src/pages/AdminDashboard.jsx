@@ -31,55 +31,63 @@ const AdminDashboard = () => {
 	const [assetDistribution, setAssetDistribution] = useState([]);
 	const [requestTrends, setRequestTrends] = useState([]);
 
-	// Improved action sentence generation
+	// Improved action sentence generation with dynamic assigned to
 	const generateActionSentence = (entry) => {
-		const { actionType, userName, userRole, assetName, assetIdNumber, assignedTo } = entry;
-		
-		// Ensure we have basic required information
-		if (!actionType || !userName) {
-			return "An action was performed.";
-		}
+		// Safely extract values with fallback
+		const getNestedValue = (obj, path, defaultValue = '') => {
+			return path.split('.').reduce((acc, part) => 
+				acc && acc[part] !== undefined ? acc[part] : defaultValue, obj);
+		};
 
-		// Standardize some key variables
-		const user = userName || "Unknown User";
-		const role = userRole || "Unknown Role";
-		const asset = assetName || "Unknown Asset";
-		const assetId = assetIdNumber ? `(${assetIdNumber})` : "";
-		const assignee = assignedTo || "No One";
+		const actionType = entry.actionType || 'Unknown Action';
+		const userName = getNestedValue(entry, 'userName', 'Unknown User');
+		const userRole = getNestedValue(entry, 'userRole', 'Unknown Role');
+		const assetName = getNestedValue(entry, 'assetName', 'Unknown Asset');
+		const assetIdNumber = getNestedValue(entry, 'assetIdNumber', '');
+		
+		// Dynamically get assignedTo, checking multiple possible paths
+		const assignedTo = 
+			getNestedValue(entry, 'assignedTo.name') || 
+			getNestedValue(entry, 'assignedTo') || 
+			getNestedValue(entry, 'assetId.assigned_to.name') || 
+			'No One';
+
+		// Construct asset ID string
+		const assetId = assetIdNumber ? `(${assetIdNumber})` : '';
 
 		// Comprehensive action sentences
 		switch (actionType) {
 			case "Assigned":
-				return role === "Admin"
-					? `${user} (${role}) assigned ${asset} ${assetId} to ${assignee}.`
-					: `${user} (${role}) was assigned ${asset} ${assetId}.`;
+				return userRole === "Admin"
+					? `${userName} (${userRole}) assigned ${assetName} ${assetId} to ${assignedTo}.`
+					: `${userName} (${userRole}) was assigned ${assetName} ${assetId}.`;
 			
 			case "Created":
-				return `${user} (${role}) created the asset ${asset} ${assetId}.`;
+				return `${userName} (${userRole}) created the asset ${assetName} ${assetId}.`;
 			
 			case "Updated":
-				return `${user} (${role}) updated the details of asset ${asset} ${assetId}.`;
+				return `${userName} (${userRole}) updated the details of asset ${assetName} ${assetId}.`;
 			
 			case "Deleted":
-				return `${user} (${role}) deleted the asset ${asset} ${assetId}.`;
+				return `${userName} (${userRole}) deleted the asset ${assetName} ${assetId}.`;
 			
 			case "Scheduled for Maintenance":
-				return `${user} (${role}) scheduled maintenance for ${asset} ${assetId}.`;
+				return `${userName} (${userRole}) scheduled maintenance for ${assetName} ${assetId}.`;
 			
 			case "Maintenance Completed":
-				return `${user} (${role}) completed maintenance for ${asset} ${assetId}.`;
+				return `${userName} (${userRole}) completed maintenance for ${assetName} ${assetId}.`;
 			
 			case "Asset Requested":
-				return `${user} (${role}) requested the asset ${asset} ${assetId}.`;
+				return `${userName} (${userRole}) requested the asset ${assetName} ${assetId}.`;
 			
 			case "Returned":
-				return `${user} (${role}) returned the asset ${asset} ${assetId}.`;
+				return `${userName} (${userRole}) returned the asset ${assetName} ${assetId}.`;
 			
 			case "Maintenance Requested":
-				return `${user} (${role}) reported an issue with ${asset} ${assetId}.`;
+				return `${userName} (${userRole}) reported an issue with ${assetName} ${assetId}.`;
 			
 			default:
-				return `${user} (${role}) performed action: ${actionType} on ${asset} ${assetId}.`;
+				return `${userName} (${userRole}) performed action: ${actionType} on ${assetName} ${assetId}.`;
 		}
 	};
 
