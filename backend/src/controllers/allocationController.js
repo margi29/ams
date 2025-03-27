@@ -1,50 +1,50 @@
 const Allocation = require('../models/AssetAllocation'); // Import the Allocation model
 const Asset = require('../models/Asset'); // Import the Asset model
 const User = require('../models/User'); // Import the User model
-const mongoose = require('mongoose'); // Import mongoose
-const { logHistory } = require("./assetHistoryController");
+const { logHistory } = require("./assetHistoryController"); // Import the history logging function
 
 const assignAsset = async (req, res) => {
   console.log("🔹 Assign Asset Request Received:", req.body);
-
   const { assetId, assignedTo, assignmentDate, category, department, location, note } = req.body;
 
   if (!assetId || !assignedTo || !assignmentDate) {
-    console.log("❌ Missing Fields:", { assetId, assignedTo, assignmentDate });
     return res.status(400).json({ error: "Asset ID, assignedTo, and assignmentDate are required." });
   }
 
   try {
-    // 🔹 Step 1: Lock Asset by Changing Status Immediately
-    const assetToAssign = await Asset.findByIdAndUpdate(
-      assetId,
-      { status: "Processing" }, // Temporary status to prevent race conditions
-      { new: true }
-    );
-
-    if (!assetToAssign || assetToAssign.status !== "Processing") {
-      console.log("❌ Asset Not Found or Already Assigned:", assetId);
-      return res.status(404).json({ error: "Asset not found or already assigned." });
+    // 🔹 Step 1: Validate Asset
+    const assetToAssign = await Asset.findById(assetId).populate("assigned_to", "name email");
+    if (!assetToAssign || assetToAssign.status !== "Available") {
+      return res.status(404).json({ error: "Asset not available for assignment." });
     }
 
-    // 🔹 Step 2: Validate User Exists
-    const user = await User.findOne({ email: assignedTo });
-    if (!user) {
-      console.log("❌ User Not Found:", assignedTo);
+    // 🔹 Step 2: Validate Assigned User
+    const assignedUser = await User.findOne({ email: assignedTo });
+    if (!assignedUser) {
       return res.status(404).json({ error: "User not found." });
     }
 
-    // 🔹 Step 3: Finalize Assignment
-    assetToAssign.status = "Assigned";
-    assetToAssign.assigned_to = user._id;
-    assetToAssign.assigned_date = new Date(assignmentDate);
-    assetToAssign.note = note || "";
+    // 🔹 Step 3: Fetch the Admin's Role (The one performing the action)
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    const adminUser = await User.findById(req.user.id);
+    if (!adminUser) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    const adminRole = adminUser.role; // Get the role of the logged-in user
 
-    await assetToAssign.save();
+    // 🔹 Step 4: Assign Asset
+    await Asset.findByIdAndUpdate(assetId, {
+      status: "Assigned",
+      assigned_to: assignedUser._id,
+      assigned_date: new Date(assignmentDate),
+      note: note || "",
+    });
 
     const allocation = new Allocation({
       asset: assetId,
-      assignedTo: user._id,
+      assignedTo: assignedUser._id,
       assignmentDate: new Date(assignmentDate),
       category,
       department,
@@ -54,17 +54,16 @@ const assignAsset = async (req, res) => {
 
     await allocation.save();
 
-    // ✅ Step 4: Log History
-    if (!req.user || !req.user.id) {
-      console.log("❌ User ID missing in request");
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+    // ✅ Step 5: Log History (Using Admin's Role, not Employee's)
+    const assetName = assetToAssign.name || "Unknown";
+    const assetIdNumber = assetToAssign.asset_id || "N/A";
+    const previouslyAssignedTo = assetToAssign.assigned_to ? assetToAssign.assigned_to.name : "None";
 
-    await logHistory(assetId, req.user.id, "Assigned");
+    await logHistory(assetId, assetName, assetIdNumber, adminUser._id, adminUser.name, adminRole, "Assigned", previouslyAssignedTo);
 
-    res.status(200).json({ message: "✅ Asset assigned successfully!", asset: assetToAssign });
+    res.status(200).json({ message: "✅ Asset assigned successfully!", assignedTo: assignedUser.name, role: assignedUser.role });
   } catch (error) {
-    console.error("❌ Error assigning asset:", error);
+    console.error("❌ Error assigning asset:", error.message);
     res.status(500).json({ error: "Internal server error." });
   }
 };

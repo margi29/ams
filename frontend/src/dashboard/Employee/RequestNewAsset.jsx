@@ -55,7 +55,7 @@ const RequestNewAsset = () => {
       return;
     }
   
-    const token = localStorage.getItem("token"); // Get token from local storage
+    const token = localStorage.getItem("token");
   
     if (!token) {
       alert("Unauthorized. Please log in.");
@@ -69,28 +69,38 @@ const RequestNewAsset = () => {
     };
   
     try {
+      console.log("Submitting request:", requestData); // Debugging
+  
       const response = await fetch("http://localhost:3000/api/asset-requests", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization:` Bearer ${token}`, // Send token
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(requestData),
       });
   
-      if (response.ok) {
-        alert("Asset request submitted successfully!");
-        navigate("/employee/view-requests");
-      } else {
-        const errorData = await response.json();
-        alert(`Failed to submit request: ${errorData.message}`);
+      const contentType = response.headers.get("content-type");
+  
+      if (!response.ok) {
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await response.json();
+          console.log("Backend error response:", errorData); // Debugging
+          alert(`Failed to submit request: ${errorData.message || errorData.error || "Unknown error"}`);
+        } else {
+          console.log("Non-JSON error response:", await response.text()); // Debugging
+          alert("Failed to submit request. Server returned an unexpected response.");
+        }
+        return;
       }
+  
+      alert("✅ Asset request submitted successfully!");
+      navigate("/employee/view-requests");
     } catch (error) {
-      console.error("Error submitting request:", error);
+      console.error("❌ Error submitting request:", error);
       alert("An error occurred. Please try again.");
     }
-  };
-  
+  };  
 
   return (
     <motion.div

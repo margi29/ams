@@ -66,6 +66,7 @@ const checkAssetId = asyncHandler(async (req, res) => {
 });
 
 // Now, let's fix the asset creation function with better logging and truly sequential IDs
+// ✅ Create an asset and log the history
 const createAsset = async (req, res) => {
   try {
     const { name, manufacturer, model_no, category, status, purchase_date, warranty_expiry, description, image, qr_code } = req.body;
@@ -135,8 +136,16 @@ const createAsset = async (req, res) => {
         const savedAsset = await newAsset.save();
         createdAssets.push(savedAsset);
 
-        // Log the history after asset creation
-        await logHistory(savedAsset._id,  req.user._id , "Created");
+        // ✅ Log history with asset name and additional details
+        await logHistory(
+          savedAsset._id,
+          savedAsset.name,
+          savedAsset.asset_id || "N/A",
+          req.user._id,
+          req.user.name || "Unknown",
+          req.user.role || "Admin",
+          "Created"
+        );
 
       } catch (error) {
         console.error(`Error creating asset ${newAssetId}:`, error);
@@ -154,23 +163,22 @@ const createAsset = async (req, res) => {
   }
 };
 
-
 // ✅ Update an asset
 const updateAsset = async (req, res) => {
   const { id } = req.params;
-  
+
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ error: "Invalid asset ID" });
   }
-  
+
   try {
     const asset = await Asset.findById(id);
     if (!asset) {
       return res.status(404).json({ error: "Asset not found" });
     }
-    
+
     console.log("Incoming update request:", req.body);
-    
+
     // ✅ Update all fields
     asset.name = req.body.name || asset.name;
     asset.manufacturer = req.body.manufacturer || asset.manufacturer;
@@ -182,38 +190,48 @@ const updateAsset = async (req, res) => {
     asset.location = req.body.location || asset.location;
     asset.description = req.body.description || asset.description;
     asset.assigned_to = req.body.assigned_to || asset.assigned_to || null;
-    
+
     // ✅ Convert assigned_date if present
     if (req.body.assigned_date) {
       const [day, month, year] = req.body.assigned_date.split("-");
       asset.assigned_date = new Date(`${year}-${month}-${day}`);
     }
-    
+
     asset.note = req.body.note || asset.note || "";
-    
+
     // ✅ Handle Image Update - support both methods
     if (req.file) {
       // Method 1: Direct file upload via multer
-      const cloudinary = require("cloudinary").v2;
-      
-      // Upload image to Cloudinary
       const uploadedImage = await cloudinary.uploader.upload(req.file.path, {
         folder: "assets",
       });
-      
+
       console.log("Uploaded Image URL:", uploadedImage.secure_url);
       asset.image = uploadedImage.secure_url;
     } else if (req.body.image && req.body.image !== asset.image) {
       // Method 2: Image URL is provided directly from frontend
-      // Only update if the image URL has changed
       console.log("Updating image URL from request body:", req.body.image);
       asset.image = req.body.image;
     }
-    
+
     console.log("Updated asset before saving:", asset);
-    
+
     const updatedAsset = await asset.save();
-    await logHistory(updatedAsset._id, req.user._id, "Updated");
+
+    // Store assetIdNumber (you may have it as `asset.idNumber` or fallback to `_id`)
+    const assetIdNumber = asset.asset_id || asset._id; // Ensure this is correct
+
+    // ✅ Log history after asset update
+    await logHistory(
+      updatedAsset._id,   // assetId
+      updatedAsset.name,   // assetName
+      assetIdNumber,       // assetIdNumber (ID number or fallback)
+      req.user._id,        // userId (logged-in user)
+      req.user.name || "Unknown", // userName
+      req.user.role || "Admin",   // userRole
+      "Updated"            // actionType
+    );
+
     res.status(200).json({ message: "Asset updated successfully", asset: updatedAsset });
   } catch (error) {
     console.error("Error updating asset:", error);
@@ -221,25 +239,43 @@ const updateAsset = async (req, res) => {
   }
 };
 
-
 // ✅ Delete an asset
 const deleteAsset = async (req, res) => {
   try {
     const { id } = req.params;
     console.log("Deleting asset with ID:", id); // ✅ Debug log
 
-    const deletedAsset = await Asset.findByIdAndDelete(id);
-
-    if (!deletedAsset) {
+    // 1️⃣ Fetch asset details before deletion
+    const assetToDelete = await Asset.findById(id);
+    if (!assetToDelete) {
       return res.status(404).json({ message: "Asset not found" });
     }
-    await logHistory(deletedAsset._id, req.user._id, "Deleted");
-    res.json({ message: "Asset deleted successfully", asset: deletedAsset });
+
+    // Store asset name and ID number before deleting
+    const assetName = assetToDelete.name;
+    const assetIdNumber = assetToDelete.asset_id || assetToDelete._id; // Ensure there's an asset ID number field or fallback to _id
+
+    // 2️⃣ Delete the asset
+    const deletedAsset = await Asset.findByIdAndDelete(id);
+
+    // 3️⃣ Log history with stored name and ID number
+    await logHistory(
+      deletedAsset._id,   // assetId
+      assetName,           // assetName
+      assetIdNumber,       // assetIdNumber (ID number or fallback)
+      req.user._id,        // userId (logged-in user)
+      req.user.name || "Unknown", // userName
+      req.user.role || "Admin",   // userRole
+      "Deleted"            // actionType
+    );
+
+    res.json({ message: "Asset deleted successfully", assetName: deletedAsset.name });
   } catch (error) {
     console.error("Error deleting asset:", error);
     res.status(500).json({ message: "Server error", error });
   }
 };
+
 
 const getEmployeeAssets = async (req, res) => {
   try {

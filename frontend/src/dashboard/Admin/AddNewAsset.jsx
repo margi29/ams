@@ -3,11 +3,12 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { QRCodeCanvas } from "qrcode.react";
 import CreatableSelect from "react-select/creatable";
 
+
 const AddNewAsset = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const editing = Boolean(location.state?.asset);
-
+  const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
@@ -274,113 +275,102 @@ Description: ${assetData.description || "N/A"}`;
   // Improved form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true); // Disable button
+    
     let imageUrl = null;
     
     try {
-      // Only attempt to upload image if a file was selected
       if (imageFile) {
         console.log("Processing image upload...");
         imageUrl = await handleImageUpload(imageFile);
-        
         if (!imageUrl) {
           console.error("Image upload returned null");
           if (confirm("Image upload failed. Continue without image?")) {
             // Continue without image
           } else {
-            return; // Stop submission if user doesn't want to continue
+            return; // Stop submission if user cancels
           }
         }
       }
-      
-      // Use existing image URL if editing and no new image was uploaded
+  
       let finalImageUrl = imageUrl || asset.image || "";
       console.log("Final image URL:", finalImageUrl);
-      
-      // Prepare asset data with image URL
+  
       const assetData = { 
         ...asset,
         image: finalImageUrl
       };
-      
-      // If quantity > 1 and not editing, create multiple assets
+  
       if (!editing && asset.quantity > 1) {
-        // Create array of assets
         const assets = [];
         let currentAssetId = asset.asset_id;
-        
+  
         for (let i = 0; i < asset.quantity; i++) {
-          // For first asset, use the current ID
-          // For subsequent assets, increment the ID
           if (i > 0) {
             const numPart = parseInt(currentAssetId.replace(/\D/g, ""), 10);
             const prefix = currentAssetId.replace(/\d+/g, "");
             currentAssetId = `${prefix}${String(numPart + i).padStart(2, "0")}`;
           }
-          
+  
           assets.push({
             ...assetData,
             asset_id: i === 0 ? assetData.asset_id : currentAssetId,
-            quantity: 1, // Each individual asset has quantity of 1
-            image: finalImageUrl // Ensure each asset has the image URL
+            quantity: 1,
+            image: finalImageUrl
           });
         }
-        
+  
         console.log("Creating multiple assets:", assets);
-        
-        // Create assets individually without trying the batch endpoint
         const createdAssets = [];
-        
+  
         for (const assetItem of assets) {
           const token = localStorage.getItem("token");
           const response = await fetch("http://localhost:3000/api/assets", {
             method: "POST",
             headers: {
-              "Authorization": `Bearer ${token}`, // Send token in headers
+              "Authorization": `Bearer ${token}`,
               "Content-Type": "application/json",
             },
             body: JSON.stringify(assetItem),
           });
-          
+  
           if (!response.ok) {
             throw new Error(`Failed to create asset: ${assetItem.asset_id}`);
           }
-          
+  
           const createdAsset = await response.json();
           createdAssets.push({
             ...createdAsset,
             qr_code: generateQRCode(createdAsset)
           });
         }
-        
+  
         setSubmittedAsset(createdAssets);
         setShowQRCode(true);
         alert(`${createdAssets.length} assets added successfully!`);
       } else {
-        // Single asset update/create
         console.log("Creating/updating single asset:", assetData);
         const token = localStorage.getItem("token");
-        const response = await fetch(editing 
-          ? `http://localhost:3000/api/assets/${asset._id}` 
-          : "http://localhost:3000/api/assets", 
-        {
-          method: editing ? "PUT" : "POST",
-          headers: {
-            "Authorization": `Bearer ${token}`, // Send token in headers
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(assetData),
-        });
-        
+        const response = await fetch(
+          editing ? `http://localhost:3000/api/assets/${asset._id}` : "http://localhost:3000/api/assets", 
+          {
+            method: editing ? "PUT" : "POST",
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(assetData),
+          });
+  
         if (!response.ok) {
           const errorText = await response.text();
           console.error("Server error:", errorText);
           throw new Error(`Request failed with status: ${response.status}`);
         }
-        
+  
         const responseData = await response.json();
-        
         alert(editing ? "Asset updated successfully!" : "Asset added successfully!");
-        // Use the returned data from the server if available, otherwise use our local data
+  
         const finalAssetData = responseData.asset || responseData || assetData;
         setSubmittedAsset({ ...finalAssetData, qr_code: generateQRCode(finalAssetData) });
         setShowQRCode(true);
@@ -388,6 +378,8 @@ Description: ${assetData.description || "N/A"}`;
     } catch (error) {
       console.error("❌ Error saving asset:", error);
       alert(`Failed to save asset: ${error.message}`);
+    } finally {
+      setLoading(false); // Re-enable button after request completes
     }
   };
   
@@ -508,17 +500,12 @@ Description: ${assetData.description || "N/A"}`;
           </div>
 
           <div>
-            <label className="block text-gray-700 font-medium">Status</label>
-            <select
-              name="status"
-              value={asset.status}
-              onChange={handleChange}
-              className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-            >
-              <option value="Available">Available</option>
-              <option value="Under Maintenance">Under Maintenance</option>
-            </select>
-          </div>
+  <label className="block text-gray-700 font-medium">Status</label>
+  <div className="w-full mt-1 p-2 border border-gray-300 rounded-md bg-gray-200 cursor-not-allowed">
+    {editing ? asset.status : "Available"}
+  </div>
+</div>
+
 
           {/* Image upload with preview */}
           <div>
@@ -596,12 +583,15 @@ Description: ${assetData.description || "N/A"}`;
           </div>
 
           <div className="col-span-2 flex justify-center">
-            <button
-              type="submit"
-              className="w-full bg-[#673AB7] hover:bg-[#5E35B1] text-white font-bold py-3 rounded-lg transition"
-            >
-              {editing ? "Update Asset" : "Add Asset"}
-            </button>
+          <button
+    type="submit"
+    className={`w-full font-bold py-3 rounded-lg transition text-white ${
+      loading ? "bg-gray-400 cursor-not-allowed" : "bg-[#673AB7] hover:bg-[#5E35B1]"
+    }`}
+    disabled={loading} // Disable button when loading
+  >
+    {loading ? "Processing..." : editing ? "Update Asset" : "Add Asset"}
+  </button>
           </div>
         </form>
       )}

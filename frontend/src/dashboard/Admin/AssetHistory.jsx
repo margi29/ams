@@ -6,6 +6,7 @@ import SearchFilterBar from "../../components/SearchFilterBar";
 const AssetHistory = () => {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
+  const [exportFormat, setExportFormat] = useState("csv");
   const [history, setHistory] = useState([]);
 
   // Fetch asset history from backend
@@ -14,7 +15,15 @@ const AssetHistory = () => {
       const response = await fetch("http://localhost:3000/api/history");
       if (!response.ok) throw new Error("Failed to fetch history");
       const data = await response.json();
-      setHistory(data);
+
+      // Ensure assigned_to is dynamically retrieved
+      const processedHistory = data.map((entry) => ({
+        ...entry,
+        assignedTo:
+          entry.assetId?.assigned_to?.name || "Not Assigned",
+      }));
+
+      setHistory(processedHistory);
     } catch (error) {
       console.error("Error fetching history:", error);
     }
@@ -22,79 +31,75 @@ const AssetHistory = () => {
 
   useEffect(() => {
     fetchHistory();
-    const interval = setInterval(fetchHistory, 5000);
+    const interval = setInterval(fetchHistory, 5000); // Fetch every 5 seconds
     return () => clearInterval(interval);
   }, []);
 
-  // Filter history based on search input
-  const filteredHistory = history.filter((entry) =>
-    entry.actionType.toLowerCase().includes(search.toLowerCase())
-  );
+  // Generate action descriptions dynamically
+  const actionSentences = (action, userName, userRole, assetName, assignedTo) => {
+    if (!userName || !userRole || !assetName) return "Invalid data for action.";
 
-  // Function to generate action descriptions
-  const actionSentences = (action, user, asset) => {
-    const userName = user?.name || "Unknown User";
-    const userRole = user?.role || "Unknown Role";
-    const assetName = asset?.name || "Unknown Asset";
-    const assignedTo = asset?.assigned_to?.name || "Unknown Employee";
-
-
-    if (userRole === "Admin") {
-      switch (action) {
-        case "Created":
-          return `${userName} created the asset ${assetName}.`;
-        case "Updated":
-          return `${userName} updated the asset ${assetName}.`;
-        case "Deleted":
-          return `${userName} deleted the asset ${assetName}.`;
-        case "Assigned":
-          return `${userName} assigned ${assetName} to ${assignedTo}.`;
-        case "Scheduled for Maintenance":
-          return `${userName} scheduled maintenance for ${assetName}.`;
-        case "Maintenance Completed":
-          return `${userName} marked maintenance as completed for ${assetName}.`;
-        default:
-          return `${userName} performed an action: ${action} ${assetName}.`;
-      }
-    } else if (userRole === "Employee") {
-      switch (action) {
-        case "Asset Requested":
-          return `${userName} requested the asset ${assetName}.`;
-        case "Returned":
-          return `${userName} returned the asset ${assetName}.`;
-        case "Maintenance Requested":
-          return `${userName} reported an issue with ${assetName} (initiates maintenance).`;
-        default:
-          return `${userName} performed an action: ${action} ${assetName}.`;
-      }
+    switch (action) {
+      case "Assigned":
+        return userRole === "Admin"
+          ? `${userName} assigned ${assetName} to ${assignedTo}.`
+          : `${userName} was assigned ${assetName}.`;
+      case "Created":
+        return `${userName} created the asset ${assetName}.`;
+      case "Updated":
+        return `${userName} updated the asset ${assetName}.`;
+      case "Deleted":
+        return `${userName} deleted the asset ${assetName}.`;
+      case "Scheduled for Maintenance":
+        return `${userName} scheduled maintenance for ${assetName}.`;
+      case "Maintenance Completed":
+        return `${userName} marked maintenance as completed for ${assetName}.`;
+      case "Asset Requested":
+        return `${userName} requested the asset ${assetName}.`;
+      case "Returned":
+        return `${userName} returned the asset ${assetName}.`;
+      case "Maintenance Requested":
+        return `${userName} reported an issue with ${assetName}.`;
+      default:
+        return `${userName} performed an action: ${action} on ${assetName}.`;
     }
-    return `${userName} performed an action: ${action} on ${assetName}.`;
   };
 
   const getActionColor = (action) => {
-    switch (action) {
-      case "Created":
-        return "text-green-500 ";
-      case "Updated":
-        return "text-blue-500 ";
-      case "Deleted":
-        return "text-red-500";
-      case "Assigned":
-        return "text-purple-500 ";
-      case "Scheduled for Maintenance":
-      case "Maintenance Requested":
-        return "text-yellow-500";
-      case "Maintenance Completed":
-        return "text-green-500 ";
-      case "Asset Requested":
-        return "text-indigo-500 ";
-      case "Returned":
-        return "text-gray-500 ";
-      default:
-        return "text-gray-700 ";
-    }
+    const colors = {
+      Created: "text-green-500",
+      Updated: "text-blue-500",
+      Deleted: "text-red-500",
+      Assigned: "text-purple-500",
+      "Scheduled for Maintenance": "text-yellow-500",
+      "Maintenance Requested": "text-yellow-500",
+      "Maintenance Completed": "text-green-500",
+      "Asset Requested": "text-indigo-500",
+      Returned: "text-gray-500",
+    };
+    return colors[action] || "text-gray-700";
   };
-  
+
+  // Filtering logic
+  const filteredHistory = history.filter((entry) => {
+    const matchesSearch = entry.actionType.toLowerCase().includes(search.toLowerCase());
+    const matchesFilter = filter === "All" || entry.actionType === filter;
+    return matchesSearch && matchesFilter;
+  });
+
+  const statusOptions = [
+    "All",
+    "Created",
+    "Updated",
+    "Deleted",
+    "Assigned",
+    "Scheduled for Maintenance",
+    "Maintenance Completed",
+    "Asset Requested",
+    "Returned",
+    "Maintenance Requested",
+  ];
+
   const columns = [
     {
       header: "Date & Time",
@@ -114,7 +119,7 @@ const AssetHistory = () => {
       accessor: "actionType",
       render: (entry) => (
         <span className="font-semibold text-gray-700">
-          {actionSentences(entry.actionType, entry.userId, entry.assetId)}
+          {actionSentences(entry.actionType, entry.userName, entry.userRole, entry.assetName, entry.assignedTo)}
         </span>
       ),
     },
@@ -122,11 +127,7 @@ const AssetHistory = () => {
       header: "Action Type",
       accessor: "actionType",
       render: (entry) => (
-        <span
-          className={` font-semibold rounded ${getActionColor(
-            entry.actionType
-          )}`}
-        >
+        <span className={`font-semibold rounded ${getActionColor(entry.actionType)}`}>
           {entry.actionType}
         </span>
       ),
@@ -136,8 +137,8 @@ const AssetHistory = () => {
       header: "Asset",
       accessor: "assetId",
       render: (entry) => {
-        const assetName = entry.assetId?.name || "Unknown Asset";
-        const assetId = entry.assetId?.asset_id || "N/A"; // Ensure the asset ID exists
+        const assetName = entry.assetName || "Unknown Asset";
+        const assetId = entry.assetIdNumber || "N/A";
         return `${assetName} (${assetId})`;
       },
       className: "text-gray-600",
@@ -145,28 +146,33 @@ const AssetHistory = () => {
     {
       header: "Performed By",
       accessor: "userId",
-      render: (entry) => `${entry.userId?.name} (${entry.userId?.role})`,
+      render: (entry) => {
+        const userName = entry.userName || "Unknown User";
+        const userRole = entry.userRole || "Unknown Role";
+        return `${userName} (${userRole})`;
+      },
     },
   ];
-  
+
   return (
     <motion.div
       className="p-6 mt-16 bg-white rounded-lg shadow-md"
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
     >
-      <h2 className="text-3xl font-bold mb-4 text-gray-800 text-center">
-        Asset History
-      </h2>
+      <h2 className="text-3xl font-bold mb-4 text-gray-800 text-center">Asset History</h2>
 
       <SearchFilterBar
         search={search}
         setSearch={setSearch}
         filter={filter}
         setFilter={setFilter}
+        exportFormat={exportFormat}
+        setExportFormat={setExportFormat}
         data={filteredHistory}
-        filename="asset_history"
         columns={columns}
+        filename="asset_history"
+        statusOptions={statusOptions}
       />
 
       {filteredHistory.length > 0 ? (
