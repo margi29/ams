@@ -12,7 +12,7 @@ const ReturnAsset = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // ✅ Fetch returned assets from backend with authentication
+  // Fetch returned assets from backend with authentication
   useEffect(() => {
     const fetchReturnedAssets = async () => {
       try {
@@ -33,7 +33,7 @@ const ReturnAsset = () => {
         setLogs(response.data);
         setError("");
       } catch (error) {
-        console.error("❌ Error fetching returned assets:", error);
+        console.error(" Error fetching returned assets:", error);
         setError(error.response?.data?.message || error.message || "Failed to fetch returned assets");
         setLogs([]);
       } finally {
@@ -44,7 +44,7 @@ const ReturnAsset = () => {
     fetchReturnedAssets();
   }, []);
 
-  // ✅ Enhanced filtering to include reason and additional notes
+  // Enhanced filtering to include reason and additional notes
   const filteredLogs = logs
     .filter((log) =>
       (log.asset?.name?.toLowerCase() || "").includes(search.toLowerCase()) ||
@@ -61,7 +61,7 @@ const ReturnAsset = () => {
       additionalNotes: log.additionalNotes || "None",
     }));
 
-  // ✅ Enhanced columns to display all relevant information
+  // Enhanced columns to display all relevant information
   const columns = [
     { header: "Asset ID", accessor: "assetId" },
     { header: "Asset Name", accessor: "assetName" },

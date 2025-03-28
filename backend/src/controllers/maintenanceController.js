@@ -3,35 +3,35 @@ const Asset = require("../models/Asset");
 const User = require("../models/User"); // Fetch user details for logging
 const { logHistory } = require("../controllers/assetHistoryController");
 
-// ✅ Create a maintenance request and update asset status
+// Create a maintenance request and update asset status
 const createMaintenanceRequest = async (req, res) => {
   try {
     const { assetId, task } = req.body;
     const employeeId = req.user.id;
 
     if (!assetId || !task) {
-      return res.status(400).json({ error: "❌ Asset and task are required." });
+      return res.status(400).json({ error: "Asset and task are required." });
     }
 
     // Check if the asset exists and is not already under maintenance
     const asset = await Asset.findById(assetId);
     if (!asset) {
-      return res.status(404).json({ error: "❌ Asset not found." });
+      return res.status(404).json({ error: "Asset not found." });
     }
     if (asset.status === "Under Maintenance") {
-      return res.status(400).json({ error: "❌ Asset is already under maintenance." });
+      return res.status(400).json({ error: "Asset is already under maintenance." });
     }
 
     // Prevent duplicate maintenance requests
     const existingRequest = await MaintenanceRequest.findOne({ assetId, status: { $ne: "Completed" } });
     if (existingRequest) {
-      return res.status(400).json({ error: "❌ A maintenance request is already pending for this asset." });
+      return res.status(400).json({ error: "A maintenance request is already pending for this asset." });
     }
 
     // Fetch employee details for logging
     const user = await User.findById(employeeId);
     if (!user) {
-      return res.status(404).json({ error: "❌ User not found." });
+      return res.status(404).json({ error: " User not found." });
     }
 
     // Create the maintenance request
@@ -42,7 +42,7 @@ const createMaintenanceRequest = async (req, res) => {
     asset.status = "Under Maintenance";
     await asset.save();
 
-    // ✅ Log history with asset name
+    // Log history with asset name
     await logHistory(
       assetId,
       asset.name,
@@ -53,29 +53,29 @@ const createMaintenanceRequest = async (req, res) => {
       "Maintenance Requested"
     );
 
-    res.status(201).json({ message: "✅ Maintenance request submitted successfully." });
+    res.status(201).json({ message: "Maintenance request submitted successfully." });
   } catch (error) {
-    console.error("❌ Error creating maintenance request:", error);
-    res.status(500).json({ error: "❌ Failed to submit maintenance request." });
+    console.error("Error creating maintenance request:", error);
+    res.status(500).json({ error: " Failed to submit maintenance request." });
   }
 };
 
-// ✅ Get all maintenance requests
+// Get all maintenance requests
 const getAllMaintenanceRequests = async (req, res) => {
   try {
     const requests = await MaintenanceRequest.find()
-      .populate("employeeId", "name email") // ✅ Fetch employee name & email
-      .populate("assetId", "name status asset_id") // ✅ Fetch asset details
+      .populate("employeeId", "name email") //  Fetch employee name & email
+      .populate("assetId", "name status asset_id") // Fetch asset details
       .lean();
 
     res.status(200).json(requests);
   } catch (error) {
-    console.error("❌ Error fetching maintenance requests:", error);
-    res.status(500).json({ error: "❌ Failed to fetch maintenance requests." });
+    console.error(" Error fetching maintenance requests:", error);
+    res.status(500).json({ error: " Failed to fetch maintenance requests." });
   }
 };
 
-// ✅ Update Maintenance Status (Schedule or Complete)
+// Update Maintenance Status (Schedule or Complete)
 const updateMaintenanceStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -83,12 +83,12 @@ const updateMaintenanceStatus = async (req, res) => {
     const adminId = req.user.id;
 
     if (!["Scheduled", "Completed"].includes(status)) {
-      return res.status(400).json({ error: "❌ Invalid status update." });
+      return res.status(400).json({ error: " Invalid status update." });
     }
 
     const maintenanceRequest = await MaintenanceRequest.findById(id);
     if (!maintenanceRequest) {
-      return res.status(404).json({ error: "❌ Maintenance request not found." });
+      return res.status(404).json({ error: " Maintenance request not found." });
     }
 
     maintenanceRequest.status = status;
@@ -97,17 +97,17 @@ const updateMaintenanceStatus = async (req, res) => {
 
     const asset = await Asset.findById(maintenanceRequest.assetId);
     if (!asset) {
-      return res.status(404).json({ error: "❌ Asset not found." });
+      return res.status(404).json({ error: " Asset not found." });
     }
 
     // Fetch admin details for logging
     const adminUser = await User.findById(adminId);
     if (!adminUser) {
-      return res.status(404).json({ error: "❌ Admin user not found." });
+      return res.status(404).json({ error: " Admin user not found." });
     }
 
     if (status === "Scheduled") {
-      // ✅ Log "Admin scheduled maintenance for an asset."
+      // Log "Admin scheduled maintenance for an asset."
       await logHistory(
         asset._id,
         asset.name,
@@ -118,13 +118,13 @@ const updateMaintenanceStatus = async (req, res) => {
         "Scheduled for Maintenance"
       );
     } else if (status === "Completed") {
-      // ✅ Update asset status only if it's not already available
+      // Update asset status only if it's not already available
       if (asset.status !== "Available") {
         asset.status = "Available";
         await asset.save();
       }
 
-      // ✅ Log "Admin marked maintenance as completed."
+      // Log "Admin marked maintenance as completed."
       await logHistory(
         asset._id,
         asset.name,
@@ -136,10 +136,10 @@ const updateMaintenanceStatus = async (req, res) => {
       );
     }
 
-    res.status(200).json({ message: `✅ Maintenance request updated to ${status}.` });
+    res.status(200).json({ message: ` Maintenance request updated to ${status}.` });
   } catch (error) {
-    console.error("❌ Error updating maintenance status:", error);
-    res.status(500).json({ error: "❌ Failed to update maintenance status." });
+    console.error(" Error updating maintenance status:", error);
+    res.status(500).json({ error: " Failed to update maintenance status." });
   }
 };
 

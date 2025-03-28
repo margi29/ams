@@ -7,7 +7,7 @@ const NotFound = () => {
 
   // Function to handle redirection based on user role
   const handleGoHome = () => {
-    const userRole = localStorage.getItem("role"); // Assuming role is stored in localStorage
+    const userRole = localStorage.getItem("role"); // role is stored in localStorage
 
     if (userRole === "admin") {
       navigate("/admin/dashboard");

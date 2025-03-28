@@ -11,9 +11,9 @@ const assetRequestSchema = new mongoose.Schema(
     },
     requestedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     requestedAt: { type: Date, default: Date.now },
-    resolvedAt: { type: Date, default: null }, // ✅ Tracks when request is resolved
+    resolvedAt: { type: Date, default: null }, // Tracks when request is resolved
   },
-  { timestamps: true } // ✅ Enables createdAt and updatedAt
+  { timestamps: true } // Enables createdAt and updatedAt
 );
 
 const AssetRequest = mongoose.model("AssetRequest", assetRequestSchema);

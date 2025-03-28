@@ -5,13 +5,13 @@ const mongoose = require('mongoose'); // Import mongoose
 const { logHistory } = require('../controllers/assetHistoryController');
 
 
-// ✅ Fetch all asset IDs
+// Fetch all asset IDs
 const getAllAssetIds = asyncHandler(async (req, res) => {
   const assets = await Asset.find({}, { asset_id: 1, _id: 0 });
   res.json({ assetIds: assets.map(asset => asset.asset_id) });
 });
 
-// ✅ Get the last asset ID and generate the next one
+// Get the last asset ID and generate the next one
 const getLastAssetId = asyncHandler(async (req, res) => {
   const lastAsset = await Asset.findOne().sort({ asset_id: -1 }).select("asset_id");
 
@@ -25,13 +25,13 @@ const getLastAssetId = asyncHandler(async (req, res) => {
   res.json({ lastAssetId: nextId });
 });
 
-// ✅ Get all assets
+// Get all assets
 const getAllAssets = asyncHandler(async (req, res) => {
   const assets = await Asset.find();
   res.json(assets);
 });
 
-// ✅ Get all available assets for assignment (optionally filter by category)
+// Get all available assets for assignment (optionally filter by category)
 const getAvailableAssets = asyncHandler(async (req, res) => {
   const { category } = req.query;
   const query = { status: "Available", ...(category && { category }) };
@@ -40,7 +40,7 @@ const getAvailableAssets = asyncHandler(async (req, res) => {
   res.json(assets);
 });
 
-// ✅ Get categories and their assets
+// Get categories and their assets
 const getCategoriesWithAssets = asyncHandler(async (req, res) => {
   const assets = await Asset.find({}, "category name");
   const categoryMap = assets.reduce((acc, asset) => {
@@ -52,21 +52,20 @@ const getCategoriesWithAssets = asyncHandler(async (req, res) => {
   res.json(Object.entries(categoryMap).map(([category, assets]) => ({ category, assets })));
 });
 
-// ✅ Get a single asset by ID
+// Get a single asset by ID
 const getAssetById = asyncHandler(async (req, res) => {
   const asset = await Asset.findById(req.params.id);
   if (!asset) return res.status(404).json({ message: "Asset not found" });
   res.json(asset);
 });
 
-// ✅ Check if asset ID is unique
+// Check if asset ID is unique
 const checkAssetId = asyncHandler(async (req, res) => {
   const existingAsset = await Asset.findOne({ asset_id: req.params.id });
   res.json({ isUnique: !existingAsset });
 });
 
-// Now, let's fix the asset creation function with better logging and truly sequential IDs
-// ✅ Create an asset and log the history
+// Create an asset and log the history
 const createAsset = async (req, res) => {
   try {
     const { name, manufacturer, model_no, category, status, purchase_date, warranty_expiry, description, image, qr_code } = req.body;
@@ -86,7 +85,7 @@ const createAsset = async (req, res) => {
         imagePath = uploadedImage.secure_url;
         console.log("Image uploaded:", imagePath);
       } catch (uploadError) {
-        console.error("❌ Cloudinary Upload Error:", uploadError);
+        console.error("Cloudinary Upload Error:", uploadError);
         return res.status(500).json({ error: "Image upload failed" });
       }
     }
@@ -136,7 +135,7 @@ const createAsset = async (req, res) => {
         const savedAsset = await newAsset.save();
         createdAssets.push(savedAsset);
 
-        // ✅ Log history with asset name and additional details
+        // Log history with asset name and additional details
         await logHistory(
           savedAsset._id,
           savedAsset.name,
@@ -158,12 +157,12 @@ const createAsset = async (req, res) => {
 
     res.status(201).json({ message: "Assets added successfully", assets: createdAssets });
   } catch (error) {
-    console.error("❌ Error adding assets:", error);
+    console.error("Error adding assets:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
-// ✅ Update an asset
+// Update an asset
 const updateAsset = async (req, res) => {
   const { id } = req.params;
 
@@ -179,7 +178,7 @@ const updateAsset = async (req, res) => {
 
     console.log("Incoming update request:", req.body);
 
-    // ✅ Update all fields
+    // Update all fields
     asset.name = req.body.name || asset.name;
     asset.manufacturer = req.body.manufacturer || asset.manufacturer;
     asset.model_no = req.body.model_no || asset.model_no;
@@ -191,7 +190,7 @@ const updateAsset = async (req, res) => {
     asset.description = req.body.description || asset.description;
     asset.assigned_to = req.body.assigned_to || asset.assigned_to || null;
 
-    // ✅ Convert assigned_date if present
+    // Convert assigned_date if present
     if (req.body.assigned_date) {
       const [day, month, year] = req.body.assigned_date.split("-");
       asset.assigned_date = new Date(`${year}-${month}-${day}`);
@@ -199,7 +198,7 @@ const updateAsset = async (req, res) => {
 
     asset.note = req.body.note || asset.note || "";
 
-    // ✅ Handle Image Update - support both methods
+    // Handle Image Update - support both methods
     if (req.file) {
       // Method 1: Direct file upload via multer
       const uploadedImage = await cloudinary.uploader.upload(req.file.path, {
@@ -221,7 +220,7 @@ const updateAsset = async (req, res) => {
     // Store assetIdNumber (you may have it as `asset.idNumber` or fallback to `_id`)
     const assetIdNumber = asset.asset_id || asset._id; // Ensure this is correct
 
-    // ✅ Log history after asset update
+    // Log history after asset update
     await logHistory(
       updatedAsset._id,   // assetId
       updatedAsset.name,   // assetName
@@ -239,13 +238,13 @@ const updateAsset = async (req, res) => {
   }
 };
 
-// ✅ Delete an asset
+// Delete an asset
 const deleteAsset = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log("Deleting asset with ID:", id); // ✅ Debug log
+    console.log("Deleting asset with ID:", id); // Debug log
 
-    // 1️⃣ Fetch asset details before deletion
+    // 1️Fetch asset details before deletion
     const assetToDelete = await Asset.findById(id);
     if (!assetToDelete) {
       return res.status(404).json({ message: "Asset not found" });
@@ -255,10 +254,10 @@ const deleteAsset = async (req, res) => {
     const assetName = assetToDelete.name;
     const assetIdNumber = assetToDelete.asset_id || assetToDelete._id; // Ensure there's an asset ID number field or fallback to _id
 
-    // 2️⃣ Delete the asset
+    // Delete the asset
     const deletedAsset = await Asset.findByIdAndDelete(id);
 
-    // 3️⃣ Log history with stored name and ID number
+    // 3Log history with stored name and ID number
     await logHistory(
       deletedAsset._id,   // assetId
       assetName,           // assetName

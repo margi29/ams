@@ -79,7 +79,7 @@ const ViewRequestStatus = () => {
             : "text-gray-500"
         }`}
       >
-        {row?.status || "Unknown"}  {/* ✅ Now text is inside the span */}
+        {row?.status || "Unknown"}  {/* Now text is inside the span */}
       </span>
     ),
   },

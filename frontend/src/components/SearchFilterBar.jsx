@@ -11,7 +11,7 @@ const SearchFilterBar = ({
   exportFormat,
   setExportFormat,
   data,
-  columns, // New prop for visible columns
+  columns, // prop for visible columns
   filename,
   statusOptions,
 }) => {

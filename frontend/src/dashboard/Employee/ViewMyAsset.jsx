@@ -28,7 +28,7 @@ const ViewMyAsset = () => {
                 throw new Error("No token found. Please log in.");
             }
 
-            // ✅ Fetch assigned assets
+            // Fetch assigned assets
             const assignedResponse = await fetch("http://localhost:3000/api/assets/my-assets", {
                 method: "GET",
                 headers: {
@@ -43,12 +43,12 @@ const ViewMyAsset = () => {
                 throw new Error("Failed to fetch assigned assets.");
             }
 
-            console.log("✅ Assigned Assets:", assignedData);
+            console.log(" Assigned Assets:", assignedData);
 
             setAssets(assignedData);
-            setFilteredAssets(assignedData); // ✅ Update UI
+            setFilteredAssets(assignedData); // Update UI
         } catch (error) {
-            console.error("❌ Error fetching assets:", error);
+            console.error(" Error fetching assets:", error);
             setError(error.message);
         } finally {
             setLoading(false);

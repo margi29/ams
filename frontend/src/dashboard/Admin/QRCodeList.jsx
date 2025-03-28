@@ -7,7 +7,7 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 import Table from "../../components/Table";
 
-// ✅ Status color mapping (same as AllAssets.jsx)
+// Status color mapping (same as AllAssets.jsx)
 const statusColors = {
   Available: "text-green-600 font-semibold",
   Assigned: "text-blue-600 font-semibold",
@@ -48,7 +48,7 @@ const QRCodeList = () => {
 
 
 
-  // ✅ Download full list as PDF
+  // Download full list as PDF
   const downloadPDF = () => {
     const doc = new jsPDF({
       orientation: "portrait", // A4 Portrait mode
@@ -64,7 +64,7 @@ const QRCodeList = () => {
     const colWidth = 95; // Space between 2 QR codes in a row
     const rowHeight = 60; // Adjusted row height
     let x = 20; // Start position for first column
-    const maxRowsPerPage = 4; // ✅ Exactly 4 rows per page (8 QR codes)
+    const maxRowsPerPage = 4; // Exactly 4 rows per page (8 QR codes)
     let rowCounter = 0; // Track rows per page
   
     filteredAssets.forEach((asset, index) => {
@@ -72,7 +72,7 @@ const QRCodeList = () => {
       if (qrCanvas) {
         const qrImage = qrCanvas.toDataURL("image/png"); // Convert QR to PNG
   
-        // ✅ Page Break Logic: If we have filled 4 rows (8 QR codes), create a new page
+        // Page Break Logic: If we have filled 4 rows (8 QR codes), create a new page
         if (rowCounter === maxRowsPerPage) {
           doc.addPage();
           y = 25; // Reset Y position for new page
@@ -80,21 +80,21 @@ const QRCodeList = () => {
           rowCounter = 0; // Reset row counter
         }
   
-        // ✅ Add QR Code
+        // Add QR Code
         doc.addImage(qrImage, "PNG", x, y, qrSize, qrSize);
   
-        // ✅ Align text to start exactly under QR Code
+        // Align text to start exactly under QR Code
         doc.setFontSize(9);
         doc.text(`ID: ${asset.asset_id}`, x, y + qrSize + 6);
         doc.text(`Name: ${asset.name}`, x, y + qrSize + 12);
   
-        // 🔄 Move to next column (Left → Right)
+        // Move to next column (Left → Right)
         if (x === 20) {
           x += colWidth; // Move to right column
         } else {
           x = 20; // Reset to first column
           y += rowHeight; // Move to next row
-          rowCounter++; // ✅ Track row count correctly
+          rowCounter++; // Track row count correctly
         }
       }
     });

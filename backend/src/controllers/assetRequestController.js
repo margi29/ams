@@ -1,9 +1,9 @@
 const AssetRequest = require("../models/AssetRequest");
 const Asset = require("../models/Asset");
-const User = require("../models/User"); // We need to fetch user details for logging
+const User = require("../models/User"); // fetch user details for logging
 const { logHistory } = require("../controllers/assetHistoryController");
 
-// ✅ Employee requests an asset (Logs "Asset Requested")
+// Employee requests an asset (Logs "Asset Requested")
 const requestAsset = async (req, res) => {
   try {
     const { assetId, reason } = req.body;
@@ -21,7 +21,7 @@ const requestAsset = async (req, res) => {
       return res.status(404).json({ error: "User not found." });
     }
 
-    // ✅ Check if the employee has already requested this asset
+    // Check if the employee has already requested this asset
     const existingRequest = await AssetRequest.findOne({
       assetId,
       requestedBy,
@@ -32,7 +32,7 @@ const requestAsset = async (req, res) => {
       return res.status(400).json({ error: "You have already requested this asset. Please wait for approval." });
     }
 
-    // ✅ Create a new asset request
+    // Create a new asset request
     const newRequest = new AssetRequest({
       assetId,
       reason,
@@ -42,7 +42,7 @@ const requestAsset = async (req, res) => {
 
     await newRequest.save();
 
-    // ✅ Log history: "Employee requested an asset."
+    // Log history: "Employee requested an asset."
     await logHistory(
       assetId,
       asset.name || "Unknown",
@@ -53,14 +53,14 @@ const requestAsset = async (req, res) => {
       "Asset Requested"
     );
 
-    res.status(201).json({ message: "✅ Asset request submitted successfully!" });
+    res.status(201).json({ message: "Asset request submitted successfully!" });
   } catch (error) {
-    console.error("❌ Error in requestAsset:", error.message);
+    console.error("Error in requestAsset:", error.message);
     res.status(500).json({ error: "Server error while processing request." });
   }
 };
 
-// ✅ Fetch asset requests (Admin sees all, Employee sees only their own)
+// Fetch asset requests (Admin sees all, Employee sees only their own)
 const getAssetRequests = async (req, res) => {
   try {
     let query = {}; // Default: Fetch all (for Admins)
@@ -76,13 +76,13 @@ const getAssetRequests = async (req, res) => {
 
     res.json(requests);
   } catch (error) {
-    console.error("❌ Error fetching asset requests:", error.message);
+    console.error("Error fetching asset requests:", error.message);
     res.status(500).json({ message: "Server Error" });
   }
 };
 
 
-// ✅ Admin updates request status (Logs "Assigned" when Approved)
+// Admin updates request status (Logs "Assigned" when Approved)
 const updateRequestStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -98,7 +98,7 @@ const updateRequestStatus = async (req, res) => {
       return res.status(400).json({ error: "Request has already been processed." });
     }
 
-    // ✅ Update Request Status
+    // Update Request Status
     await AssetRequest.findByIdAndUpdate(requestId, {
       status,
       resolvedAt: new Date(),
@@ -113,7 +113,7 @@ const updateRequestStatus = async (req, res) => {
         return res.status(400).json({ error: "Asset is already assigned to another user." });
       }
 
-      // ✅ Assign Asset
+      // Assign Asset
       await Asset.findByIdAndUpdate(assetRequest.assetId, {
         status: "Assigned",
         assigned_to: assetRequest.requestedBy,
@@ -133,15 +133,15 @@ const updateRequestStatus = async (req, res) => {
         asset.name || "Unknown",
         asset.asset_id || "N/A",
         adminId,
-        admin.name || "Unknown", // ✅ Store the Admin who accepted the request
-        admin.role || "Admin", // ✅ Store the Admin's role
+        admin.name || "Unknown", // Store the Admin who accepted the request
+        admin.role || "Admin", // Store the Admin's role
         "Assigned"
       );
     }
 
-    res.json({ message: `✅ Request ${status.toLowerCase()} successfully.` });
+    res.json({ message: `Request ${status.toLowerCase()} successfully.` });
   } catch (error) {
-    console.error("❌ Error updating request status:", error.message);
+    console.error("Error updating request status:", error.message);
     res.status(500).json({ error: "Server error while updating status." });
   }
 };

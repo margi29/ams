@@ -15,7 +15,7 @@ const MaintenanceRequest = () => {
         });
         const data = await response.json();
 
-        // ✅ Format assets with status for react-select
+        // Format assets with status for react-select
         const formattedAssets = data.map((asset) => ({
           value: asset._id,
           label: `${asset.name}`, 
@@ -57,7 +57,7 @@ const MaintenanceRequest = () => {
         if (response.ok) {
           alert("Maintenance request submitted successfully.");
 
-          // ✅ Update status in dropdown instead of removing it
+          // Update status in dropdown instead of removing it
           setAssignedAssets((prevAssets) =>
             prevAssets.map((asset) =>
               asset.value === selectedAsset.value ? { ...asset, label: `${asset.label.split(" (")[0]} (Under Maintenance)`, status: "Under Maintenance" } : asset

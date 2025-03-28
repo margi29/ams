@@ -1,6 +1,5 @@
 const History = require("../models/AssetHistory");
 
-// Fetch all history (no population needed, use stored values)
 // Fetch all history directly from the model (no population needed)
 const getAllHistory = async (req, res) => {
   try {
@@ -56,9 +55,9 @@ const logHistory = async (assetId, assetName, assetIdNumber, userId, userName, u
 
     // Save the history entry to the database
     await historyEntry.save();
-    console.log(`✅ History logged: ${actionType} - ${assetName}`);
+    console.log(`History logged: ${actionType} - ${assetName}`);
   } catch (error) {
-    console.error("❌ Error logging history:", error);
+    console.error("Error logging history:", error);
   }
 };
 

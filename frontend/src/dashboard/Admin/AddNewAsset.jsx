@@ -36,14 +36,14 @@ const AddNewAsset = () => {
   // Generate QR code content
   const generateQRCode = (assetData) => {
     return `Asset ID: ${assetData.asset_id}
-Name: ${assetData.name}
-Manufacturer: ${assetData.manufacturer}
-Model No.: ${assetData.model_no}
-Category: ${assetData.category}
-Status: ${assetData.status}
-Purchase Date: ${assetData.purchase_date}
-Warranty Expiry: ${assetData.warranty_expiry || "N/A"}
-Description: ${assetData.description || "N/A"}`;
+            Name: ${assetData.name}
+            Manufacturer: ${assetData.manufacturer}
+            Model No.: ${assetData.model_no}
+            Category: ${assetData.category}
+            Status: ${assetData.status}
+            Purchase Date: ${assetData.purchase_date}
+            Warranty Expiry: ${assetData.warranty_expiry || "N/A"}
+            Description: ${assetData.description || "N/A"}`;
   };
 
   // Fetch categories from backend
@@ -113,19 +113,19 @@ Description: ${assetData.description || "N/A"}`;
       console.log("🔍 Received asset IDs:", data.assetIds);
       
       let nextId = findFirstAvailableAssetId(data.assetIds || []);
-      console.log("✅ Final Assigned Asset ID:", nextId);
+      console.log("Final Assigned Asset ID:", nextId);
       
       setAsset((prev) => ({ 
         ...prev, 
         asset_id: nextId
       }));
     } catch (error) {
-      console.error("❌ Error fetching Asset IDs:", error);
+      console.error("Error fetching Asset IDs:", error);
     }
   };
 
   const findFirstAvailableAssetId = (existingIds) => {
-    // Your existing logic
+    // existing logic
     if (!existingIds || existingIds.length === 0) {
       return "A01"; // If no assets exist
     }
@@ -229,7 +229,7 @@ Description: ${assetData.description || "N/A"}`;
     
       return data.isUnique;
     } catch (error) {
-      console.error("❌ Error checking Asset ID:", error);
+      console.error(" Error checking Asset ID:", error);
       alert("Error checking asset ID. Please refresh and try again.");
       return false;
     }
@@ -385,6 +385,7 @@ Description: ${assetData.description || "N/A"}`;
   
   // Download QR Code for a specific asset
   const downloadQRCode = (assetId, index) => {
+    
     // Find the right canvas - when multiple QR codes, target by index
     const qrCanvases = document.querySelectorAll("canvas");
     let qrCanvas;

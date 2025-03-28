@@ -94,10 +94,10 @@ const RequestNewAsset = () => {
         return;
       }
   
-      alert("✅ Asset request submitted successfully!");
+      alert(" Asset request submitted successfully!");
       navigate("/employee/view-requests");
     } catch (error) {
-      console.error("❌ Error submitting request:", error);
+      console.error(" Error submitting request:", error);
       alert("An error occurred. Please try again.");
     }
   };  

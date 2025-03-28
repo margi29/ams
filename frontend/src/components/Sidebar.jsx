@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"; // ✅ Import Auth Context
+import { useAuth } from "../context/AuthContext"; // Import Auth Context
 import { Menu, X, ChevronDown, Home, Settings, User, Package, QrCode, Wrench, LogOut, Book } from "lucide-react";
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
@@ -8,7 +8,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const sidebarRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth(); // ✅ Use logout from context
+  const { logout } = useAuth(); // Use logout from context
   const role = location.pathname.split("/")[1];
 
   const toggleSubMenu = (label) => {
@@ -35,8 +35,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   }, []);
 
   const handleLogout = () => {
-    logout(); // ✅ Use AuthContext logout function
-    navigate("/"); // ✅ Redirect to login
+    logout(); // Use AuthContext logout function
+    navigate("/"); // Redirect to login
   };
 
   const menuItems = {

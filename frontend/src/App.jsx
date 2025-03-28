@@ -65,7 +65,7 @@ const App = () => {
           }
         />
 
-        {/* ✅ Admin Routes - Now Fully Protected */}
+        {/* Admin Routes - Now Fully Protected */}
         <Route element={<ProtectedRoute allowedRoles={["Admin"]} />}>
           <Route path="/admin/dashboard" element={<Layout><AdminDashboard /></Layout>} />
           <Route path="/admin/assets" element={<Layout><AllAssets /></Layout>} />
@@ -81,7 +81,7 @@ const App = () => {
 
         </Route>
 
-        {/* ✅ Employee Routes - Now Fully Protected */}
+        {/* Employee Routes - Now Fully Protected */}
         <Route element={<ProtectedRoute allowedRoles={["Employee"]} />}>
           <Route path="/employee/dashboard" element={<Layout><EmployeeDashboard /></Layout>} />
           <Route path="/employee/view-my-asset" element={<Layout><ViewMyAsset /></Layout>} />
@@ -93,7 +93,7 @@ const App = () => {
           <Route path="/employee/request-new-asset" element={<Layout><RequestNewAsset /></Layout>} />
         </Route>
 
-        {/* 🔹 Not Found Page */}
+        {/* Not Found Page */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>

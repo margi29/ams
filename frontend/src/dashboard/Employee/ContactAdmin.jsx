@@ -63,7 +63,7 @@ const ContactAdmin = () => {
 
       {/* Asset Request Form */}
       <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-        {/* 🔹 Asset Name */}
+        {/* Asset Name */}
         <div>
           <label className="block font-medium">
             Asset Name <span className="text-red-500">*</span>
@@ -78,7 +78,7 @@ const ContactAdmin = () => {
           />
         </div>
 
-        {/* 🔹 Asset Category */}
+        {/* Asset Category */}
         <div>
           <label className="block font-medium">
             Asset Category <span className="text-red-500">*</span>
@@ -93,7 +93,7 @@ const ContactAdmin = () => {
           />
         </div>
 
-        {/* 🔹 Request Type */}
+        {/* Request Type */}
         <div>
           <label className="block font-medium">
             Request Type <span className="text-red-500">*</span>
@@ -110,7 +110,7 @@ const ContactAdmin = () => {
           </select>
         </div>
 
-        {/* 🔹 Request Details */}
+        {/* Request Details */}
         <div>
           <label className="block font-medium">
             Request Details <span className="text-red-500">*</span>
@@ -126,7 +126,7 @@ const ContactAdmin = () => {
           />
         </div>
 
-        {/* 🔹 Submit Button */}
+        {/* Submit Button */}
         <div className="text-center">
           <button
             type="submit"
