@@ -63,7 +63,7 @@ const AssignAsset = () => {
   
     fetchCategories();
     fetchDepartments();
-  }, []); // Removed `fetchEmployees()` here
+  }, []);
   
   const fetchAssets = async (selectedCategory) => {
     setLoadingAssets(true);
@@ -87,9 +87,9 @@ const AssignAsset = () => {
   }
 
   const assignmentData = {
-    assetId: asset, // replace `asset` with `assetId`
-    assignedTo: user, // replace `user` with `assignedTo`
-    assignmentDate: date, // replace `date` with `assignmentDate`
+    assetId: asset, 
+    assignedTo: user,
+    assignmentDate: date, 
     category,
     department,
     location,
@@ -98,7 +98,17 @@ const AssignAsset = () => {
   
 
   try {
-    const res = await axios.post("http://localhost:3000/api/allocation/assign", assignmentData);
+    const token = localStorage.getItem("token"); // Get token from storage
+    if (!token) {
+      console.error(" No token found. User not authenticated.");
+      return;
+    }
+    const res = await axios.post("http://localhost:3000/api/allocation/assign", assignmentData, {
+      headers: {
+        Authorization: `Bearer ${token}`, // Send token in headers
+        "Content-Type": "application/json",
+      },
+    });
     alert("Asset assigned successfully!");
     
     // Reset form fields after successful submission
@@ -226,7 +236,7 @@ const AssignAsset = () => {
     value: item._id, // Use _id here
     label: item.name,
   }))}
-  value={asset ? { value: asset, label: asset } : null}
+ value={asset ? { value: asset, label: assets.find(a => a._id === asset)?.name || "Unknown" } : null}
   onChange={(selectedOption) => {
     setAsset(selectedOption.value); // Set _id as value
     setErrors((prev) => ({ ...prev, asset: "" })); // Clear error

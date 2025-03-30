@@ -12,7 +12,10 @@ const Table = ({ columns, data }) => {
         <thead>
           <tr className="bg-[#673AB7] text-white">
             {columns.map((col, index) => (
-              <th key={index} className="p-4 border-b border-gray-300 border-r last:border-r-0 text-center font-semibold">
+              <th
+                key={index}
+                className="p-4 border-b border-gray-300 border-r last:border-r-0 text-center font-semibold"
+              >
                 {col.header}
               </th>
             ))}
@@ -21,7 +24,7 @@ const Table = ({ columns, data }) => {
         <tbody>
           {data.map((row, rowIndex) => (
             <motion.tr
-              key={row.id || rowIndex}
+              key={row._id || rowIndex}
               className="text-center even:bg-gray-50 odd:bg-white hover:bg-gray-100 transition border-b border-gray-300"
               initial={{ x: -10, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
@@ -32,7 +35,7 @@ const Table = ({ columns, data }) => {
                     col.render(row)
                   ) : (
                     <span className={col.className ? col.className(row[col.accessor]) : ""}>
-                      {row[col.accessor]}
+                      {typeof col.accessor === "function" ? col.accessor(row) : row[col.accessor]}
                     </span>
                   )}
                 </td>

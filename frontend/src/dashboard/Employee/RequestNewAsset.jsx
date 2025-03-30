@@ -1,46 +1,106 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import Select from "react-select";
 import { motion } from "framer-motion";
 
-// Mock Data for Available Assets
-const mockAvailableAssets = [
-  { id: "A200", name: "Laptop - HP ProBook 450" },
-  { id: "A201", name: "Monitor - Dell 27-inch" },
-  { id: "A202", name: "Tablet - iPad Air" },
-  { id: "A203", name: "Phone - iPhone 14 Pro" },
-];
-
 const RequestNewAsset = () => {
-  const [availableAssets, setAvailableAssets] = useState([]);
-  const [selectedAsset, setSelectedAsset] = useState("");
+  const [assets, setAssets] = useState([]);
+  const [selectedAsset, setSelectedAsset] = useState(null);
   const [reason, setReason] = useState("");
   const navigate = useNavigate();
 
+  // Fetch available assets from API
   useEffect(() => {
-    setAvailableAssets(mockAvailableAssets);
+    const fetchAssets = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch("http://localhost:3000/api/assets", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization:` Bearer ${token}`, // Send token
+          },
+        });
+        const data = await response.json();
+        const availableAssets = data
+          .filter((asset) => asset.status === "Available")
+          .map((asset) => ({
+            value: asset._id,
+            label: asset.name,
+          }));
+
+        setAssets(availableAssets);
+      } catch (error) {
+        console.error("Error fetching assets:", error);
+      }
+    };
+    fetchAssets();
   }, []);
 
-  // Handle Asset Selection
-  const handleSelect = (e) => {
-    setSelectedAsset(e.target.value);
+  // Handle asset selection
+  const handleSelect = (selectedOption) => {
+    setSelectedAsset(selectedOption);
   };
 
-  // Handle Reason Input
+  // Handle reason input
   const handleReasonChange = (e) => {
     setReason(e.target.value);
   };
 
-  // Submit Request
-  const handleSubmit = (e) => {
+  // Submit request
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedAsset || !reason.trim()) {
-      alert("Please select an asset and provide a reason for your request.");
+      alert("Please select an asset and provide a reason.");
       return;
     }
-    console.log("Asset Request Submitted:", { selectedAsset, reason });
-    alert(`Your request for ${selectedAsset} has been submitted.\nReason: ${reason}`);
-    navigate("/employee"); // Redirect to Employee Dashboard
-  };
+  
+    const token = localStorage.getItem("token");
+  
+    if (!token) {
+      alert("Unauthorized. Please log in.");
+      navigate("/");
+      return;
+    }
+  
+    const requestData = {
+      assetId: selectedAsset.value,
+      reason,
+    };
+  
+    try {
+      console.log("Submitting request:", requestData); // Debugging
+  
+      const response = await fetch("http://localhost:3000/api/asset-requests", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestData),
+      });
+  
+      const contentType = response.headers.get("content-type");
+  
+      if (!response.ok) {
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await response.json();
+          console.log("Backend error response:", errorData); // Debugging
+          alert(`Failed to submit request: ${errorData.message || errorData.error || "Unknown error"}`);
+        } else {
+          console.log("Non-JSON error response:", await response.text()); // Debugging
+          alert("Failed to submit request. Server returned an unexpected response.");
+        }
+        return;
+      }
+  
+      alert(" Asset request submitted successfully!");
+      navigate("/employee/view-requests");
+    } catch (error) {
+      console.error(" Error submitting request:", error);
+      alert("An error occurred. Please try again.");
+    }
+  };  
 
   return (
     <motion.div
@@ -48,7 +108,6 @@ const RequestNewAsset = () => {
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
     >
-      {/* Header */}
       <h1 className="text-3xl font-bold text-center text-gray-800">
         Request New Asset
       </h1>
@@ -56,29 +115,23 @@ const RequestNewAsset = () => {
         Select an available asset and provide a reason to submit your request.
       </p>
 
-      {/* Asset Request Form */}
       <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-        {/* 🔹 Select Asset */}
+        {/* Select Asset using react-select */}
         <div>
           <label className="block font-medium">
             Select Asset <span className="text-red-500">*</span>
           </label>
-          <select
+          <Select
+            options={assets}
             value={selectedAsset}
             onChange={handleSelect}
-            className="w-full p-3 border rounded-lg border-gray-300 mt-1"
-            required
-          >
-            <option value="">-- Choose an Asset --</option>
-            {availableAssets.map((asset) => (
-              <option key={asset.id} value={asset.name}>
-                {asset.name}
-              </option>
-            ))}
-          </select>
+            className="mt-1"
+            placeholder="Choose an asset..."
+            isSearchable
+          />
         </div>
 
-        {/* 🔹 Reason for Request */}
+        {/* Reason for Request */}
         <div>
           <label className="block font-medium">
             Reason for Request <span className="text-red-500">*</span>
@@ -93,7 +146,7 @@ const RequestNewAsset = () => {
           />
         </div>
 
-        {/* 🔹 Submit Button */}
+        {/* Submit Button */}
         <div className="text-center">
           <button
             type="submit"

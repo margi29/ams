@@ -4,56 +4,220 @@ import {
 	Cell,
 	Tooltip,
 	ResponsiveContainer,
-	LineChart,
-	Line,
-	Legend,
+	BarChart,
+	Bar,
 	XAxis,
 	YAxis,
 	CartesianGrid,
-	BarChart,
-	Bar,
+	Legend,
+	LineChart,
+	Line
 } from "recharts";
 import { FiDatabase } from "react-icons/fi";
 import { FaTools, FaClipboardList, FaBoxes } from "react-icons/fa";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import Card from "../components/Card";
 import Table from "../components/Table";
 
 const AdminDashboard = () => {
-	// Data matching summary cards
-	const assetData = [
-		{ category: "Total Assets", value: 20, color: "#673AB7" },
-		{ category: "Assigned Assets", value: 10, color: "#F88379" },
-		{ category: "Pending Requests", value: 2, color: "#00B4D8" },
-		{ category: "Under Maintenance", value: 1, color: "#FFC107" },
-	];
+	const [assetStats, setAssetStats] = useState({
+		total: 0,
+		assigned: 0,
+		maintenance: 0,
+	});
+	const [pendingRequests, setPendingRequests] = useState(0);
+	const [recentActivity, setRecentActivity] = useState([]);
+	const [assetDistribution, setAssetDistribution] = useState([]);
+	const [requestTrends, setRequestTrends] = useState([]);
 
-	// Monthly Asset Summary for Bar Chart
-	const barChartData = [
-		{ name: "Jan", assets: 100 },
-		{ name: "Feb", assets: 110 },
-		{ name: "Mar", assets: 120 },
-		{ name: "Apr", assets: 130 },
-	];
+	// Improved action sentence generation with dynamic assigned to
+	const generateActionSentence = (entry) => {
+		// Safely extract values with fallback
+		const getNestedValue = (obj, path, defaultValue = '') => {
+			return path.split('.').reduce((acc, part) => 
+				acc && acc[part] !== undefined ? acc[part] : defaultValue, obj);
+		};
 
-	// Line Chart Data (Trends)
-	const lineChartData = [
-		{ name: "Jan", total: 100, assigned: 70, pending: 20, maintenance: 10 },
-		{ name: "Feb", total: 110, assigned: 75, pending: 22, maintenance: 12 },
-		{ name: "Mar", total: 120, assigned: 80, pending: 25, maintenance: 15 },
-		{ name: "Apr", total: 130, assigned: 85, pending: 28, maintenance: 18 },
-	];
+		const actionType = entry.actionType || 'Unknown Action';
+		const userName = getNestedValue(entry, 'userName', 'Unknown User');
+		const userRole = getNestedValue(entry, 'userRole', 'Unknown Role');
+		const assetName = getNestedValue(entry, 'assetName', 'Unknown Asset');
+		const assetIdNumber = getNestedValue(entry, 'assetIdNumber', '');
+		
+		// Dynamically get assignedTo, checking multiple possible paths
+		const assignedTo = 
+			getNestedValue(entry, 'assignedTo.name') || 
+			getNestedValue(entry, 'assignedTo') || 
+			getNestedValue(entry, 'assetId.assigned_to.name') || 
+			'No One';
 
-	const recentActivity = [
-		{ date: "2025-03-07", action: "Laptop assigned to John Doe" },
-		{ date: "2025-03-06", action: "Printer sent for maintenance" },
-		{ date: "2025-03-05", action: "New router added to inventory" },
-		{ date: "2025-03-04", action: "Desktop assigned to Jane Smith" },
-	];
+		// Construct asset ID string
+		const assetId = assetIdNumber ? `(${assetIdNumber})` : '';
 
+		// Comprehensive action sentences
+		switch (actionType) {
+			case "Assigned":
+				return userRole === "Admin"
+					? `${userName} (${userRole}) assigned ${assetName} ${assetId} to ${assignedTo}.`
+					: `${userName} (${userRole}) was assigned ${assetName} ${assetId}.`;
+			
+			case "Created":
+				return `${userName} (${userRole}) created the asset ${assetName} ${assetId}.`;
+			
+			case "Updated":
+				return `${userName} (${userRole}) updated the details of asset ${assetName} ${assetId}.`;
+			
+			case "Deleted":
+				return `${userName} (${userRole}) deleted the asset ${assetName} ${assetId}.`;
+			
+			case "Scheduled for Maintenance":
+				return `${userName} (${userRole}) scheduled maintenance for ${assetName} ${assetId}.`;
+			
+			case "Maintenance Completed":
+				return `${userName} (${userRole}) completed maintenance for ${assetName} ${assetId}.`;
+			
+			case "Asset Requested":
+				return `${userName} (${userRole}) requested the asset ${assetName} ${assetId}.`;
+			
+			case "Returned":
+				return `${userName} (${userRole}) returned the asset ${assetName} ${assetId}.`;
+			
+			case "Maintenance Requested":
+				return `${userName} (${userRole}) reported an issue with ${assetName} ${assetId}.`;
+			
+			default:
+				return `${userName} (${userRole}) performed action: ${actionType} on ${assetName} ${assetId}.`;
+		}
+	};
+
+	useEffect(() => {
+		const fetchData = async () => {
+			try {
+				const token = localStorage.getItem("token");
+				if (!token) {
+					console.error("No token found. Authentication required.");
+					return;
+				}
+	
+				const config = { headers: { Authorization: `Bearer ${token}` } };
+	
+				// Fetch Assets
+				const assetsRes = await axios.get("http://localhost:3000/api/assets", config);
+				const assets = Array.isArray(assetsRes.data) ? assetsRes.data : assetsRes.data.assets;
+				if (!Array.isArray(assets)) throw new Error("Assets data is not an array!");
+	
+				// Group by Category
+				const categoryCount = assets.reduce((acc, asset) => {
+					const category = asset.category || "Unknown"; // Default if missing
+					acc[category] = (acc[category] || 0) + 1;
+					return acc;
+				}, {});
+	
+				// Convert to array and sort by count
+				let sortedCategories = Object.entries(categoryCount)
+					.map(([category, count]) => ({ category, count }))
+					.sort((a, b) => b.count - a.count); // Descending order
+	
+				// Get Top 3 + "Others"
+				let topCategories = sortedCategories.slice(0, 3);
+				let othersCount = sortedCategories.slice(3).reduce((sum, cat) => sum + cat.count, 0);
+	
+				if (othersCount > 0) {
+					topCategories.push({ category: "Others", count: othersCount });
+				}
+	
+				setAssetDistribution(topCategories);
+	
+				// Asset Summary
+				const totalAssets = assets.length;
+				const assignedAssets = assets.filter((asset) => asset.status === "Assigned").length;
+				const maintenanceAssets = assets.filter((asset) => asset.status === "Under Maintenance").length;
+	
+				setAssetStats({ total: totalAssets, assigned: assignedAssets, maintenance: maintenanceAssets });
+
+				// Fetch Asset History
+				const historyRes = await axios.get("http://localhost:3000/api/history", config);
+				const history = Array.isArray(historyRes.data) ? historyRes.data : historyRes.data.history;
+				if (!Array.isArray(history)) throw new Error("History data is not an array!");
+	
+				// Sort by latest timestamp & get the most recent 5
+				const sortedHistory = history
+					.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)) // Sort descending
+					.slice(0, 5); // Get the latest 5 entries
+	
+				// Format for the table with sentence-based descriptions
+				const formattedHistory = sortedHistory.map(entry => ({
+					date: new Date(entry.timestamp).toLocaleString(),
+					action: generateActionSentence(entry),
+				}));
+	
+				setRecentActivity(formattedHistory);
+	
+				// Fetch Pending Requests
+				const requestRes = await axios.get("http://localhost:3000/api/asset-requests", config);
+				const requests = Array.isArray(requestRes.data) ? requestRes.data : requestRes.data.requests;
+				if (!Array.isArray(requests)) throw new Error("Requests data is not an array!");
+	
+				const pendingCount = requests.filter(req => req.status === "Pending").length;
+				setPendingRequests(pendingCount);
+
+				// Generate Request Trends (Simulated Data for Line Graph)
+				const currentDate = new Date();
+				const requestTrendsData = [
+					{ 
+						date: new Date(currentDate.getTime() - 5 * 24 * 60 * 60 * 1000).toLocaleDateString(), 
+						assetRequests: Math.floor(Math.random() * 10), 
+						maintenanceRequests: Math.floor(Math.random() * 5) 
+					},
+					{ 
+						date: new Date(currentDate.getTime() - 4 * 24 * 60 * 60 * 1000).toLocaleDateString(), 
+						assetRequests: Math.floor(Math.random() * 10), 
+						maintenanceRequests: Math.floor(Math.random() * 5) 
+					},
+					{ 
+						date: new Date(currentDate.getTime() - 3 * 24 * 60 * 60 * 1000).toLocaleDateString(), 
+						assetRequests: Math.floor(Math.random() * 10), 
+						maintenanceRequests: Math.floor(Math.random() * 5) 
+					},
+					{ 
+						date: new Date(currentDate.getTime() - 2 * 24 * 60 * 60 * 1000).toLocaleDateString(), 
+						assetRequests: Math.floor(Math.random() * 10), 
+						maintenanceRequests: Math.floor(Math.random() * 5) 
+					},
+					{ 
+						date: new Date(currentDate.getTime() - 1 * 24 * 60 * 60 * 1000).toLocaleDateString(), 
+						assetRequests: Math.floor(Math.random() * 10), 
+						maintenanceRequests: Math.floor(Math.random() * 5) 
+					},
+					{ 
+						date: currentDate.toLocaleDateString(), 
+						assetRequests: Math.floor(Math.random() * 10), 
+						maintenanceRequests: Math.floor(Math.random() * 5) 
+					}
+				];
+				setRequestTrends(requestTrendsData);
+	
+			} catch (error) {
+				console.error("Error fetching dashboard data:", error.response?.data || error.message);
+			}
+		};
+	
+		fetchData();
+	}, []);
+	
+	
 	const tableColumns = [
 		{ header: "Date", accessor: "date" },
 		{ header: "Action", accessor: "action" },
+	];
+
+	// Pie Chart Data
+	const pieData = [
+		{ category: "Total Assets", value: assetStats.total, color: "#673AB7" },
+		{ category: "Assigned Assets", value: assetStats.assigned, color: "#F88379" },
+		{ category: "Pending Requests", value: pendingRequests, color: "#00B4D8" },
+		{ category: "Under Maintenance", value: assetStats.maintenance, color: "#FFC107" },
 	];
 
 	return (
@@ -65,37 +229,44 @@ const AdminDashboard = () => {
 
 			{/* Summary Cards */}
 			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
-				{[
-					{ icon: FiDatabase, label: "Total Assets", value: 20, color: "#673AB7" },
-					{ icon: FaBoxes, label: "Assigned Assets", value: 10, color: "#F88379" },
-					{ icon: FaClipboardList, label: "Pending Requests", value: 2, color: "#00B4D8" },
-					{ icon: FaTools, label: "Under Maintenance", value: 1, color: "#FFC107" },
-				].map((card, index) => (
+				{pieData.map((card, index) => (
 					<div
 						key={index}
 						className="bg-white shadow-xl p-6 rounded-xl flex items-center space-x-5 transition-all duration-200 hover:border-l-[6px]"
 						style={{ borderColor: card.color }}
 					>
 						<div className="w-16 h-16 flex items-center justify-center rounded-full" style={{ backgroundColor: `${card.color}20` }}>
-							<card.icon className="text-4xl" style={{ color: card.color }} />
+							{index === 0 ? <FiDatabase className="text-4xl" style={{ color: card.color }} /> :
+								index === 1 ? <FaBoxes className="text-4xl" style={{ color: card.color }} /> :
+								index === 2 ? <FaClipboardList className="text-4xl" style={{ color: card.color }} /> :
+								<FaTools className="text-4xl" style={{ color: card.color }} />}
 						</div>
 						<div>
-							<h3 className="text-lg font-semibold text-gray-800">{card.label}</h3>
+							<h3 className="text-lg font-semibold text-gray-800">{card.category}</h3>
 							<p className="text-2xl font-bold text-gray-900">{card.value}</p>
 						</div>
 					</div>
 				))}
 			</div>
 
-			{/* Donut Chart and Bar Chart SIDE BY SIDE */}
+			{/* Donut Chart and Bar Chart Side by Side */}
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-				{/* Donut Chart (Pie Chart) */}
+				{/* Donut Chart */}
 				<div className="bg-white p-6 rounded-xl shadow-xl border border-gray-200">
-					<h3 className="text-xl font-semibold text-gray-800 mb-4">Asset Distribution</h3>
+					<h3 className="text-xl font-semibold text-gray-800 mb-4">Asset Summary</h3>
 					<ResponsiveContainer width="100%" height={350}>
 						<PieChart>
-							<Pie data={assetData} dataKey="value" nameKey="category" cx="50%" cy="50%" innerRadius={60} outerRadius={90} label>
-								{assetData.map((entry, index) => (
+							<Pie
+								data={pieData}
+								dataKey="value"
+								nameKey="category"
+								cx="50%"
+								cy="50%"
+								innerRadius={60}
+								outerRadius={90}
+								label
+							>
+								{pieData.map((entry, index) => (
 									<Cell key={`cell-${index}`} fill={entry.color} />
 								))}
 							</Pie>
@@ -104,18 +275,19 @@ const AdminDashboard = () => {
 					</ResponsiveContainer>
 				</div>
 
-				{/* Bar Chart (Updated for Monthly Summary) */}
-				<div className="bg-white p-6 rounded-xl shadow-lg">
-					<h3 className="text-xl font-semibold text-gray-800 mb-4">Monthly Asset Summary</h3>
+				{/* Bar Chart - Asset Distribution by Category */}
+				<div className="bg-white p-6 rounded-xl shadow-xl border border-gray-200">
+					<h3 className="text-xl font-semibold text-gray-800 mb-4">Asset Distribution by Category</h3>
 					<ResponsiveContainer width="100%" height={350}>
-						<BarChart data={barChartData}>
-							<XAxis dataKey="name" />
+						<BarChart data={assetDistribution}>
+							<XAxis dataKey="category" />
 							<YAxis />
+							<CartesianGrid strokeDasharray="3 3" />
 							<Tooltip />
 							<Legend />
-							<Bar dataKey="assets">
-								{barChartData.map((entry, index) => (
-									<Cell key={`bar-${index}`} fill={["#673AB7", "#F88379", "#00B4D8", "#FFC107"][index]} />
+							<Bar dataKey="count">
+								{assetDistribution.map((_, index) => (
+									<Cell key={`bar-${index}`} fill={["#673AB7", "#F88379", "#00B4D8", "#FFC107"][index % 4]} />
 								))}
 							</Bar>
 						</BarChart>
@@ -123,20 +295,18 @@ const AdminDashboard = () => {
 				</div>
 			</div>
 
-			{/* Line Chart Below */}
-			<div className="bg-white shadow-xl p-6 rounded-xl border border-gray-200 mt-6">
-				<h3 className="text-xl font-semibold text-gray-800 mb-4">Asset Trends & Maintenance</h3>
+			{/* Full-Width Line Chart */}
+			<div className="w-full bg-white p-6 rounded-xl shadow-xl border border-gray-200 mt-6">
+				<h3 className="text-xl font-semibold text-gray-800 mb-4">Request Trends</h3>
 				<ResponsiveContainer width="100%" height={350}>
-					<LineChart data={lineChartData} margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
-						<CartesianGrid strokeDasharray="3 3" stroke="#ddd" />
-						<XAxis dataKey="name" tick={{ fill: "#888" }} />
-						<YAxis tick={{ fill: "#888" }} />
+					<LineChart data={requestTrends}>
+						<XAxis dataKey="date" />
+						<YAxis />
+						<CartesianGrid strokeDasharray="3 3" />
 						<Tooltip />
 						<Legend />
-						<Line type="monotone" dataKey="total" stroke="#673AB7" strokeWidth={2} dot={{ r: 4 }} />
-						<Line type="monotone" dataKey="assigned" stroke="#F88379" strokeWidth={2} dot={{ r: 4 }} />
-						<Line type="monotone" dataKey="pending" stroke="#00B4D8" strokeWidth={2} dot={{ r: 4 }} />
-						<Line type="monotone" dataKey="maintenance" stroke="#FFC107" strokeWidth={2} dot={{ r: 4 }} />
+						<Line type="monotone" dataKey="assetRequests" stroke="#8884d8" name="Asset Requests" />
+						<Line type="monotone" dataKey="maintenanceRequests" stroke="#82ca9d" name="Maintenance Requests" />
 					</LineChart>
 				</ResponsiveContainer>
 			</div>

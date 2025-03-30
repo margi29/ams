@@ -12,6 +12,7 @@ import AssignAsset from "./dashboard/Admin/AssignAsset";
 import AssetRequests from "./dashboard/Admin/AssetRequests";
 import QRCodeList from "./dashboard/Admin/QRCodeList";
 import MaintenanceAndRepair from "./dashboard/Admin/MaintenanceAndRepair";
+import Settings from "./dashboard/Admin/Settings";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
 import ViewMyAsset from "./dashboard/Employee/ViewMyAsset";
 import ReturnRequest from "./dashboard/Employee/ReturnRequest";
@@ -25,6 +26,7 @@ import "./styles/global.css";
 import "./App.css";
 import UserManagement from "./dashboard/Admin/UserManagement";
 import ReturnAsset from "./dashboard/Admin/ReturnAsset";
+// import { Settings } from "lucide-react";
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -63,7 +65,7 @@ const App = () => {
           }
         />
 
-        {/* ✅ Admin Routes - Now Fully Protected */}
+        {/* Admin Routes - Now Fully Protected */}
         <Route element={<ProtectedRoute allowedRoles={["Admin"]} />}>
           <Route path="/admin/dashboard" element={<Layout><AdminDashboard /></Layout>} />
           <Route path="/admin/assets" element={<Layout><AllAssets /></Layout>} />
@@ -75,9 +77,11 @@ const App = () => {
           <Route path="/admin/qr-logs" element={<Layout><QRCodeList /></Layout>} />
           <Route path="/admin/scheduled-maintenance" element={<Layout><MaintenanceAndRepair /></Layout>} />
           <Route path="/admin/user-management" element={<Layout><UserManagement /></Layout>} />
+          <Route path="/admin/settings" element={<Layout><Settings /></Layout>} />
+
         </Route>
 
-        {/* ✅ Employee Routes - Now Fully Protected */}
+        {/* Employee Routes - Now Fully Protected */}
         <Route element={<ProtectedRoute allowedRoles={["Employee"]} />}>
           <Route path="/employee/dashboard" element={<Layout><EmployeeDashboard /></Layout>} />
           <Route path="/employee/view-my-asset" element={<Layout><ViewMyAsset /></Layout>} />
@@ -89,7 +93,7 @@ const App = () => {
           <Route path="/employee/request-new-asset" element={<Layout><RequestNewAsset /></Layout>} />
         </Route>
 
-        {/* 🔹 Not Found Page */}
+        {/* Not Found Page */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
