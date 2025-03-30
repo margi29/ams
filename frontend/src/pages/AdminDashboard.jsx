@@ -99,107 +99,108 @@ const AdminDashboard = () => {
 					console.error("No token found. Authentication required.");
 					return;
 				}
-	
+		
 				const config = { headers: { Authorization: `Bearer ${token}` } };
-	
+		
 				// Fetch Assets
 				const assetsRes = await axios.get("http://localhost:3000/api/assets", config);
 				const assets = Array.isArray(assetsRes.data) ? assetsRes.data : assetsRes.data.assets;
 				if (!Array.isArray(assets)) throw new Error("Assets data is not an array!");
-	
+		
 				// Group by Category
 				const categoryCount = assets.reduce((acc, asset) => {
 					const category = asset.category || "Unknown"; // Default if missing
 					acc[category] = (acc[category] || 0) + 1;
 					return acc;
 				}, {});
-	
+		
 				// Convert to array and sort by count
 				let sortedCategories = Object.entries(categoryCount)
 					.map(([category, count]) => ({ category, count }))
 					.sort((a, b) => b.count - a.count); // Descending order
-	
+		
 				// Get Top 3 + "Others"
 				let topCategories = sortedCategories.slice(0, 3);
 				let othersCount = sortedCategories.slice(3).reduce((sum, cat) => sum + cat.count, 0);
-	
+		
 				if (othersCount > 0) {
 					topCategories.push({ category: "Others", count: othersCount });
 				}
-	
+		
 				setAssetDistribution(topCategories);
-	
+		
 				// Asset Summary
 				const totalAssets = assets.length;
 				const assignedAssets = assets.filter((asset) => asset.status === "Assigned").length;
 				const maintenanceAssets = assets.filter((asset) => asset.status === "Under Maintenance").length;
-	
+		
 				setAssetStats({ total: totalAssets, assigned: assignedAssets, maintenance: maintenanceAssets });
-
+		
 				// Fetch Asset History
 				const historyRes = await axios.get("http://localhost:3000/api/history", config);
 				const history = Array.isArray(historyRes.data) ? historyRes.data : historyRes.data.history;
 				if (!Array.isArray(history)) throw new Error("History data is not an array!");
-	
+		
 				// Sort by latest timestamp & get the most recent 5
 				const sortedHistory = history
 					.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)) // Sort descending
 					.slice(0, 5); // Get the latest 5 entries
-	
+		
 				// Format for the table with sentence-based descriptions
 				const formattedHistory = sortedHistory.map(entry => ({
 					date: new Date(entry.timestamp).toLocaleString(),
 					action: generateActionSentence(entry),
 				}));
-	
+		
 				setRecentActivity(formattedHistory);
-	
+		
 				// Fetch Pending Requests
 				const requestRes = await axios.get("http://localhost:3000/api/asset-requests", config);
 				const requests = Array.isArray(requestRes.data) ? requestRes.data : requestRes.data.requests;
 				if (!Array.isArray(requests)) throw new Error("Requests data is not an array!");
-	
+		
 				const pendingCount = requests.filter(req => req.status === "Pending").length;
 				setPendingRequests(pendingCount);
-
-				// Generate Request Trends (Simulated Data for Line Graph)
-				const currentDate = new Date();
-				const requestTrendsData = [
-					{ 
-						date: new Date(currentDate.getTime() - 5 * 24 * 60 * 60 * 1000).toLocaleDateString(), 
-						assetRequests: Math.floor(Math.random() * 10), 
-						maintenanceRequests: Math.floor(Math.random() * 5) 
-					},
-					{ 
-						date: new Date(currentDate.getTime() - 4 * 24 * 60 * 60 * 1000).toLocaleDateString(), 
-						assetRequests: Math.floor(Math.random() * 10), 
-						maintenanceRequests: Math.floor(Math.random() * 5) 
-					},
-					{ 
-						date: new Date(currentDate.getTime() - 3 * 24 * 60 * 60 * 1000).toLocaleDateString(), 
-						assetRequests: Math.floor(Math.random() * 10), 
-						maintenanceRequests: Math.floor(Math.random() * 5) 
-					},
-					{ 
-						date: new Date(currentDate.getTime() - 2 * 24 * 60 * 60 * 1000).toLocaleDateString(), 
-						assetRequests: Math.floor(Math.random() * 10), 
-						maintenanceRequests: Math.floor(Math.random() * 5) 
-					},
-					{ 
-						date: new Date(currentDate.getTime() - 1 * 24 * 60 * 60 * 1000).toLocaleDateString(), 
-						assetRequests: Math.floor(Math.random() * 10), 
-						maintenanceRequests: Math.floor(Math.random() * 5) 
-					},
-					{ 
-						date: currentDate.toLocaleDateString(), 
-						assetRequests: Math.floor(Math.random() * 10), 
-						maintenanceRequests: Math.floor(Math.random() * 5) 
-					}
-				];
-				setRequestTrends(requestTrendsData);
-	
+		
+				// Fetch Request Trends - Now from backend instead of random values
+				const assetRequestsRes = await axios.get("http://localhost:3000/api/asset-requests", config);
+				const maintenanceRequestsRes = await axios.get("http://localhost:3000/api/maintenance", config);
+		
+				// Assuming API returns an array of requests
+				const assetRequestsData = assetRequestsRes.data;
+				const maintenanceRequestsData = maintenanceRequestsRes.data;
+		
+				// Group requests by date and count them
+				const countRequestsByDate = (requests) => {
+					return requests.reduce((acc, item) => {
+						const date = new Date(item.createdAt).toLocaleDateString(); // Format date
+						acc[date] = (acc[date] || 0) + 1;
+						return acc;
+					}, {});
+				};
+		
+				const assetRequestsMap = countRequestsByDate(assetRequestsData);
+				const maintenanceRequestsMap = countRequestsByDate(maintenanceRequestsData);
+		
+				// Get all unique dates and sort them
+				const allDates = new Set([...Object.keys(assetRequestsMap), ...Object.keys(maintenanceRequestsMap)]);
+				const sortedDates = [...allDates].sort((a, b) => new Date(a) - new Date(b));
+		
+				// Take only the last 6 dates (or fewer if there aren't 6)
+				const recentDates = sortedDates.slice(-6);
+		
+				// Prepare trend data for the line graph
+				const trendData = recentDates.map(date => ({
+					date,
+					assetRequests: assetRequestsMap[date] || 0,
+					maintenanceRequests: maintenanceRequestsMap[date] || 0
+				}));
+		
+				// Reverse the array to show dates in chronological order (12, 13, 14)
+				setRequestTrends([...trendData].reverse());
 			} catch (error) {
 				console.error("Error fetching dashboard data:", error.response?.data || error.message);
+				setRequestTrends([]); // Fallback to empty trends array
 			}
 		};
 	

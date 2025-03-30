@@ -55,11 +55,13 @@ const MaintenanceRequests = () => {
     }
   };
 
-  const filteredRequests = requests.filter(
+  const filteredRequests = requests
+  .filter(
     (entry) =>
       (filter === "All" || entry.status === filter) &&
       entry.assetId?.name?.toLowerCase().includes(search.toLowerCase())
-  );
+  )
+  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // Sort by newest first
 
   const columns = [
      { header: "Asset Id", accessor: (row) => row.assetId?.asset_id },
