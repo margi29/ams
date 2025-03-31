@@ -34,8 +34,8 @@ const ViewRequestStatus = () => {
         };
   
         const updatedRequests = data.map((req) => ({
-          assetId: req.assetId?.asset_id || req.assetId?._id || "N/A",
-          assetName: req.assetId?.name || "Unknown",
+          assetId: req.asset_id || req.assetId?._id || "N/A",
+          assetName: req.asset_name || "Unknown",
           requestedBy: req.requestedBy?.name || "Unknown User",
           requestedAt: formatDate(req.requestedAt),
           resolvedAt: formatDate(req.resolvedAt),

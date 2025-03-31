@@ -1,12 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const { protect } = require("../middleware/authMiddleware");
+const { ensureEmployee, ensureAdmin } = require("../middleware/roleMiddleware");
 const { getAllReturnedAssets, returnAsset } = require("../controllers/returnedAssetsController");
 
-// Route to fetch all returned assets
-router.get("/", protect ,getAllReturnedAssets);
+// Admin can fetch all returned assets
+router.get("/", protect, ensureAdmin, getAllReturnedAssets);
 
-// Route to return an asset
-router.post("/return",protect , returnAsset);
+// Employee can return an asset
+router.post("/", protect, ensureEmployee, returnAsset);
 
 module.exports = router;
