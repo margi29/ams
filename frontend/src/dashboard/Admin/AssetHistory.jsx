@@ -13,7 +13,7 @@ const AssetHistory = () => {
   const fetchHistory = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:3000/api/history", {
+      const response = await fetch("/api/history", {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",

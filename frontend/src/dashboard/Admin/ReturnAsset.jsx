@@ -24,7 +24,7 @@ const ReturnAsset = () => {
         }
 
         // Make the request with the Authorization header
-        const response = await axios.get("http://localhost:3000/api/returned-assets", {
+        const response = await axios.get("/api/returned-assets", {
           headers: {
             Authorization: `Bearer ${token}`
           }

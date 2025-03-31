@@ -10,7 +10,7 @@ const MaintenanceRequest = () => {
   useEffect(() => {
     const fetchAssets = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/assets/my-assets", {
+        const response = await fetch("/api/assets/my-assets", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         const data = await response.json();
@@ -45,7 +45,7 @@ const MaintenanceRequest = () => {
     const confirmSend = window.confirm("Are you sure you want to send this asset for maintenance?");
     if (confirmSend) {
       try {
-        const response = await fetch("http://localhost:3000/api/maintenance", {
+        const response = await fetch("/api/maintenance", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

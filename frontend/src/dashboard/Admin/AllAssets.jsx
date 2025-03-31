@@ -23,7 +23,7 @@ const AllAssets = () => {
     const fetchAssets = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:3000/api/assets", {
+        const response = await fetch("/api/assets", {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -57,7 +57,7 @@ const AllAssets = () => {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:3000/api/assets/${asset_id}`, {
+      const response = await fetch(`/api/assets/${asset_id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

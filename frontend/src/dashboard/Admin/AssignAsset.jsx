@@ -31,7 +31,7 @@ const AssignAsset = () => {
 
   setLoadingUsers(true);
   try {
-    const res = await axios.get(`http://localhost:3000/api/users/employees?department=${selectedDepartment}`);
+    const res = await axios.get(`/api/users/employees?department=${selectedDepartment}`);
     setUsers(res.data);
   } catch (error) {
     console.error("Error fetching employees:", error);
@@ -45,7 +45,7 @@ const AssignAsset = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await axios.get("http://localhost:3000/api/assets/categories");
+        const res = await axios.get("/api/assets/categories");
         setCategories(res.data);
       } catch (error) {
         console.error("Error fetching categories:", error);
@@ -54,7 +54,7 @@ const AssignAsset = () => {
   
     const fetchDepartments = async () => {
       try {
-        const res = await axios.get("http://localhost:3000/api/users/departments");
+        const res = await axios.get("/api/users/departments");
         setDepartments(res.data);
       } catch (error) {
         console.error("Error fetching departments:", error);
@@ -68,7 +68,7 @@ const AssignAsset = () => {
   const fetchAssets = async (selectedCategory) => {
     setLoadingAssets(true);
     try {
-      const res = await axios.get(`http://localhost:3000/api/assets/available?category=${selectedCategory}`);
+      const res = await axios.get(`/api/assets/available?category=${selectedCategory}`);
       setAssets(res.data); // Make sure each asset includes its _id
     } catch (error) {
       console.error("Error fetching available assets:", error);
@@ -103,7 +103,7 @@ const AssignAsset = () => {
       console.error(" No token found. User not authenticated.");
       return;
     }
-    const res = await axios.post("http://localhost:3000/api/allocation/assign", assignmentData, {
+    const res = await axios.post("/api/allocation/assign", assignmentData, {
       headers: {
         Authorization: `Bearer ${token}`, // Send token in headers
         "Content-Type": "application/json",

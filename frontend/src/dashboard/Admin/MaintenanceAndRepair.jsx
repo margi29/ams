@@ -13,7 +13,7 @@ const MaintenanceRequests = () => {
 
   const fetchRequests = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/maintenance", {
+      const response = await fetch("/api/maintenance", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
 
@@ -34,7 +34,7 @@ const MaintenanceRequests = () => {
     if (!window.confirm(`Are you sure you want to mark this task as ${newStatus}?`)) return;
     
     try {
-      const response = await fetch(`http://localhost:3000/api/maintenance/${id}/status`, {
+      const response = await fetch(`/api/maintenance/${id}/status`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

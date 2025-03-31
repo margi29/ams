@@ -47,13 +47,13 @@ const EmployeeDashboard = () => {
         }
 
         const [assetsResponse, requestsResponse, historyResponse] = await Promise.all([
-          axios.get("http://localhost:3000/api/assets/my-assets", {
+          axios.get("/api/assets/my-assets", {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get("http://localhost:3000/api/asset-requests", {
+          axios.get("/api/asset-requests", {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get(`http://localhost:3000/api/history`, {  // Fetch only the logged-in employee's history
+          axios.get(`/api/history`, {  // Fetch only the logged-in employee's history
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);

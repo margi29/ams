@@ -25,7 +25,7 @@ const ReturnRequest = () => {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("No token found. Please log in.");
 
-        const response = await fetch("http://localhost:3000/api/assets/my-assets", {
+        const response = await fetch("/api/assets/my-assets", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -83,7 +83,7 @@ const ReturnRequest = () => {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found. Please log in.");
 
-      const response = await fetch("http://localhost:3000/api/returned-assets/return", {
+      const response = await fetch("/api/returned-assets/return", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

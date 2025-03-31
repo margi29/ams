@@ -50,7 +50,7 @@ const AddNewAsset = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/assets/categories");
+        const response = await fetch("/api/assets/categories");
         if (!response.ok) throw new Error("Failed to fetch categories");
 
         const data = await response.json();
@@ -106,7 +106,7 @@ const AddNewAsset = () => {
   // Fetch next available Asset ID
   const fetchNextAssetId = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/assets/all-ids");
+      const response = await fetch("/api/assets/all-ids");
       if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
       
       const data = await response.json();
@@ -219,7 +219,7 @@ const AddNewAsset = () => {
   // Check if asset ID is unique
   const checkUniqueAssetId = async (assetId) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/assets/check-id/${assetId}`);
+      const response = await fetch(`/api/assets/check-id/${assetId}`);
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
@@ -244,7 +244,7 @@ const AddNewAsset = () => {
 
     try {
       console.log("Uploading image...");
-      const response = await fetch("http://localhost:3000/api/upload", {
+      const response = await fetch("/api/upload", {
         method: "POST",
         body: formData,
       });
@@ -325,7 +325,7 @@ const AddNewAsset = () => {
   
         for (const assetItem of assets) {
           const token = localStorage.getItem("token");
-          const response = await fetch("http://localhost:3000/api/assets", {
+          const response = await fetch("/api/assets", {
             method: "POST",
             headers: {
               "Authorization": `Bearer ${token}`,
@@ -352,7 +352,7 @@ const AddNewAsset = () => {
         console.log("Creating/updating single asset:", assetData);
         const token = localStorage.getItem("token");
         const response = await fetch(
-          editing ? `http://localhost:3000/api/assets/${asset._id}` : "http://localhost:3000/api/assets", 
+          editing ? `/api/assets/${asset._id}` : "/api/assets", 
           {
             method: editing ? "PUT" : "POST",
             headers: {

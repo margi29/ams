@@ -13,7 +13,7 @@ const LoginPage = () => {
     event.preventDefault();
 
     try {
-      const response = await fetch("http://localhost:3000/api/auth/login", {
+      const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -23,7 +23,9 @@ const LoginPage = () => {
 
       if (response.ok) {
         login(data.token, data.role); // Use context function
-        navigate(data.role === "Admin" ? "/admin/dashboard" : "/employee/dashboard");
+        navigate(
+          data.role === "Admin" ? "/admin/dashboard" : "/employee/dashboard"
+        );
       } else {
         setError(data.message || "Login failed");
       }
@@ -36,7 +38,9 @@ const LoginPage = () => {
   return (
     <div className="flex justify-center items-center h-screen bg-gray-50">
       <div className="bg-white p-8 rounded-lg shadow-lg w-96">
-        <h2 className="text-2xl font-bold text-center mb-6 text-[#673AB7]">Login</h2>
+        <h2 className="text-2xl font-bold text-center mb-6 text-[#673AB7]">
+          Login
+        </h2>
         {error && <p className="text-red-500 text-center">{error}</p>}
         <form onSubmit={handleLogin}>
           <div className="mb-4">
@@ -61,7 +65,10 @@ const LoginPage = () => {
               required
             />
           </div>
-          <button type="submit" className="w-full bg-[#673AB7] text-white p-2 rounded hover:bg-[#7e53c7] transition">
+          <button
+            type="submit"
+            className="w-full bg-[#673AB7] text-white p-2 rounded hover:bg-[#7e53c7] transition"
+          >
             Login
           </button>
         </form>

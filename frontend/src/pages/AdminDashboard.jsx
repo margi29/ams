@@ -103,7 +103,7 @@ const AdminDashboard = () => {
 				const config = { headers: { Authorization: `Bearer ${token}` } };
 		
 				// Fetch Assets
-				const assetsRes = await axios.get("http://localhost:3000/api/assets", config);
+				const assetsRes = await axios.get("/api/assets", config);
 				const assets = Array.isArray(assetsRes.data) ? assetsRes.data : assetsRes.data.assets;
 				if (!Array.isArray(assets)) throw new Error("Assets data is not an array!");
 		
@@ -137,7 +137,7 @@ const AdminDashboard = () => {
 				setAssetStats({ total: totalAssets, assigned: assignedAssets, maintenance: maintenanceAssets });
 		
 				// Fetch Asset History
-				const historyRes = await axios.get("http://localhost:3000/api/history", config);
+				const historyRes = await axios.get("/api/history", config);
 				const history = Array.isArray(historyRes.data) ? historyRes.data : historyRes.data.history;
 				if (!Array.isArray(history)) throw new Error("History data is not an array!");
 		
@@ -155,7 +155,7 @@ const AdminDashboard = () => {
 				setRecentActivity(formattedHistory);
 		
 				// Fetch Pending Requests
-				const requestRes = await axios.get("http://localhost:3000/api/asset-requests", config);
+				const requestRes = await axios.get("/api/asset-requests", config);
 				const requests = Array.isArray(requestRes.data) ? requestRes.data : requestRes.data.requests;
 				if (!Array.isArray(requests)) throw new Error("Requests data is not an array!");
 		
@@ -163,10 +163,10 @@ const AdminDashboard = () => {
 				setPendingRequests(pendingCount);
 		
 				// Fetch Request Trends - Now from backend instead of random values
-				const assetRequestsRes = await axios.get("http://localhost:3000/api/asset-requests", config);
-				const maintenanceRequestsRes = await axios.get("http://localhost:3000/api/maintenance", config);
+				const assetRequestsRes = await axios.get("/api/asset-requests", config);
+				const maintenanceRequestsRes = await axios.get("/api/maintenance", config);
 		
-				// Assuming API returns an array of requests
+				// Assuming /api returns an array of requests
 				const assetRequestsData = assetRequestsRes.data;
 				const maintenanceRequestsData = maintenanceRequestsRes.data;
 		

@@ -14,7 +14,7 @@ const RequestNewAsset = () => {
     const fetchAssets = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:3000/api/assets", {
+        const response = await fetch("/api/assets", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -71,7 +71,7 @@ const RequestNewAsset = () => {
     try {
       console.log("Submitting request:", requestData); // Debugging
   
-      const response = await fetch("http://localhost:3000/api/asset-requests", {
+      const response = await fetch("/api/asset-requests", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
