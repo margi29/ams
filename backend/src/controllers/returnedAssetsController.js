@@ -22,33 +22,37 @@ const returnAsset = async (req, res) => {
 
     // Validate request
     if (!assetId || !reason) {
-      return res.status(400).json({ message: " Asset ID and reason are required." });
+      return res.status(400).json({ message: "Asset ID and reason are required." });
     }
 
     // Find the asset
     const asset = await Asset.findById(assetId);
     if (!asset) {
-      return res.status(404).json({ message: " Asset not found." });
+      return res.status(404).json({ message: "Asset not found." });
     }
 
     // Ensure the asset is assigned to the current employee
     if (!asset.assigned_to || asset.assigned_to.toString() !== userId) {
-      return res.status(403).json({ message: " You are not assigned to this asset." });
+      return res.status(403).json({ message: "You are not assigned to this asset." });
     }
 
     // Fetch employee details for logging
     const employee = await User.findById(userId);
     if (!employee) {
-      return res.status(404).json({ message: " Employee not found." });
+      return res.status(404).json({ message: "Employee not found." });
     }
 
-    // Create return record
+    // Create return record (Including asset name and ID)
     const returnedAsset = new ReturnedAssets({
       asset: assetId,
+      asset_id: asset.asset_id || asset._id.toString(),
+      asset_name: asset.name,
       employee: userId,
+      employee_name: employee.name, // ✅ Fix applied here
       reason,
       additionalNotes,
-    });
+    });    
+
     await returnedAsset.save();
 
     // Update asset status only if it's not already available
@@ -59,7 +63,7 @@ const returnAsset = async (req, res) => {
       await asset.save();
     }
 
-    // Log history with asset name and additional details
+    // Log history with asset details
     await logHistory(
       assetId,
       asset.name,
@@ -70,12 +74,13 @@ const returnAsset = async (req, res) => {
       "Returned"
     );
 
-    res.status(200).json({ message: " Asset return request processed successfully." });
+    res.status(200).json({ message: "Asset return request processed successfully." });
   } catch (error) {
-    console.error(" Error processing asset return:", error);
-    res.status(500).json({ message: " Internal server error." });
+    console.error("Error processing asset return:", error);
+    res.status(500).json({ message: "Internal server error." });
   }
 };
+
 
 // Export the functions
 module.exports = { getAllReturnedAssets, returnAsset };

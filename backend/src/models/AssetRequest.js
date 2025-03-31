@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 const assetRequestSchema = new mongoose.Schema(
   {
     assetId: { type: mongoose.Schema.Types.ObjectId, ref: "Asset", required: true },
+    asset_id: { type: String, required: true }, // Store asset identifier
+    asset_name: { type: String, required: true }, // Store asset name
     reason: { type: String, required: true },
     status: {
       type: String,

@@ -24,7 +24,7 @@ const ContactAdmin = () => {
 
     try {
       console.log("Sending request to admin...");
-      const response = await fetch("http://localhost:3000/api/contact-admin", {
+      const response = await fetch("/api/contact-admin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

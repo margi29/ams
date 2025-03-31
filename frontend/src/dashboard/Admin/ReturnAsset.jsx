@@ -24,7 +24,7 @@ const ReturnAsset = () => {
         }
 
         // Make the request with the Authorization header
-        const response = await axios.get("http://localhost:3000/api/returned-assets", {
+        const response = await axios.get("/api/returned-assets", {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -45,21 +45,24 @@ const ReturnAsset = () => {
   }, []);
 
   // Enhanced filtering to include reason and additional notes
-  const filteredLogs = logs
-    .filter((log) =>
-      (log.asset?.name?.toLowerCase() || "").includes(search.toLowerCase()) ||
-      (log.employee?.name?.toLowerCase() || "").includes(search.toLowerCase()) ||
-      (log.reason?.toLowerCase() || "").includes(search.toLowerCase()) ||
-      (log.additionalNotes?.toLowerCase() || "").includes(search.toLowerCase())
-    )
-    .map((log) => ({
-      assetName: log.asset?.name || "Unknown Asset",
-      assetId: log.asset?.asset_id || "N/A",
-      employeeName: log.employee?.name || "Unknown Employee",
-      returnDate: new Date(log.return_date || Date.now()).toLocaleDateString(),
-      reason: log.reason || "N/A",
-      additionalNotes: log.additionalNotes || "None",
-    }));
+// Sort logs by return_date in descending order (most recent first)
+const filteredLogs = logs
+  .sort((a, b) => new Date(b.return_date) - new Date(a.return_date)) // Sorting by most recent
+  .map((log) => ({
+    assetName: log.asset?._id ? log.asset.name : `${log.asset_name || "Unknown Asset"} (Deleted)`,
+    assetId: log.asset?._id ? log.asset.asset_id : log.asset_id || "N/A",
+    employeeName: log.employee?._id ? log.employee.name : `${log.employee_name || "Unknown Employee"} (Deleted)`,
+    returnDate: new Date(log.return_date || Date.now()).toLocaleDateString(),
+    reason: log.reason || "N/A",
+    additionalNotes: log.additionalNotes || "None",
+  }))
+  .filter((log) =>
+    (log.assetName.toLowerCase() || "").includes(search.toLowerCase()) ||
+    (log.employeeName.toLowerCase() || "").includes(search.toLowerCase()) ||
+    (log.reason.toLowerCase() || "").includes(search.toLowerCase()) ||
+    (log.additionalNotes.toLowerCase() || "").includes(search.toLowerCase())
+  );
+
 
   // Enhanced columns to display all relevant information
   const columns = [

@@ -18,18 +18,20 @@ const assetHistoryRoutes = require("./src/routes/assetHistoryRoutes");
 
 const app = express();
 
-// Middleware
+
 app.use(
   cors({
-    origin: "http://localhost:5173", // Set this to frontend's origin
+    origin: "*", // Set this to frontend's origin
     credentials: true, // Allow cookies/auth headers
   })
 );
+
 app.use(bodyParser.json());
 app.use(morgan("dev")); // Logs HTTP requests
 
 // MongoDB Connection
-const mongoURI = process.env.MONGO_URI || "mongodb://localhost:27017/asset-management";
+const mongoURI =
+  process.env.MONGO_URI || "mongodb://localhost:27017/asset-management";
 
 mongoose
   .connect(mongoURI) // Removed deprecated options

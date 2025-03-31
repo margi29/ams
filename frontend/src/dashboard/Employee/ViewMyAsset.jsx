@@ -29,7 +29,7 @@ const ViewMyAsset = () => {
             }
 
             // Fetch assigned assets
-            const assignedResponse = await fetch("http://localhost:3000/api/assets/my-assets", {
+            const assignedResponse = await fetch("/api/assets/my-assets", {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",

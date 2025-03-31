@@ -24,7 +24,7 @@ const QRCodeList = () => {
     const fetchAssets = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:3000/api/assets", 
+        const response = await fetch("/api/assets", 
          { headers: {
             "Authorization": `Bearer ${token}`, // Send token in headers
             "Content-Type": "application/json",}

@@ -13,7 +13,7 @@ const ViewRequestStatus = () => {
       const token = localStorage.getItem("token");
   
       try {
-        const response = await fetch("http://localhost:3000/api/asset-requests", {
+        const response = await fetch("/api/asset-requests", {
           headers: { Authorization: `Bearer ${token}` },
         });
   
@@ -34,8 +34,8 @@ const ViewRequestStatus = () => {
         };
   
         const updatedRequests = data.map((req) => ({
-          assetId: req.assetId?.asset_id || req.assetId?._id || "N/A",
-          assetName: req.assetId?.name || "Unknown",
+          assetId: req.asset_id || req.assetId?._id || "N/A",
+          assetName: req.asset_name || "Unknown",
           requestedBy: req.requestedBy?.name || "Unknown User",
           requestedAt: formatDate(req.requestedAt),
           resolvedAt: formatDate(req.resolvedAt),

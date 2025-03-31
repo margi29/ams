@@ -12,7 +12,13 @@ const AssetHistory = () => {
   // Fetch asset history from backend
   const fetchHistory = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/history");
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/history", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
       if (!response.ok) throw new Error("Failed to fetch history");
       const data = await response.json();
 

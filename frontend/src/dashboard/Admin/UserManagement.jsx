@@ -34,8 +34,8 @@ const UserManagement = () => {
   const fetchData = async () => {
     try {
       const [usersRes, deptsRes] = await Promise.all([
-        axios.get("http://localhost:3000/api/users"),
-        axios.get("http://localhost:3000/api/users/departments")
+        axios.get("/api/users"),
+        axios.get("/api/users/departments")
       ]);
       setUsers(usersRes.data);
       setDepartments(deptsRes.data);
@@ -92,10 +92,10 @@ const UserManagement = () => {
         const updatedUser = { name, email, role, department };
         if (password) updatedUser.password = password; // Only include password if provided
   
-        await axios.put(`http://localhost:3000/api/users/${_id}`, updatedUser);
+        await axios.put(`/api/users/${_id}`, updatedUser);
       } else {
         // Add new user
-        await axios.post("http://localhost:3000/api/users", {
+        await axios.post("/api/users", {
           name: currentUser.name,
           email: currentUser.email,
           password: currentUser.password,
@@ -119,7 +119,7 @@ const UserManagement = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       try {
-        await axios.delete(`http://localhost:3000/api/users/${id}`);
+        await axios.delete(`/api/users/${id}`);
         fetchData();
       } catch (error) {
         console.error("Error deleting user:", error);

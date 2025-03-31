@@ -16,7 +16,7 @@ const AssetRequests = () => {
       console.log("Fetching asset requests...");
 
       try {
-        const response = await fetch("http://localhost:3000/api/asset-requests", {
+        const response = await fetch("/api/asset-requests", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -67,7 +67,7 @@ const AssetRequests = () => {
     try {
       const token = localStorage.getItem("token");
 
-      const response = await fetch(`http://localhost:3000/api/asset-requests/${_id}`, {
+      const response = await fetch(`/api/asset-requests/${_id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
