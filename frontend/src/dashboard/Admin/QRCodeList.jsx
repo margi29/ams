@@ -15,6 +15,36 @@ const statusColors = {
   Retired: "text-gray-600 font-semibold",
 };
 
+// Action sentences generation function
+const actionSentences = (action, userName, userRole, assetName, assignedTo) => {
+  if (!userName || !userRole || !assetName) return "Invalid data for action.";
+
+  switch (action) {
+    case "Assigned":
+      return userRole === "Admin"
+        ? `${userName} assigned ${assetName} to ${assignedTo}.`
+        : `${userName} was assigned ${assetName}.`;
+    case "Created":
+      return `${userName} created the asset ${assetName}.`;
+    case "Updated":
+      return `${userName} updated the asset ${assetName}.`;
+    case "Deleted":
+      return `${userName} deleted the asset ${assetName}.`;
+    case "Scheduled for Maintenance":
+      return `${userName} scheduled maintenance for ${assetName}.`;
+    case "Maintenance Completed":
+      return `${userName} marked maintenance as completed for ${assetName}.`;
+    case "Asset Requested":
+      return `${userName} requested the asset ${assetName}.`;
+    case "Returned":
+      return `${userName} returned the asset ${assetName}.`;
+    case "Maintenance Requested":
+      return `${userName} reported an issue with ${assetName}.`;
+    default:
+      return `${userName} performed an action: ${action} on ${assetName}.`;
+  }
+};
+
 const QRCodeList = () => {
   const [assets, setAssets] = useState([]);
   const [search, setSearch] = useState("");
@@ -46,12 +76,15 @@ const QRCodeList = () => {
   )
   .sort((a, b) => a.asset_id.localeCompare(b.asset_id, undefined, { numeric: true }));
 
-
+  // Generate asset URL for QR code
+  const generateAssetUrl = (assetId) => {
+    return `${window.location.origin}/asset-details/${assetId}`;
+  };
 
   // Download full list as PDF
   const downloadPDF = () => {
     const doc = new jsPDF({
-      orientation: "portrait", // A4 Portrait mode
+      orientation: "portrait", 
       unit: "mm",
       format: "a4",
     });
@@ -59,75 +92,59 @@ const QRCodeList = () => {
     doc.setFont("helvetica", "bold");
     doc.text("QR Code List", 105, 15, { align: "center" });
   
-    let y = 25; // Initial Y position
-    const qrSize = 40; // QR Code size
-    const colWidth = 95; // Space between 2 QR codes in a row
-    const rowHeight = 60; // Adjusted row height
-    let x = 20; // Start position for first column
-    const maxRowsPerPage = 4; // Exactly 4 rows per page (8 QR codes)
-    let rowCounter = 0; // Track rows per page
+    let y = 25; 
+    const qrSize = 40; 
+    const colWidth = 95; 
+    const rowHeight = 60; 
+    let x = 20; 
+    const maxRowsPerPage = 4; 
+    let rowCounter = 0; 
   
     filteredAssets.forEach((asset, index) => {
-      const qrCanvas = document.getElementById(`qr-${asset.asset_id}`);
+      const qrCanvas = document.getElementById(`qr-${asset._id}`);
       if (qrCanvas) {
-        const qrImage = qrCanvas.toDataURL("image/png"); // Convert QR to PNG
+        const qrImage = qrCanvas.toDataURL("image/png"); 
   
-        // Page Break Logic: If we have filled 4 rows (8 QR codes), create a new page
         if (rowCounter === maxRowsPerPage) {
           doc.addPage();
-          y = 25; // Reset Y position for new page
-          x = 20; // Reset column
-          rowCounter = 0; // Reset row counter
+          y = 25;
+          x = 20;
+          rowCounter = 0;
         }
   
-        // Add QR Code
         doc.addImage(qrImage, "PNG", x, y, qrSize, qrSize);
   
-        // Align text to start exactly under QR Code
         doc.setFontSize(9);
-        doc.text(`ID: ${asset.asset_id}`, x, y + qrSize + 6);
+        doc.text(`ID: ${asset._id}`, x, y + qrSize + 6);
         doc.text(`Name: ${asset.name}`, x, y + qrSize + 12);
   
-        // Move to next column (Left → Right)
         if (x === 20) {
-          x += colWidth; // Move to right column
+          x += colWidth;
         } else {
-          x = 20; // Reset to first column
-          y += rowHeight; // Move to next row
-          rowCounter++; // Track row count correctly
+          x = 20;
+          y += rowHeight;
+          rowCounter++;
         }
       }
     });
   
     doc.save("QR_Code_List.pdf");
   };
-  
-  
-  
 
-
+  // Download individual QR code as an image
   const downloadQRCodeImage = (asset) => {
-    const qrCanvas = document.getElementById(`qr-${asset.asset_id}`);
+    const qrCanvas = document.getElementById(`qr-${asset._id}`);
     if (qrCanvas) {
-      const qrImage = qrCanvas.toDataURL("image/png"); // Convert QR to PNG
+      const qrImage = qrCanvas.toDataURL("image/png");
   
       const link = document.createElement("a");
       link.href = qrImage;
-      link.download = `QR_Code_${asset.asset_id}.png`; // Set file name
+      link.download = `QR_Code_${asset._id}.png`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }
   };
-  
-  
-  
-
-  
-  
-  
-  
-  
 
   // Columns for the Table component
   const columns = [
@@ -137,26 +154,15 @@ const QRCodeList = () => {
     { header: "Status", accessor: "status", className: (status) => statusColors[status] },
     {
       header: "QR Code",
-      accessor: "asset_id",
+      accessor: "_id", 
       render: (asset) => (
         <div className="flex flex-col items-center">
           <QRCodeCanvas
-            id={`qr-${asset.asset_id}`} // Matches element for selection
-            value={`Asset Details:
-    ID: ${asset.asset_id}
-    Name: ${asset.name}
-    Category: ${asset.category}
-    Status: ${asset.status}
-    Manufacturer: ${asset.manufacturer || "N/A"}
-    Model No.: ${asset.model_no || "N/A"}
-    Purchase Date: ${asset.purchase_date || "N/A"}
-    Warranty Expiry: ${asset.warranty_expiry || "N/A"}
-    Location: ${asset.location || "N/A"}
-    Description: ${asset.description || "N/A"}`}
+            id={`qr-${asset._id}`}
+            value={generateAssetUrl(asset._id)} 
             size={150}
             includeMargin={true}
           />
-          {/* ✅ Download Button for Individual QR Code */}
           <button
             onClick={() => downloadQRCodeImage(asset)}
             className="bg-green-500 text-white px-3 py-1 mt-2 text-sm rounded"
@@ -166,48 +172,39 @@ const QRCodeList = () => {
         </div>
       ),
     }
-    
-    
-    
   ];
 
   return (
     <motion.div
-  className="p-6 mt-16 bg-white shadow-lg rounded-xl"
-  initial={{ opacity: 0, y: -10 }}
-  animate={{ opacity: 1, y: 0 }}
->
-  <h2 className="text-3xl font-bold mb-4 text-gray-800 text-center">QR Code List</h2>
+      className="p-6 mt-16 bg-white shadow-lg rounded-xl"
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <h2 className="text-3xl font-bold mb-4 text-gray-800 text-center">QR Code List</h2>
 
-  {/* ✅ Search, Filter & Download in One Row */}
-  <div className="flex items-center gap-3">
-  {/* ✅ Search Bar - Takes Remaining Space */}
-  <div className="flex-grow">
-    <SearchFilterBar
-      search={search}
-      setSearch={setSearch}
-      filter={filter}
-      setFilter={setFilter}
-      statusOptions={["Available", "Assigned", "Under Maintenance", "Retired"]}
-    />
-  </div>
+      <div className="flex items-center gap-3">
+        <div className="flex-grow">
+          <SearchFilterBar
+            search={search}
+            setSearch={setSearch}
+            filter={filter}
+            setFilter={setFilter}
+            statusOptions={["Available", "Assigned", "Under Maintenance", "Retired"]}
+          />
+        </div>
 
-  {/* ✅ Download Button - Fixed Size */}
-  <button
-    className="bg-red-500 text-white px-4 py-2 rounded flex items-center h-full"
-    onClick={downloadPDF}
-  >
-    <FaFilePdf className="mr-2" /> Download PDF
-  </button>
-</div>
+        <button
+          className="bg-red-500 text-white px-4 py-2 rounded flex items-center h-full"
+          onClick={downloadPDF}
+        >
+          <FaFilePdf className="mr-2" /> Download PDF
+        </button>
+      </div>
 
-
-  {/* ✅ Table with Status and QR Codes */}
-  <div className="overflow-x-auto mt-6">
-    <Table columns={columns} data={filteredAssets} />
-  </div>
-</motion.div>
-
+      <div className="overflow-x-auto mt-6">
+        <Table columns={columns} data={filteredAssets} />
+      </div>
+    </motion.div>
   );
 };
 

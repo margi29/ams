@@ -25,8 +25,8 @@ const AssetHistory = () => {
       // Ensure assigned_to is dynamically retrieved
       const processedHistory = data.map((entry) => ({
         ...entry,
-        assignedTo:
-          entry.assetId?.assigned_to?.name || "Not Assigned",
+        assignedTo: entry.assetId?.assigned_to?.name || "Not Assigned",
+        assetImage: entry.assetId?.image || null, // Fetch asset image
       }));
 
       setHistory(processedHistory);
@@ -108,18 +108,29 @@ const AssetHistory = () => {
 
   const columns = [
     {
-      header: "Date & Time",
-      accessor: "timestamp",
+      header: "Asset Image",
+      accessor: "assetImage",
       render: (entry) =>
-        new Date(entry.timestamp).toLocaleString("en-US", {
-          year: "numeric",
-          month: "numeric",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        }),
+        entry.assetImage ? (
+          <img
+            src={entry.assetImage}
+            alt="Asset"
+            className="w-12 h-12 object-cover rounded-md shadow-sm"
+          />
+        ) : (
+          <span className="text-gray-400">No Image</span>
+        ),
+    }, {
+      header: "Asset",
+      accessor: "assetId",
+      render: (entry) => {
+        const assetName = entry.assetName || "Unknown Asset";
+        const assetId = entry.assetIdNumber || "N/A";
+        return `${assetName} (${assetId})`;
+      },
+      className: "text-gray-600",
     },
+    
     {
       header: "Action",
       accessor: "actionType",
@@ -140,14 +151,17 @@ const AssetHistory = () => {
       className: "text-center",
     },
     {
-      header: "Asset",
-      accessor: "assetId",
-      render: (entry) => {
-        const assetName = entry.assetName || "Unknown Asset";
-        const assetId = entry.assetIdNumber || "N/A";
-        return `${assetName} (${assetId})`;
-      },
-      className: "text-gray-600",
+      header: "Date & Time",
+      accessor: "timestamp",
+      render: (entry) =>
+        new Date(entry.timestamp).toLocaleString("en-US", {
+          year: "numeric",
+          month: "numeric",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        }),
     },
     {
       header: "Performed By",

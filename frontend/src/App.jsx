@@ -26,6 +26,7 @@ import "./styles/global.css";
 import "./App.css";
 import UserManagement from "./dashboard/Admin/UserManagement";
 import ReturnAsset from "./dashboard/Admin/ReturnAsset";
+import QRCode from "./pages/QRCode";
 // import { Settings } from "lucide-react";
 
 const Layout = ({ children }) => {
@@ -78,7 +79,6 @@ const App = () => {
           <Route path="/admin/scheduled-maintenance" element={<Layout><MaintenanceAndRepair /></Layout>} />
           <Route path="/admin/user-management" element={<Layout><UserManagement /></Layout>} />
           <Route path="/admin/settings" element={<Layout><Settings /></Layout>} />
-
         </Route>
 
         {/* Employee Routes - Now Fully Protected */}
@@ -95,6 +95,7 @@ const App = () => {
 
         {/* Not Found Page */}
         <Route path="*" element={<NotFound />} />
+        <Route path="asset-details/:id" element={<QRCode />} />
       </Routes>
     </Router>
   );

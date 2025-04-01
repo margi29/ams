@@ -250,27 +250,40 @@ const deleteAsset = async (req, res) => {
       return res.status(404).json({ message: "Asset not found" });
     }
 
-    // Store asset name and ID number before deleting
+    // Store asset name and ID number before updating
     const assetName = assetToDelete.name;
     const assetIdNumber = assetToDelete.asset_id || assetToDelete._id; // Ensure there's an asset ID number field or fallback to _id
 
-    // Delete the asset
-    const deletedAsset = await Asset.findByIdAndDelete(id);
-
-    // 3Log history with stored name and ID number
-    await logHistory(
-      deletedAsset._id,   // assetId
-      assetName,           // assetName
-      assetIdNumber,       // assetIdNumber (ID number or fallback)
-      req.user._id,        // userId (logged-in user)
-      req.user.name || "Unknown", // userName
-      req.user.role || "Admin",   // userRole
-      "Deleted"            // actionType
+    // 2️Update the asset status to 'retired' and clear assigned fields
+    const updatedAsset = await Asset.findByIdAndUpdate(
+      id,
+      {
+        status: 'Retired',        // Update the status to 'Retired'
+        assigned_to: null,        // Clear the assigned_to field
+        assigned_on: null,        // Clear the assigned_on field
+        note: null                // Clear the note field
+      },
+      { new: true } // Return the updated document
     );
 
-    res.json({ message: "Asset deleted successfully", assetName: deletedAsset.name });
+    if (!updatedAsset) {
+      return res.status(404).json({ message: "Asset not found or failed to update" });
+    }
+
+    // 3️Log history with stored name and ID number
+    await logHistory(
+      updatedAsset._id,        // assetId
+      assetName,               // assetName
+      assetIdNumber,           // assetIdNumber (ID number or fallback)
+      req.user._id,            // userId (logged-in user)
+      req.user.name || "Unknown", // userName
+      req.user.role || "Admin",   // userRole
+      "Deleted"               // actionType
+    );
+
+    res.json({ message: "Asset retired successfully", assetName: updatedAsset.name });
   } catch (error) {
-    console.error("Error deleting asset:", error);
+    console.error("Error retiring asset:", error);
     res.status(500).json({ message: "Server error", error });
   }
 };

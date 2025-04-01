@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { QRCodeCanvas } from "qrcode.react";
+import { useLocation } from "react-router-dom";
 import CreatableSelect from "react-select/creatable";
-
 
 const AddNewAsset = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const editing = Boolean(location.state?.asset);
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
-  const [asset, setAsset] = useState({
+  // Initial blank asset state
+  const initialAssetState = {
     asset_id: "",
     name: "",
     manufacturer: "",
@@ -24,27 +22,11 @@ const AddNewAsset = () => {
     description: "",
     quantity: 1,
     image: ""
-  });
-
-  const [submittedAsset, setSubmittedAsset] = useState(null);
-  const [showQRCode, setShowQRCode] = useState(false);
-  const [imageFile, setImageFile] = useState(null);
-  
-  // New state for image preview
-  const [imagePreview, setImagePreview] = useState(null);
-
-  // Generate QR code content
-  const generateQRCode = (assetData) => {
-    return `Asset ID: ${assetData.asset_id}
-            Name: ${assetData.name}
-            Manufacturer: ${assetData.manufacturer}
-            Model No.: ${assetData.model_no}
-            Category: ${assetData.category}
-            Status: ${assetData.status}
-            Purchase Date: ${assetData.purchase_date}
-            Warranty Expiry: ${assetData.warranty_expiry || "N/A"}
-            Description: ${assetData.description || "N/A"}`;
   };
+
+  const [asset, setAsset] = useState(initialAssetState);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   // Fetch categories from backend
   useEffect(() => {
@@ -125,7 +107,6 @@ const AddNewAsset = () => {
   };
 
   const findFirstAvailableAssetId = (existingIds) => {
-    // existing logic
     if (!existingIds || existingIds.length === 0) {
       return "A01"; // If no assets exist
     }
@@ -144,6 +125,23 @@ const AddNewAsset = () => {
     }
   
     return `A${String(numericIds.length > 0 ? numericIds[numericIds.length - 1] + 1 : 1).padStart(2, "0")}`;
+  };
+
+  // Reset form to initial state
+  const resetForm = () => {
+    setAsset(initialAssetState);
+    setSelectedCategory(null);
+    setImageFile(null);
+    setImagePreview(null);
+    
+    // Reset file input
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) {
+      fileInput.value = "";
+    }
+    
+    // Fetch a new asset ID for the next asset
+    fetchNextAssetId();
   };
 
   // Improved image handling with preview
@@ -216,25 +214,6 @@ const AddNewAsset = () => {
     }));
   };
 
-  // Check if asset ID is unique
-  const checkUniqueAssetId = async (assetId) => {
-    try {
-      const response = await fetch(`/api/assets/check-id/${assetId}`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-    
-      const text = await response.text();
-      const data = text ? JSON.parse(text) : {};
-    
-      return data.isUnique;
-    } catch (error) {
-      console.error(" Error checking Asset ID:", error);
-      alert("Error checking asset ID. Please refresh and try again.");
-      return false;
-    }
-  };
-
   // Handle image upload
   const handleImageUpload = async (file) => {
     if (!file) return null;
@@ -272,7 +251,7 @@ const AddNewAsset = () => {
     }
   };
 
-  // Improved form submission
+  // Form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true); // Disable button
@@ -288,6 +267,7 @@ const AddNewAsset = () => {
           if (confirm("Image upload failed. Continue without image?")) {
             // Continue without image
           } else {
+            setLoading(false);
             return; // Stop submission if user cancels
           }
         }
@@ -321,7 +301,6 @@ const AddNewAsset = () => {
         }
   
         console.log("Creating multiple assets:", assets);
-        const createdAssets = [];
   
         for (const assetItem of assets) {
           const token = localStorage.getItem("token");
@@ -337,17 +316,14 @@ const AddNewAsset = () => {
           if (!response.ok) {
             throw new Error(`Failed to create asset: ${assetItem.asset_id}`);
           }
-  
-          const createdAsset = await response.json();
-          createdAssets.push({
-            ...createdAsset,
-            qr_code: generateQRCode(createdAsset)
-          });
         }
   
-        setSubmittedAsset(createdAssets);
-        setShowQRCode(true);
-        alert(`${createdAssets.length} assets added successfully!`);
+        alert(`${assets.length} assets added successfully!`);
+        
+        // Reset form for new asset entry
+        if (!editing) {
+          resetForm();
+        }
       } else {
         console.log("Creating/updating single asset:", assetData);
         const token = localStorage.getItem("token");
@@ -368,12 +344,12 @@ const AddNewAsset = () => {
           throw new Error(`Request failed with status: ${response.status}`);
         }
   
-        const responseData = await response.json();
         alert(editing ? "Asset updated successfully!" : "Asset added successfully!");
-  
-        const finalAssetData = responseData.asset || responseData || assetData;
-        setSubmittedAsset({ ...finalAssetData, qr_code: generateQRCode(finalAssetData) });
-        setShowQRCode(true);
+        
+        // Reset form for new asset entry
+        if (!editing) {
+          resetForm();
+        }
       }
     } catch (error) {
       console.error("❌ Error saving asset:", error);
@@ -382,39 +358,6 @@ const AddNewAsset = () => {
       setLoading(false); // Re-enable button after request completes
     }
   };
-  
-  // Download QR Code for a specific asset
-  const downloadQRCode = (assetId, index) => {
-    
-    // Find the right canvas - when multiple QR codes, target by index
-    const qrCanvases = document.querySelectorAll("canvas");
-    let qrCanvas;
-    
-    if (qrCanvases.length > 1 && index !== undefined) {
-      qrCanvas = qrCanvases[index];
-    } else {
-      qrCanvas = qrCanvases[0];
-    }
-    
-    if (!qrCanvas) {
-      console.error("QR Code canvas not found!");
-      return;
-    }
-
-    const pngUrl = qrCanvas.toDataURL("image/png");
-    const downloadLink = document.createElement("a");
-    downloadLink.href = pngUrl;
-    downloadLink.download = `${assetId}_QRCode.png`;
-    document.body.appendChild(downloadLink);
-    downloadLink.style.display = 'none';
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
-  };
-
-  // Return to asset list
-  const handleReturnToList = () => {
-    navigate("/admin/assets");
-  };
 
   return (
     <div className="p-6 mt-16 bg-white shadow-lg rounded-xl">
@@ -422,249 +365,177 @@ const AddNewAsset = () => {
         {editing ? "Edit Asset" : "Add New Asset"}
       </h2>
 
-      {!showQRCode && (
-        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-6">
-          <div>
-            <label className="block text-gray-700 font-medium">Asset ID *</label>
-            <input
-              type="text"
-              name="asset_id"
-              value={asset.asset_id}
-              readOnly
-              className="w-full mt-1 p-2 border border-gray-300 rounded-md bg-gray-200 cursor-not-allowed"
-            />
-          </div>
+      <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-6">
+        <div>
+          <label className="block text-gray-700 font-medium">Asset ID *</label>
+          <input
+            type="text"
+            name="asset_id"
+            value={asset.asset_id}
+            readOnly
+            className="w-full mt-1 p-2 border border-gray-300 rounded-md bg-gray-200 cursor-not-allowed"
+          />
+        </div>
 
-          {/* Quantity field - shown in both create and edit modes but readonly in edit mode */}
-          <div>
-            <label className="block text-gray-700 font-medium">Quantity *</label>
-            <input
-              type="number"
-              name="quantity"
-              value={asset.quantity}
-              onChange={editing ? undefined : handleChange}
-              min="1"
-              required
-              readOnly={editing}
-              className={`w-full mt-1 p-2 border border-gray-300 rounded-md ${editing ? 'bg-gray-200 cursor-not-allowed' : ''}`}
-            />
-          </div>
+        {/* Quantity field - shown in both create and edit modes but readonly in edit mode */}
+        <div>
+          <label className="block text-gray-700 font-medium">Quantity *</label>
+          <input
+            type="number"
+            name="quantity"
+            value={asset.quantity}
+            onChange={editing ? undefined : handleChange}
+            min="1"
+            required
+            readOnly={editing}
+            className={`w-full mt-1 p-2 border border-gray-300 rounded-md ${editing ? 'bg-gray-200 cursor-not-allowed' : ''}`}
+          />
+        </div>
 
-          <div>
-            <label className="block text-gray-700 font-medium">Asset Name *</label>
+        <div>
+          <label className="block text-gray-700 font-medium">Asset Name *</label>
+          <input
+            type="text"
+            name="name"
+            value={asset.name}
+            onChange={handleChange}
+            required
+            className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+          />
+        </div>
+
+        <div>
+          <label className="block text-gray-700 font-medium">Manufacturer *</label>
+          <input
+            type="text"
+            name="manufacturer"
+            value={asset.manufacturer}
+            onChange={handleChange}
+            required
+            className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+          />
+        </div>
+
+        <div>
+          <label className="block text-gray-700 font-medium">Model No. *</label>
+          <input
+            type="text"
+            name="model_no"
+            value={asset.model_no}
+            onChange={handleChange}
+            required
+            className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+          />
+        </div>
+
+        <div>
+          <label className="block text-gray-700 font-medium">Category *</label>
+          <CreatableSelect
+            options={categories}
+            value={selectedCategory}
+            onChange={handleCategoryChange}
+            onCreateOption={handleNewCategory}
+            isClearable
+            isSearchable
+            placeholder="Select or type a category..."
+            className="mt-1"
+          />
+        </div>
+
+        <div>
+          <label className="block text-gray-700 font-medium">Status</label>
+          <div className="w-full mt-1 p-2 border border-gray-300 rounded-md bg-gray-200 cursor-not-allowed">
+            {editing ? asset.status : "Available"}
+          </div>
+        </div>
+
+        {/* Image upload with preview */}
+        <div>
+          <label className="block text-gray-700 font-medium">Upload Image {editing && !asset.image ? '*' : ''}</label>
+          <div className="flex">
             <input
-              type="text"
-              name="name"
-              value={asset.name}
-              onChange={handleChange}
-              required
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
               className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+              required={editing && !asset.image}
             />
-          </div>
-
-          <div>
-            <label className="block text-gray-700 font-medium">Manufacturer *</label>
-            <input
-              type="text"
-              name="manufacturer"
-              value={asset.manufacturer}
-              onChange={handleChange}
-              required
-              className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-            />
-          </div>
-
-          <div>
-            <label className="block text-gray-700 font-medium">Model No. *</label>
-            <input
-              type="text"
-              name="model_no"
-              value={asset.model_no}
-              onChange={handleChange}
-              required
-              className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-            />
-          </div>
-
-          <div>
-            <label className="block text-gray-700 font-medium">Category *</label>
-            <CreatableSelect
-              options={categories}
-              value={selectedCategory}
-              onChange={handleCategoryChange}
-              onCreateOption={handleNewCategory}
-              isClearable
-              isSearchable
-              placeholder="Select or type a category..."
-              className="mt-1"
-            />
-          </div>
-
-          <div>
-  <label className="block text-gray-700 font-medium">Status</label>
-  <div className="w-full mt-1 p-2 border border-gray-300 rounded-md bg-gray-200 cursor-not-allowed">
-    {editing ? asset.status : "Available"}
-  </div>
-</div>
-
-
-          {/* Image upload with preview */}
-          <div>
-            <label className="block text-gray-700 font-medium">Upload Image {editing && !asset.image ? '*' : ''}</label>
-            <div className="flex">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-                required={editing && !asset.image}
-              />
-              {imagePreview && (
-                <button 
-                  type="button"
-                  onClick={handleClearImage}
-                  className="ml-2 mt-1 px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-            
-            {/* Image preview */}
             {imagePreview && (
-              <div className="mt-3 relative">
-                <img 
-                  src={imagePreview} 
-                  alt="Image Preview" 
-                  className="w-40 h-40 object-cover rounded-md shadow-md"
-                />
-                <p className="text-sm text-green-600 mt-1">Image Preview</p>
-              </div>
-            )}
-            
-            {!imagePreview && asset.image && (
-              <div className="mt-2">
-                <span className="text-sm text-green-600">Current image available</span>
-              </div>
-            )}
-          </div>
-
-          {/* Purchase Date and Warranty Expiry side by side */}
-          <div>
-            <label className="block text-gray-700 font-medium">Purchase Date *</label>
-            <input
-              type="date"
-              name="purchase_date"
-              value={asset.purchase_date}
-              onChange={handleChange}
-              required
-              className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-            />
-          </div>
-
-          <div>
-            <label className="block text-gray-700 font-medium">Warranty Expiry</label>
-            <input
-              type="date"
-              name="warranty_expiry"
-              value={asset.warranty_expiry}
-              onChange={handleChange}
-              className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-            />
-          </div>
-
-          <div className="col-span-2">
-            <label className="block text-gray-700 font-medium">Description (Optional)</label>
-            <textarea
-              name="description"
-              value={asset.description}
-              onChange={handleChange}
-              className="w-full mt-1 p-2 border border-gray-300 rounded-md"
-            />
-          </div>
-
-          <div className="col-span-2 flex justify-center">
-          <button
-    type="submit"
-    className={`w-full font-bold py-3 rounded-lg transition text-white ${
-      loading ? "bg-gray-400 cursor-not-allowed" : "bg-[#673AB7] hover:bg-[#5E35B1]"
-    }`}
-    disabled={loading} // Disable button when loading
-  >
-    {loading ? "Processing..." : editing ? "Update Asset" : "Add Asset"}
-  </button>
-          </div>
-        </form>
-      )}
-
-      {/* Show submitted assets QR codes after form submission */}
-      {showQRCode && submittedAsset && (
-        <div className="mt-6">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4 text-center">Asset QR Codes</h3>
-          
-          {Array.isArray(submittedAsset) ? (
-            // Multiple assets
-            <div className="flex flex-wrap justify-center">
-              {submittedAsset.map((item, index) => (
-                <div key={index} className="m-4 text-center p-4 border rounded-lg shadow-md">
-                  <h4 className="font-semibold mb-2">Asset {index + 1} - {item.asset_id}</h4>
-                  <QRCodeCanvas
-                    value={item.qr_code}
-                    size={200}
-                  />
-                  <button 
-                    onClick={() => downloadQRCode(item.asset_id, index)} 
-                    className="mt-3 px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 w-full"
-                  >
-                    Download QR Code
-                  </button>
-                  {/* Display Image if available */}
-                  {item.image && (
-                    <div className="mt-3">
-                      <img 
-                        src={item.image} 
-                        alt="Asset" 
-                        className="w-32 h-32 object-cover rounded-md shadow-md mx-auto" 
-                      />
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            // Single asset - usually for edit mode
-            <div className="flex flex-col items-center">
-              <QRCodeCanvas value={submittedAsset.qr_code} size={200} />
               <button 
-                onClick={() => downloadQRCode(submittedAsset.asset_id)} 
-                className="mt-4 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                type="button"
+                onClick={handleClearImage}
+                className="ml-2 mt-1 px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
               >
-                Download QR Code
+                Clear
               </button>
-              {/* Display Image if available */}
-              {submittedAsset.image && (
-                <div className="mt-4">
-                  <img 
-                    src={submittedAsset.image} 
-                    alt="Asset" 
-                    className="w-40 h-40 object-cover rounded-md shadow-md" 
-                  />
-                </div>
-              )}
+            )}
+          </div>
+          
+          {/* Image preview */}
+          {imagePreview && (
+            <div className="mt-3 relative">
+              <img 
+                src={imagePreview} 
+                alt="Image Preview" 
+                className="w-40 h-40 object-cover rounded-md shadow-md"
+              />
+              <p className="text-sm text-green-600 mt-1">Image Preview</p>
             </div>
           )}
           
-          {/* Button to return to asset list */}
-          <div className="mt-6 flex justify-center">
-            <button
-              onClick={handleReturnToList}
-              className="px-6 py-3 bg-gray-600 text-white text-lg rounded-lg shadow-md hover:bg-gray-700"
-            >
-              Return to Asset List
-            </button>
-          </div>
+          {!imagePreview && asset.image && (
+            <div className="mt-2">
+              <span className="text-sm text-green-600">Current image available</span>
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Purchase Date and Warranty Expiry side by side */}
+        <div>
+          <label className="block text-gray-700 font-medium">Purchase Date *</label>
+          <input
+            type="date"
+            name="purchase_date"
+            value={asset.purchase_date}
+            onChange={handleChange}
+            required
+            className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+          />
+        </div>
+
+        <div>
+          <label className="block text-gray-700 font-medium">Warranty Expiry</label>
+          <input
+            type="date"
+            name="warranty_expiry"
+            value={asset.warranty_expiry}
+            onChange={handleChange}
+            className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+          />
+        </div>
+
+        <div className="col-span-2">
+          <label className="block text-gray-700 font-medium">Description (Optional)</label>
+          <textarea
+            name="description"
+            value={asset.description}
+            onChange={handleChange}
+            className="w-full mt-1 p-2 border border-gray-300 rounded-md"
+          />
+        </div>
+
+        <div className="col-span-2 flex justify-center">
+          <button
+            type="submit"
+            className={`w-full font-bold py-3 rounded-lg transition text-white ${
+              loading ? "bg-gray-400 cursor-not-allowed" : "bg-[#673AB7] hover:bg-[#5E35B1]"
+            }`}
+            disabled={loading} // Disable button when loading
+          >
+            {loading ? "Processing..." : editing ? "Update Asset" : "Add Asset"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };

@@ -4,20 +4,19 @@ const History = require("../models/AssetHistory");
 const getAllHistory = async (req, res) => {
   try {
     const history = await History.find()
-    .populate({
-      path: "assetId",
-      select: "assigned_to",
-      populate: { path: "assigned_to", select: "name email" }, // Fetch user details if needed
-    })
-     // Populating assigned_to field from Asset
+      .populate({
+        path: "assetId",
+        select: "assigned_to image", // Include the image field
+        populate: { path: "assigned_to", select: "name email" }, // Fetch user details if needed
+      })
       .sort({ timestamp: -1 });
 
-    // Return the history entries with the populated assigned_to
     res.status(200).json(history);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch all history", error: error.message });
   }
 };
+
 
 // Fetch history by asset (populate assigned_to field from Asset)
 const getHistoryByAsset = async (req, res) => {
