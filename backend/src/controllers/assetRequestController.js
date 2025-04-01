@@ -35,10 +35,13 @@ const requestAsset = async (req, res) => {
     // Create a new asset request
     const newRequest = new AssetRequest({
       assetId,
+      asset_name: asset.name,    // Add asset_name
+      asset_id: asset.asset_id,  // Add asset_id
       reason,
       requestedBy,
       status: "Pending", // Default status
     });
+    
 
     await newRequest.save();
 
