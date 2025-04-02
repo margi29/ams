@@ -331,7 +331,7 @@ const EmployeeDashboard = () => {
         </div>
 
         <div className="bg-white p-6 rounded-xl shadow-xl border border-gray-200">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">Asset Assignment & Activity Timeline</h3>
+          <h3 className="text-xl font-semibold text-gray-800 mb-4">Asset Assignment Timeline</h3>
           <ResponsiveContainer width="100%" height={350}>
             <LineChart data={lineChartData}>
               <CartesianGrid strokeDasharray="3 3" />

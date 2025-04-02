@@ -184,20 +184,18 @@ const AdminDashboard = () => {
 		
 				// Get all unique dates and sort them
 				const allDates = new Set([...Object.keys(assetRequestsMap), ...Object.keys(maintenanceRequestsMap)]);
-				const sortedDates = [...allDates].sort((a, b) => new Date(a) - new Date(b));
-		
-				// Take only the last 6 dates (or fewer if there aren't 6)
-				const recentDates = sortedDates.slice(-6);
-		
-				// Prepare trend data for the line graph
-				const trendData = recentDates.map(date => ({
-					date,
-					assetRequests: assetRequestsMap[date] || 0,
-					maintenanceRequests: maintenanceRequestsMap[date] || 0
-				}));
-		
-				// Reverse the array to show dates in chronological order (12, 13, 14)
-				setRequestTrends([...trendData].reverse());
+				const sortedDates = [...allDates].sort((a, b) => new Date(a) - new Date(b)); // Sort dates in ascending order
+const recentDates = sortedDates.slice(-6); // Get last 6 (still in ascending order)
+
+// Prepare trend data for the line graph
+const trendData = recentDates.map(date => ({
+    date,
+    assetRequests: assetRequestsMap[date] || 0,
+    maintenanceRequests: maintenanceRequestsMap[date] || 0
+}));
+
+setRequestTrends(trendData); // No need to reverse, already in correct order
+
 			} catch (error) {
 				console.error("Error fetching dashboard data:", error.response?.data || error.message);
 				setRequestTrends([]); // Fallback to empty trends array
