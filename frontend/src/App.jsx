@@ -67,8 +67,31 @@ const App = () => {
             </div>
           }
         />
-   <Route path="/forgot-password" element={<ForgotPassword />} />
-   <Route path="/reset-password/:token" element={<ResetPassword />} />
+    {/* Forgot Password */}
+    <Route
+          path="/forgot-password"
+          element={
+            <div className="app-container">
+              <Navbar />
+              <div className="login-container">
+                <ForgotPassword />
+              </div>
+            </div>
+          }
+        />
+        
+        {/* Reset Password */}
+        <Route
+          path="/reset-password/:token"
+          element={
+            <div className="app-container">
+              <Navbar />
+              <div className="login-container">
+                <ResetPassword />
+              </div>
+            </div>
+          }
+        />
 
         {/* Admin Routes - Now Fully Protected */}
         <Route element={<ProtectedRoute allowedRoles={["Admin"]} />}>
