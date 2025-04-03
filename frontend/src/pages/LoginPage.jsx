@@ -72,6 +72,14 @@ const LoginPage = () => {
             Login
           </button>
         </form>
+        <div className="mt-4 text-center">
+          <button
+            className="text-[#673AB7] hover:underline text-sm"
+            onClick={() => navigate("/forgot-password")}
+          >
+            Forgot Password?
+          </button>
+        </div>
       </div>
     </div>
   );

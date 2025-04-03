@@ -22,7 +22,6 @@ const UserManagement = () => {
   const [currentUser, setCurrentUser] = useState({
     name: "", 
     email: "", 
-    password: "", 
     role: "Employee", 
     departmentOption: null
   });
@@ -55,7 +54,6 @@ const UserManagement = () => {
       _id: user._id,
       name: user.name, 
       email: user.email, 
-      password: "", // Don't show password when editing
       role: user.role, 
       departmentOption: { value: user.department, label: user.department }
     });
@@ -68,7 +66,6 @@ const UserManagement = () => {
     setCurrentUser({ 
       name: "", 
       email: "", 
-      password: "", 
       role: "Employee", 
       departmentOption: null 
     });
@@ -79,42 +76,36 @@ const UserManagement = () => {
   const handleSaveUser = async () => {
     const department = currentUser.departmentOption?.value || "";
     
-    // Basic validation
-    if (!currentUser.name || !currentUser.email || (!isEditMode && !currentUser.password) || !department) {
+    if (!currentUser.name || !currentUser.email || !department) {
       alert("Please fill all required fields");
+      return;
+    }
+  
+    // Check if email already exists
+    if (!isEditMode && users.some(user => user.email === currentUser.email)) {
+      alert("This email is already in use.");
       return;
     }
   
     try {
       if (isEditMode) {
-        // Update existing user
-        const { _id, name, email, password, role } = currentUser;
-        const updatedUser = { name, email, role, department };
-        if (password) updatedUser.password = password; // Only include password if provided
-  
-        await axios.put(`/api/users/${_id}`, updatedUser);
+        const { _id, name, email, role } = currentUser;
+        await axios.put(`/api/users/${_id}`, { name, email, role, department });
       } else {
-        // Add new user
-        await axios.post("/api/users", {
-          name: currentUser.name,
-          email: currentUser.email,
-          password: currentUser.password,
-          role: currentUser.role,
-          department
-        });
+        await axios.post("/api/users", { name: currentUser.name, email: currentUser.email, role: currentUser.role, department });
       }
-      
-      // Add new department if not exists
+  
       if (department && !departments.includes(department)) {
         setDepartments(prev => [...prev, department]);
       }
-      
+  
       fetchData();
       setModalOpen(false);
     } catch (error) {
       console.error(`Error ${isEditMode ? 'updating' : 'adding'} user:`, error);
     }
   };
+  
   
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
@@ -235,20 +226,6 @@ const UserManagement = () => {
                   placeholder="Enter email"
                 />
               </div>
-              
-              {/* Only show password field when adding a new user */}
-              {!isEditMode && (
-                <div>
-                  <label className="block mb-2">Password</label>
-                  <input
-                    type="password"
-                    value={currentUser.password}
-                    onChange={(e) => setCurrentUser({ ...currentUser, password: e.target.value })}
-                    className="w-full p-2 border rounded-lg"
-                    placeholder="Enter password"
-                  />
-                </div>
-              )}
               
               <div>
                 <label className="block mb-2">Department</label>

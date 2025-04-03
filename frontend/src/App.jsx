@@ -27,6 +27,8 @@ import "./App.css";
 import UserManagement from "./dashboard/Admin/UserManagement";
 import ReturnAsset from "./dashboard/Admin/ReturnAsset";
 import QRCode from "./pages/QRCode";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 // import { Settings } from "lucide-react";
 
 const Layout = ({ children }) => {
@@ -65,6 +67,8 @@ const App = () => {
             </div>
           }
         />
+   <Route path="/forgot-password" element={<ForgotPassword />} />
+   <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* Admin Routes - Now Fully Protected */}
         <Route element={<ProtectedRoute allowedRoles={["Admin"]} />}>
